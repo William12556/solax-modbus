@@ -1,0 +1,13 @@
+.DS_Store
+**/.DS_Store
+.obsidian/
+*.log
+**/*.log
+**/logs
+.zsh_history
+coverage.xml
+test.txt
+
+# Deprecated folders
+deprecated/
+**/deprecated/
