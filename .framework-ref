@@ -1,0 +1,3 @@
+FRAMEWORK_PATH=/Users/williamwatson/Documents/GitHub/LLM-Orchestration
+PROJECT_SPEC=active_workspace/specs/solax-modbus-poc.md
+CYCLE_HISTORY=knowledge/sessions/solax-modbus/
