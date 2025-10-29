@@ -2,10 +2,110 @@
 ## Solax X3 Hybrid Inverter Monitoring System
 
 **Document Type:** Software Design Specification  
-**Version:** 1.0  
-**Date:** October 25, 2025  
+**Version:** 1.1  
+**Date:** October 29, 2025  
 **Classification:** Technical Specification  
 **Status:** Draft
+
+---
+
+## Table of Contents
+
+- [1. Introduction](<#1. introduction>)
+  - [1.1 Purpose](<#1.1 purpose>)
+  - [1.2 Scope](<#1.2 scope>)
+  - [1.3 Target Audience](<#1.3 target audience>)
+  - [1.4 Document Conventions](<#1.4 document conventions>)
+- [2. System Overview](<#2. system overview>)
+  - [2.1 System Context](<#2.1 system context>)
+  - [2.2 High-Level Architecture](<#2.2 high-level architecture>)
+  - [2.3 Design Principles](<#2.3 design principles>)
+- [3. Functional Requirements](<#3. functional requirements>)
+  - [3.1 Data Acquisition](<#3.1 data acquisition>)
+  - [3.2 Data Processing](<#3.2 data processing>)
+  - [3.3 Data Persistence](<#3.3 data persistence>)
+  - [3.4 Monitoring and Alerting](<#3.4 monitoring and alerting>)
+  - [3.5 Control and Configuration](<#3.5 control and configuration>)
+  - [3.6 Multi-Inverter Support](<#3.6 multi-inverter support>)
+- [4. Non-Functional Requirements](<#4. non-functional requirements>)
+  - [4.1 Performance](<#4.1 performance>)
+  - [4.2 Reliability](<#4.2 reliability>)
+  - [4.3 Maintainability](<#4.3 maintainability>)
+  - [4.4 Security](<#4.4 security>)
+  - [4.5 Scalability](<#4.5 scalability>)
+  - [4.6 Usability](<#4.6 usability>)
+- [5. System Components](<#5. system components>)
+  - [5.1 Protocol Interface Module](<#5.1 protocol interface module>)
+  - [5.2 Inverter Interface Module](<#5.2 inverter interface module>)
+  - [5.3 Data Processing Module](<#5.3 data processing module>)
+  - [5.4 Storage Module](<#5.4 storage module>)
+  - [5.5 Monitoring Module](<#5.5 monitoring module>)
+  - [5.6 Control Module](<#5.6 control module>)
+  - [5.7 Multi-Inverter Coordinator](<#5.7 multi-inverter coordinator>)
+- [6. Interface Specifications](<#6. interface specifications>)
+  - [6.1 Modbus Register Map](<#6.1 modbus register map>)
+    - [6.1.1 Multi-Register Values](<#6.1.1 multi-register values>)
+    - [6.1.2 Recommended Register Access Patterns](<#6.1.2 recommended register access patterns>)
+  - [6.2 REST API Specification](<#6.2 rest api specification>)
+  - [6.3 Configuration File Format](<#6.3 configuration file format>)
+- [7. Data Flow Diagrams](<#7. data flow diagrams>)
+  - [7.1 Telemetry Acquisition Flow](<#7.1 telemetry acquisition flow>)
+  - [7.2 Control Command Flow](<#7.2 control command flow>)
+- [8. Security Architecture](<#8. security architecture>)
+  - [8.1 Network Security](<#8.1 network security>)
+  - [8.2 Authentication and Authorization](<#8.2 authentication and authorization>)
+  - [8.3 Data Protection](<#8.3 data protection>)
+  - [8.4 Security Monitoring](<#8.4 security monitoring>)
+- [9. Deployment Architecture](<#9. deployment architecture>)
+  - [9.1 Physical Deployment](<#9.1 physical deployment>)
+  - [9.2 Software Stack](<#9.2 software stack>)
+  - [9.3 Installation Procedure](<#9.3 installation procedure>)
+  - [9.4 High Availability Configuration](<#9.4 high availability configuration>)
+- [10. Testing Strategy](<#10. testing strategy>)
+  - [10.1 Unit Testing](<#10.1 unit testing>)
+  - [10.2 Integration Testing](<#10.2 integration testing>)
+  - [10.3 System Testing](<#10.3 system testing>)
+  - [10.4 Acceptance Testing](<#10.4 acceptance testing>)
+- [11. Maintenance and Operations](<#11. maintenance and operations>)
+  - [11.1 Logging Strategy](<#11.1 logging strategy>)
+  - [11.2 Monitoring and Metrics](<#11.2 monitoring and metrics>)
+  - [11.3 Backup and Recovery](<#11.3 backup and recovery>)
+  - [11.4 Update Procedures](<#11.4 update procedures>)
+- [12. Error Handling and Recovery](<#12. error handling and recovery>)
+  - [12.1 Error Classification](<#12.1 error classification>)
+  - [12.2 Retry Logic](<#12.2 retry logic>)
+  - [12.3 Circuit Breaker Pattern](<#12.3 circuit breaker pattern>)
+- [13. Performance Optimization](<#13. performance optimization>)
+  - [13.1 Optimization Strategies](<#13.1 optimization strategies>)
+  - [13.2 Performance Targets](<#13.2 performance targets>)
+- [14. Extensibility and Future Enhancements](<#14. extensibility and future enhancements>)
+  - [14.1 Plugin Architecture](<#14.1 plugin architecture>)
+  - [14.2 Planned Features](<#14.2 planned features>)
+- [15. Dependencies and Constraints](<#15. dependencies and constraints>)
+  - [15.1 External Dependencies](<#15.1 external dependencies>)
+  - [15.2 Hardware Constraints](<#15.2 hardware constraints>)
+  - [15.3 Protocol Constraints](<#15.3 protocol constraints>)
+  - [15.4 Assumptions](<#15.4 assumptions>)
+- [16. Compliance and Standards](<#16. compliance and standards>)
+  - [16.1 Applicable Standards](<#16.1 applicable standards>)
+  - [16.2 Data Privacy](<#16.2 data privacy>)
+  - [16.3 Safety Considerations](<#16.3 safety considerations>)
+- [17. Glossary](<#17. glossary>)
+- [18. References](<#18. references>)
+  - [18.1 Protocol Documentation](<#18.1 protocol documentation>)
+  - [18.2 Software Libraries](<#18.2 software libraries>)
+  - [18.3 Standards](<#18.3 standards>)
+- [Appendix A: Register Reference Tables](<#appendix a: register reference tables>)
+  - [A.1 Complete Input Register Map](<#a.1 complete input register map>)
+  - [A.2 Complete Holding Register Map](<#a.2 complete holding register map>)
+- [Appendix B: Configuration Examples](<#appendix b: configuration examples>)
+  - [B.1 Single Inverter Configuration](<#b.1 single inverter configuration>)
+  - [B.2 Multi-Inverter Configuration](<#b.2 multi-inverter configuration>)
+- [Appendix C: API Examples](<#appendix c: api examples>)
+  - [C.1 Retrieve Current Telemetry](<#c.1 retrieve current telemetry>)
+  - [C.2 Set Operating Mode](<#c.2 set operating mode>)
+- [Appendix D: Troubleshooting Decision Tree](<#appendix d: troubleshooting decision tree>)
+- [Document Control](<#document control>)
 
 ---
 
@@ -45,6 +145,8 @@ Out of scope:
 - **MAY**: Optional requirement
 - Register addresses use hexadecimal notation (0x prefix)
 - Data types follow IEC 61131-3 conventions
+
+[Return to Table of Contents](<#table of contents>)
 
 ---
 
@@ -112,6 +214,9 @@ The system implements a modular architecture with clear separation of concerns:
 3. **Observability**: Comprehensive logging and metrics
 4. **Idempotency**: Repeatable operations without side effects
 5. **Minimal Dependencies**: Reduce external library requirements
+6. **Protocol Fidelity**: Maintain strict adherence to vendor protocol specifications
+
+[Return to Table of Contents](<#table of contents>)
 
 ---
 
@@ -224,6 +329,8 @@ The system implements a modular architecture with clear separation of concerns:
 - Combined battery capacity
 - Net grid interaction
 
+[Return to Table of Contents](<#table of contents>)
+
 ---
 
 ## 4. Non-Functional Requirements
@@ -293,6 +400,8 @@ The system implements a modular architecture with clear separation of concerns:
 **REQ-NF-USE-003**: Error messages SHALL provide actionable diagnostic information.
 
 **REQ-NF-USE-004**: The system SHALL provide health check endpoint for monitoring tools.
+
+[Return to Table of Contents](<#table of contents>)
 
 ---
 
@@ -408,7 +517,9 @@ class GridMetrics:
     power_r: float    # Watts
     power_s: float    # Watts
     power_t: float    # Watts
-    frequency: float  # Hertz
+    frequency_r: float  # Hertz
+    frequency_s: float  # Hertz
+    frequency_t: float  # Hertz
     timestamp: datetime
 
 
@@ -420,8 +531,21 @@ class BatteryMetrics:
     power: int           # Watts (positive = charge)
     soc: int            # State of charge (%)
     temperature: int     # Celsius
-    bms_status: bool    # BMS communication active
+    bms_connected: bool  # BMS communication active
+    status: int         # Battery status (0=idle, 1=charge, 2=discharge)
     capacity: int       # Watt-hours
+    timestamp: datetime
+
+
+@dataclass
+class EnergyStats:
+    """Energy accounting and totals."""
+    generation_today: float      # kWh - Daily solar generation
+    generation_total: float      # kWh - Lifetime solar generation
+    battery_charge_today: float  # kWh - Daily battery charge
+    feedin_today: float         # kWh - Daily grid export
+    consumption_today: float     # kWh - Daily grid import
+    feedin_power: int          # W - Instantaneous grid power (signed)
     timestamp: datetime
 ```
 
@@ -658,6 +782,8 @@ class PollingCoordinator:
     def get_next_poll_time(inverter_id: str) -> datetime
 ```
 
+[Return to Table of Contents](<#table of contents>)
+
 ---
 
 ## 6. Interface Specifications
@@ -666,30 +792,138 @@ class PollingCoordinator:
 
 **Input Registers (Function Code 0x04):**
 
+#### PV String Parameters
+
 | Address | Field | Type | Scale | Unit | Access |
 |---------|-------|------|-------|------|--------|
-| 0x0000 | Grid Voltage Phase R | uint16 | 0.1 | V | R |
-| 0x0001 | Grid Voltage Phase S | uint16 | 0.1 | V | R |
-| 0x0002 | Grid Voltage Phase T | uint16 | 0.1 | V | R |
-| 0x0003 | Grid Current Phase R | uint16 | 0.1 | A | R |
-| 0x0004 | Grid Current Phase S | uint16 | 0.1 | A | R |
-| 0x0005 | Grid Current Phase T | uint16 | 0.1 | A | R |
-| 0x0006 | Grid Power Phase R | int16 | 1 | W | R |
-| 0x0007 | Grid Power Phase S | int16 | 1 | W | R |
-| 0x0008 | Grid Power Phase T | int16 | 1 | W | R |
-| 0x0009 | PV1 Voltage | uint16 | 0.1 | V | R |
-| 0x000A | PV2 Voltage | uint16 | 0.1 | V | R |
-| 0x000B | PV1 Current | uint16 | 0.1 | A | R |
-| 0x000C | PV2 Current | uint16 | 0.1 | A | R |
-| 0x0014 | Battery Voltage | uint16 | 0.1 | V | R |
+| 0x0003 | PV1 Voltage | uint16 | 0.1 | V | R |
+| 0x0004 | PV2 Voltage | uint16 | 0.1 | V | R |
+| 0x0005 | PV1 Current | uint16 | 0.1 | A | R |
+| 0x0006 | PV2 Current | uint16 | 0.1 | A | R |
+| 0x0007 | Grid Frequency (legacy) | uint16 | 0.01 | Hz | R |
+| 0x0008 | Inverter Temperature | int16 | 1 | °C | R |
+| 0x0009 | Run Mode | uint16 | 1 | enum | R |
+| 0x000A | PV1 Power | uint16 | 1 | W | R |
+| 0x000B | PV2 Power | uint16 | 1 | W | R |
+
+#### Battery Parameters
+
+| Address | Field | Type | Scale | Unit | Access |
+|---------|-------|------|-------|------|--------|
+| 0x0014 | Battery Voltage | int16 | 0.1 | V | R |
 | 0x0015 | Battery Current | int16 | 0.1 | A | R |
 | 0x0016 | Battery Power | int16 | 1 | W | R |
-| 0x001C | Battery Temperature | int16 | 1 | °C | R |
-| 0x001D | Battery SOC | uint16 | 1 | % | R |
-| 0x0020 | Feedin Power | int16 | 1 | W | R |
-| 0x0047 | Run Mode | uint16 | 1 | enum | R |
+| 0x0017 | BMS Connection State | uint16 | 1 | bool | R |
+| 0x0018 | Battery Temperature | int16 | 1 | °C | R |
+| 0x0019 | Battery Status | uint16 | 1 | enum | R |
+| 0x001A | Reserved | - | - | - | - |
+| 0x001B | Reserved | - | - | - | - |
+| 0x001C | Battery SOC | uint16 | 1 | % | R |
+
+#### Energy Statistics
+
+| Address | Field | Type | Scale | Unit | Access |
+|---------|-------|------|-------|------|--------|
+| 0x0020 | Battery Charge Today | uint16 | 0.1 | kWh | R |
+| 0x0046 | Feedin Power (Low) | uint16 | - | - | R |
+| 0x0047 | Feedin Power (High) | uint16 | - | - | R |
+| 0x0050 | Energy Today | uint16 | 0.1 | kWh | R |
+| 0x0052 | Energy Total (Low) | uint16 | - | - | R |
+| 0x0053 | Energy Total (High) | uint16 | - | - | R |
+
+**Note:** Feedin Power and Energy Total are 32-bit values (little-endian).  
+Feedin Power: Positive = export to grid, Negative = import from grid
+
+#### Grid Three-Phase Parameters
+
+| Address | Field | Type | Scale | Unit | Access |
+|---------|-------|------|-------|------|--------|
+| 0x006A | Grid Voltage Phase R | uint16 | 0.1 | V | R |
+| 0x006B | Grid Current Phase R | int16 | 0.1 | A | R |
+| 0x006C | Grid Power Phase R | int16 | 1 | W | R |
+| 0x006D | Grid Frequency Phase R | uint16 | 0.01 | Hz | R |
+| 0x006E | Grid Voltage Phase S | uint16 | 0.1 | V | R |
+| 0x006F | Grid Current Phase S | int16 | 0.1 | A | R |
+| 0x0070 | Grid Power Phase S | int16 | 1 | W | R |
+| 0x0071 | Grid Frequency Phase S | uint16 | 0.01 | Hz | R |
+| 0x0072 | Grid Voltage Phase T | uint16 | 0.1 | V | R |
+| 0x0073 | Grid Current Phase T | int16 | 0.1 | A | R |
+| 0x0074 | Grid Power Phase T | int16 | 1 | W | R |
+| 0x0075 | Grid Frequency Phase T | uint16 | 0.01 | Hz | R |
+
+#### Grid Import/Export Energy
+
+| Address | Field | Type | Scale | Unit | Access |
+|---------|-------|------|-------|------|--------|
+| 0x0098 | Feedin Energy Today (Low) | uint16 | - | - | R |
+| 0x0099 | Feedin Energy Today (High) | uint16 | - | - | R |
+| 0x009A | Consumption Energy Today (Low) | uint16 | - | - | R |
+| 0x009B | Consumption Energy Today (High) | uint16 | - | - | R |
+
+**Note:** Both values are 32-bit unsigned integers (little-endian), scale 0.01 kWh
+
+### 6.1.1 Multi-Register Values
+
+Several parameters use 32-bit values spanning two consecutive 16-bit registers:
+
+**32-bit Signed Integer (Little-Endian):**
+- Feedin Power (0x0046-0x0047)
+  - Low word at 0x0046, high word at 0x0047
+  - Range: -2,147,483,648 to +2,147,483,647 W
+  - Positive = export, Negative = import
+
+**32-bit Unsigned Integer (Little-Endian):**
+- Energy Total (0x0052-0x0053)
+- Feedin Energy Today (0x0098-0x0099)
+- Consumption Energy Today (0x009A-0x009B)
+
+**Conversion Examples:**
+
+```python
+def read_32bit_signed(low: int, high: int) -> int:
+    """Convert two 16-bit registers to signed 32-bit (little-endian)."""
+    value = (high << 16) | low
+    return value if value < 2147483648 else value - 4294967296
+
+def read_32bit_unsigned(low: int, high: int) -> int:
+    """Convert two 16-bit registers to unsigned 32-bit (little-endian)."""
+    return (high << 16) | low
+```
+
+### 6.1.2 Recommended Register Access Patterns
+
+**Efficient Batch Reads:**
+
+Group contiguous registers to minimize Modbus transactions:
+
+```python
+# Group 1: PV and System Status (9 registers)
+pv_data = read_input_registers(0x0003, 9)
+# Returns: PV1V, PV2V, PV1I, PV2I, freq, temp, mode, PV1P, PV2P
+
+# Group 2: Battery Parameters (9 registers)
+battery_data = read_input_registers(0x0014, 9)
+# Returns: voltage, current, power, BMS, temp, status, rsv, rsv, SOC
+
+# Group 3: Grid Three-Phase (12 registers)
+grid_data = read_input_registers(0x006A, 12)
+# Returns: R(V,I,P,F), S(V,I,P,F), T(V,I,P,F)
+
+# Group 4: Energy Statistics (dispersed, read individually)
+energy_today = read_input_registers(0x0050, 1)[0]
+energy_total = read_input_registers(0x0052, 2)
+feedin_power = read_input_registers(0x0046, 2)
+```
+
+**Polling Strategy:**
+
+- High-frequency (1s): PV, Battery, Grid power
+- Medium-frequency (10s): Energy statistics
+- Low-frequency (60s): Temperatures, status
 
 **Holding Registers (Function Code 0x03):**
+
+**Note:** Holding register addresses shown are preliminary. Verify against protocol specification Section 5 (User Settings) before implementing write operations. Read-only mode recommended for initial deployment per REQ-CC-001.
 
 | Address | Field | Type | Scale | Unit | Access |
 |---------|-------|------|-------|------|--------|
@@ -713,7 +947,7 @@ class PollingCoordinator:
 - 2: Backup mode
 - 3: Manual mode
 
-*Run Mode (0x0047):*
+*Run Mode (0x0009):*
 - 0: Waiting
 - 1: Checking
 - 2: Normal
@@ -725,6 +959,11 @@ class PollingCoordinator:
 - 8: Self-testing
 - 9: Idle
 - 10: Standby
+
+*Battery Status (0x0019):*
+- 0: Idle/Stop
+- 1: Charging
+- 2: Discharging
 
 ### 6.2 REST API Specification
 
@@ -876,6 +1115,8 @@ control:
   require_authentication: true
   audit_log: /var/log/solax-monitor/audit.log
 ```
+
+[Return to Table of Contents](<#table of contents>)
 
 ---
 
@@ -1055,6 +1296,8 @@ control:
 - Rate limiting on API endpoints (100 requests/minute per IP)
 - Failed authentication lockout (5 attempts = 15-minute block)
 - Anomalous network traffic detection
+
+[Return to Table of Contents](<#table of contents>)
 
 ---
 
@@ -1241,6 +1484,8 @@ curl http://localhost:8080/api/v1/health
 - Failover time: <5 seconds
 - Database replication: InfluxDB clustering
 
+[Return to Table of Contents](<#table of contents>)
+
 ---
 
 ## 10. Testing Strategy
@@ -1264,7 +1509,7 @@ curl http://localhost:8080/api/v1/health
 ```python
 def test_register_scaling():
     """Verify correct scaling of register values."""
-    raw_value = 2305  # 230.5V
+    raw_value = 2305  # 230.5V from register 0x006A
     scaled = scale_voltage(raw_value)
     assert scaled == 230.5
 
@@ -1361,6 +1606,8 @@ def test_alert_dispatch():
 | AC-004 | Installation time <30 minutes | Timed installation procedure |
 | AC-005 | CPU utilization <10% | System monitoring |
 | AC-006 | Memory footprint <512MB | Resource monitoring |
+
+[Return to Table of Contents](<#table of contents>)
 
 ---
 
@@ -1527,6 +1774,8 @@ curl http://localhost:8080/api/v1/health
 6. Validate register mappings
 7. Resume normal operation
 
+[Return to Table of Contents](<#table of contents>)
+
 ---
 
 ## 12. Error Handling and Recovery
@@ -1615,6 +1864,8 @@ class CircuitBreaker:
             raise e
 ```
 
+[Return to Table of Contents](<#table of contents>)
+
 ---
 
 ## 13. Performance Optimization
@@ -1627,13 +1878,17 @@ Read contiguous registers in single operation:
 
 ```python
 # Inefficient: Multiple reads
-voltage = read_register(0x0000)
-current = read_register(0x0001)
-power = read_register(0x0002)
+pv1_voltage = read_register(0x0003)
+pv2_voltage = read_register(0x0004)
+pv1_current = read_register(0x0005)
 
 # Optimized: Batch read
-registers = read_registers(0x0000, 3)
-voltage, current, power = registers
+# Read PV parameters (9 registers)
+registers = read_registers(0x0003, 9)
+pv1_voltage = registers[0] * 0.1
+pv2_voltage = registers[1] * 0.1
+pv1_current = registers[2] * 0.1
+# ... etc
 ```
 
 **2. Connection Pooling**
@@ -1706,6 +1961,8 @@ END
 | CPU utilization | <10% | System monitoring |
 | Startup time | <10s | Systemd service metrics |
 
+[Return to Table of Contents](<#table of contents>)
+
 ---
 
 ## 14. Extensibility and Future Enhancements
@@ -1772,6 +2029,8 @@ class SunGrowPlugin(InverterPlugin):
 - Demand response integration
 - Virtual power plant capabilities
 
+[Return to Table of Contents](<#table of contents>)
+
 ---
 
 ## 15. Dependencies and Constraints
@@ -1823,6 +2082,8 @@ class SunGrowPlugin(InverterPlugin):
 4. **Protocol Stability**: Solax Modbus protocol remains backward-compatible
 5. **Resource Availability**: Sufficient storage for retention policies
 
+[Return to Table of Contents](<#table of contents>)
+
 ---
 
 ## 16. Compliance and Standards
@@ -1861,6 +2122,8 @@ class SunGrowPlugin(InverterPlugin):
 - Comprehensive audit logging
 - Change management procedures
 
+[Return to Table of Contents](<#table of contents>)
+
 ---
 
 ## 17. Glossary
@@ -1881,6 +2144,8 @@ class SunGrowPlugin(InverterPlugin):
 | TOU | Time of Use - Variable electricity pricing by time |
 | Unit ID | Modbus device identifier (slave address) |
 
+[Return to Table of Contents](<#table of contents>)
+
 ---
 
 ## 18. References
@@ -1890,6 +2155,8 @@ class SunGrowPlugin(InverterPlugin):
 1. Solax Modbus TCP/RTU Protocol V3.21 - `Hybrid-X1X3-G4-ModbusTCPRTU-V3.21-English_0622-public-version.pdf`
 2. Modbus Application Protocol Specification V1.1b3 - Modbus Organization
 3. Modbus Messaging on TCP/IP Implementation Guide V1.0b - Modbus Organization
+4. Register Map Verification Report - `docs/verification/register-map-verification-report.md`
+5. Design Specification Verification Checklist - `docs/verification/design-specification-verification-checklist.md`
 
 ### 18.2 Software Libraries
 
@@ -1903,17 +2170,42 @@ class SunGrowPlugin(InverterPlugin):
 2. IEEE 1547 - Standard for Interconnecting Distributed Resources with Electric Power Systems
 3. IEC 62109 - Safety of power converters for use in photovoltaic power systems
 
+[Return to Table of Contents](<#table of contents>)
+
 ---
 
 ## Appendix A: Register Reference Tables
 
 ### A.1 Complete Input Register Map
 
-[Detailed register map would be included here with all addresses, data types, scaling factors, units, and descriptions]
+See Section 6.1 for verified input register addresses.
+
+**Register Groups:**
+- PV Parameters: 0x0003-0x000B
+- Battery Parameters: 0x0014-0x001C
+- Energy Statistics: 0x0020, 0x0046-0x0047, 0x0050, 0x0052-0x0053
+- Grid Parameters: 0x006A-0x0075
+- Grid Energy: 0x0098-0x009B
+
+**Unverified Ranges:**
+The following register ranges require investigation:
+- 0x0000-0x0002
+- 0x000C-0x0013
+- 0x001D-0x001F
+- 0x0021-0x0045
+- 0x0048-0x004F, 0x0051, 0x0054-0x0069
+- 0x0076-0x0097
+- 0x009C onwards
+
+Consult Solax protocol specification for complete register documentation.
+
+[Return to Table of Contents](<#table of contents>)
 
 ### A.2 Complete Holding Register Map
 
 [Detailed holding register map would be included here with all configuration parameters]
+
+[Return to Table of Contents](<#table of contents>)
 
 ---
 
@@ -1975,6 +2267,8 @@ inverters:
     host: 192.168.1.103
     location: "Parking"
 ```
+
+[Return to Table of Contents](<#table of contents>)
 
 ---
 
@@ -2058,6 +2352,8 @@ Content-Type: application/json
 }
 ```
 
+[Return to Table of Contents](<#table of contents>)
+
 ---
 
 ## Appendix D: Troubleshooting Decision Tree
@@ -2083,13 +2379,16 @@ Connection Issue?
         └─ Check number of concurrent inverters
 ```
 
+[Return to Table of Contents](<#table of contents>)
+
 ---
 
 ## Document Control
 
 | Version | Date | Author | Changes |
-|---------|------|--------|---------|
+|---------|------|--------|---------|  
 | 1.0 | 2025-10-25 | System Architect | Initial release |
+| 1.1 | 2025-10-29 | System Architect | Register map corrections per POC validation |
 
 **Approval:**
 
