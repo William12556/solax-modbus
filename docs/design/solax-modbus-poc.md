@@ -766,7 +766,7 @@ value = (high << 16) | low  # 0x00011234 = 70,196W
 ### Software Requirements
 
 **Operating System:**
-- Linux (Debian, Ubuntu, Raspberry Pi OS)
+- Linux (Debian, Raspberry Pi OS)
 - Windows 10/11
 - macOS 10.15+
 
