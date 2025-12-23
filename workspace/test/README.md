@@ -16,4 +16,4 @@ Documents test plans, cases, and results per governance protocol P06.
 
 ---
 
-Copyright: Copyright (c) 2025 William Watson. This work is licensed under the MIT License.
+Copyright (c) 2025 William Watson. This work is licensed under the MIT License.

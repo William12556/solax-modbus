@@ -8,4 +8,4 @@ Stores detailed test execution outcomes, pass/fail status, and defect reports.
 
 ---
 
-Copyright: Copyright (c) 2025 William Watson. This work is licensed under the MIT License.
+Copyright (c) 2025 William Watson. This work is licensed under the MIT License.

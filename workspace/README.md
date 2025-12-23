@@ -16,4 +16,4 @@ Working directory for all active project documentation following governance prot
 
 ---
 
-Copyright: Copyright (c) 2025 William Watson. This work is licensed under the MIT License.
+Copyright (c) 2025 William Watson. This work is licensed under the MIT License.
