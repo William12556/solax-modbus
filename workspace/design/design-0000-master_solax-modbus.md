@@ -32,7 +32,6 @@ project_info:
   name: "solax-modbus"
   version: "0.1.0"
   date: "2025-12-30"
-  author: "William Watson"
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -657,21 +656,32 @@ logging:
 
 ## Design Element Cross-References
 
-### Tier 2 Domain Documents (Planned)
+### Tier 2 Domain Documents
 
 | Domain | Document | Status |
 |--------|----------|--------|
-| Protocol | design-XXXX-domain_protocol.md | Not created |
-| Data | design-XXXX-domain_data.md | Not created |
-| Monitoring | design-XXXX-domain_monitoring.md | Not created |
+| Protocol | [design-8f3a1b2c-domain_protocol.md](<design-8f3a1b2c-domain_protocol.md>) | Active |
+| Data | [design-9e4b2c3d-domain_data.md](<design-9e4b2c3d-domain_data.md>) | Active |
+| Presentation | [design-af5c3d4e-domain_presentation.md](<design-af5c3d4e-domain_presentation.md>) | Active |
+| Application | [design-bf6d4e5f-domain_application.md](<design-bf6d4e5f-domain_application.md>) | Active |
 
-### Tier 3 Component Documents (Planned)
+### Tier 3 Component Documents
 
-| Component | Document | Status |
-|-----------|----------|--------|
-| SolaxInverterClient | design-XXXX-component_protocol_client.md | Not created |
-| InverterDisplay | design-XXXX-component_data_display.md | Not created |
-| SolaxEmulator | design-XXXX-component_protocol_emulator.md | Not created |
+| Component | Domain | Document | Status |
+|-----------|--------|----------|--------|
+| SolaxInverterClient | Protocol | [design-c1a2b3d4-component_protocol_client.md](<design-c1a2b3d4-component_protocol_client.md>) | Active |
+| SolaxEmulator | Protocol | [design-c2b3c4d5-component_protocol_emulator.md](<design-c2b3c4d5-component_protocol_emulator.md>) | Active |
+| InverterController | Protocol | [design-f5e6f7a8-component_protocol_controller.md](<design-f5e6f7a8-component_protocol_controller.md>) | Active |
+| DataValidator | Data | [design-a6b7c8d9-component_data_validator.md](<design-a6b7c8d9-component_data_validator.md>) | Active |
+| TimeSeriesStore | Data | [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>) | Active |
+| DataBuffer | Data | [design-c8d9e0f1-component_data_buffer.md](<design-c8d9e0f1-component_data_buffer.md>) | Active |
+| InverterDisplay | Presentation | [design-d3c4d5e6-component_presentation_console.md](<design-d3c4d5e6-component_presentation_console.md>) | Active |
+| HTMLRenderer | Presentation | [design-d9e0f1a2-component_presentation_html.md](<design-d9e0f1a2-component_presentation_html.md>) | Active |
+| main | Application | [design-e4d5e6f7-component_application_main.md](<design-e4d5e6f7-component_application_main.md>) | Active |
+| AlertManager | Application | [design-e0f1a2b3-component_application_alerting.md](<design-e0f1a2b3-component_application_alerting.md>) | Active |
+| InverterPool | Application | [design-f1a2b3c4-component_application_pool.md](<design-f1a2b3c4-component_application_pool.md>) | Active |
+| NotificationDispatcher | Application | design-XXXX-component_application_notifications.md | Planned |
+| PollingCoordinator | Application | design-XXXX-component_application_coordinator.md | Planned |
 
 ### Source Code Mapping
 
@@ -697,9 +707,12 @@ logging:
 
 ## Version History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-12-30 | Claude | Initial master design reverse-engineered from source code. Distinguishes implemented vs planned components. Replaces design-0000-solax-modbus-master-design.md |
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | 2025-12-30 | Initial master design reverse-engineered from source code. Distinguishes implemented vs planned components. |
+| 1.1 | 2025-12-30 | Added Tier 2 domain document references: Protocol, Data, Presentation, Application. Updated planned Tier 3 component list. |
+| 1.2 | 2025-12-30 | Added Tier 3 component document references for implemented components: SolaxInverterClient, SolaxEmulator, InverterDisplay, main. |
+| 1.3 | 2025-12-30 | Added Tier 3 component document references for planned components: InverterController, DataValidator, TimeSeriesStore, DataBuffer, HTMLRenderer, AlertManager, InverterPool. Added NotificationDispatcher and PollingCoordinator as planned. |
 
 ---
 
