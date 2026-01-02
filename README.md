@@ -1,4 +1,4 @@
-# Solax Modbus Monitoring System
+-# Solax Modbus Monitoring System
 
 Real-time monitoring and control system for Solax X3 Hybrid 6.0-D solar inverters using Modbus TCP protocol.
 
