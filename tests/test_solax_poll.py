@@ -9,10 +9,10 @@ import time
 from unittest.mock import Mock, MagicMock, patch, call
 from pymodbus.exceptions import ModbusException
 
-# Import the module under test
+# Import from src directory
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from solax_poll import SolaxInverterClient, InverterDisplay
 
 
