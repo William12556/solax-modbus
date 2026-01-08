@@ -35,7 +35,7 @@ test_info:
   coupled_docs:
     prompt_ref: ""  # No prompt - tests already exist
     prompt_iteration: null
-    result_ref: ""  # Will be populated after execution
+    result_ref: "result-b2c3d4e5"  # Will be populated after execution
 ```
 
 [Return to Table of Contents](<#table of contents>)
