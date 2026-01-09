@@ -2,7 +2,7 @@
 
 ## Objective
 
-Reset the project `/Users/williamwatson/Documents/GitHub/solax-modbus` to achieve strict compliance with governance.md from `/Users/williamwatson/Documents/GitHub/LLM-Governance-and-Orchestration/ai/governance.md`.
+Reset the project `/Users/<user_name>/Documents/GitHub/solax-modbus` to achieve strict compliance with governance.md from `/Users/<user_name>/Documents/GitHub/LLM-Governance-and-Orchestration/ai/governance.md`.
 
 ---
 
@@ -147,7 +147,7 @@ Move governance/ → deprecated/governance_old/
 **2. Create new ai/ folder structure**
 ```
 Create ai/
-Copy from /Users/williamwatson/Documents/GitHub/LLM-Governance-and-Orchestration/ai/:
+Copy from /Users/<user_name>/Documents/GitHub/LLM-Governance-and-Orchestration/ai/:
   - governance.md
   - instructions.md
   - obsidian_markdown_guidelines.md
@@ -204,9 +204,9 @@ Document all archived items.
 Start a new conversation and paste this prompt:
 
 ```
-Read governance.md from /Users/williamwatson/Documents/GitHub/LLM-Governance-and-Orchestration/ai/governance.md
+Read governance.md from /Users/<user_name>/Documents/GitHub/LLM-Governance-and-Orchestration/ai/governance.md
 
-Reset the project /Users/williamwatson/Documents/GitHub/solax-modbus to achieve strict compliance with governance.md P01.2.6.
+Reset the project /Users/<user_name>/Documents/GitHub/solax-modbus to achieve strict compliance with governance.md P01.2.6.
 
 Follow the step-by-step procedure:
 1. Archive governance/ folder to deprecated/governance_old/

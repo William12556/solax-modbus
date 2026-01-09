@@ -21,7 +21,7 @@ Created: 2026 January 09
 **On development Mac:**
 ```bash
 # Verify you're in project root
-pwd  # Should show: /Users/williamwatson/Documents/GitHub/solax-modbus
+pwd  # Should show: /Users/<user_name>/Documents/GitHub/solax-modbus
 
 # Verify build tools available
 python3 --version  # Should be 3.9+
@@ -41,7 +41,7 @@ ping <inverter-ip>
 
 **Working directory: Project root on Mac**
 ```bash
-cd /Users/williamwatson/Documents/GitHub/solax-modbus
+cd /Users/<user_name>/Documents/GitHub/solax-modbus
 
 # Clean previous builds
 rm -rf dist/ build/ *.egg-info/
@@ -136,7 +136,7 @@ Service logs should show successful Modbus connection and telemetry display.
 - Python 3.9+
 - Build tools: `pip install build`
 - Git repository clone
-- Working directory: Project root (`/Users/williamwatson/Documents/GitHub/solax-modbus`)
+- Working directory: Project root (`/Users/<user_name>/Documents/GitHub/solax-modbus`)
 
 **Raspberry Pi:**
 - Debian-based OS (tested on Debian 12)
@@ -150,10 +150,10 @@ Service logs should show successful Modbus connection and telemetry display.
 **Working directory: Project root on Mac**
 ```bash
 # Navigate to project root
-cd /Users/williamwatson/Documents/GitHub/solax-modbus
+cd /Users/<user_name>/Documents/GitHub/solax-modbus
 
 # Verify location
-pwd  # Should output: /Users/williamwatson/Documents/GitHub/solax-modbus
+pwd  # Should output: /Users/<user_name>/Documents/GitHub/solax-modbus
 
 # Install build tools (one-time)
 pip install build
@@ -271,7 +271,7 @@ Service starts automatically. Successful installation shows:
 **Working directory: Project root on Mac**
 ```bash
 # Build new version
-cd /Users/williamwatson/Documents/GitHub/solax-modbus
+cd /Users/<user_name>/Documents/GitHub/solax-modbus
 ./build.sh
 
 # Transfer to Pi
@@ -413,10 +413,10 @@ python3 -c "import solax_modbus"  # Should fail with ModuleNotFoundError
 **Working directory: Project root on Mac**
 ```bash
 # Navigate to project root
-cd /Users/williamwatson/Documents/GitHub/solax-modbus
+cd /Users/<user_name>/Documents/GitHub/solax-modbus
 
 # Verify location
-pwd  # Should output: /Users/williamwatson/Documents/GitHub/solax-modbus
+pwd  # Should output: /Users/<user_name>/Documents/GitHub/solax-modbus
 ```
 
 **Setup (one-time):**
