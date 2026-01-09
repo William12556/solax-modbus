@@ -5,7 +5,9 @@ Created: 2026 January 09
 ## Table of Contents
 
 - [1. Quick Start](<#1 quick start>)
-- [2. Build and Deploy](<#2 build and deploy>)
+- [2. Deployment Methods](<#2 deployment methods>)
+  - [2.1. Scripted Deployment (Recommended)](<#2 1 scripted deployment (recommended)>)
+  - [2.2. Manual Deployment](<#2 2 manual deployment>)
 - [3. Service Operations](<#3 service operations>)
 - [4. Uninstallation](<#4 uninstallation>)
 - [5. Testing](<#5 testing>)
@@ -43,10 +45,12 @@ ping <inverter-ip>
 ```bash
 cd /Users/<user_name>/Documents/GitHub/solax-modbus
 
-# Clean previous builds
-rm -rf dist/ build/ *.egg-info/
+# Use build script (recommended)
+chmod +x build.sh
+./build.sh
 
-# Build distribution
+# Or build manually:
+rm -rf dist/ build/ *.egg-info/
 python3 -m build
 
 # Verify output
@@ -80,7 +84,7 @@ sudo ./venv/bin/pip install /tmp/solax_modbus-*.whl
 ./venv/bin/python -c "import solax_modbus; print(solax_modbus.__version__)"
 ```
 
-### 1.4. Configure Service
+### 1.4. Configure and Start Service
 
 Create systemd service file:
 
@@ -128,9 +132,192 @@ Service logs should show successful Modbus connection and telemetry display.
 
 [Return to Table of Contents](<#table of contents>)
 
-## 2. Build and Deploy
+## 2. Deployment Methods
 
-### 2.1. Prerequisites
+### 2.1. Scripted Deployment (Recommended)
+
+Automated deployment using `build.sh` and `install.sh` scripts.
+
+#### 2.1.1. Prerequisites
+
+**Development machine:**
+- Python 3.9+
+- Build module: `pip install build`
+- Git repository clone
+- Working directory: Project root (`/Users/<user_name>/Documents/GitHub/solax-modbus`)
+
+**Raspberry Pi:**
+- Debian-based OS (tested on Debian 12)
+- Python 3.9+
+- Network connectivity to inverter
+- Root/sudo access
+- Sufficient disk space (100MB minimum)
+
+#### 2.1.2. Initial Installation
+
+**Step 1: Build on Mac**
+
+```bash
+cd /Users/<user_name>/Documents/GitHub/solax-modbus
+
+# Make script executable (one-time)
+chmod +x build.sh
+
+# Run build script
+./build.sh
+```
+
+Script output shows:
+- Version extracted from `pyproject.toml`
+- Build artifacts created in `dist/`
+- Wheel filename for transfer
+
+**Step 2: Transfer to Pi**
+
+```bash
+# Transfer wheel (adjust hostname as needed)
+scp dist/solax_modbus-*.whl pi@raspberrypi:/tmp/
+```
+
+**Step 3: Initial Setup on Pi**
+
+```bash
+# Connect to Pi
+ssh pi@raspberrypi
+
+# Create installation directory
+sudo mkdir -p /opt/solax-monitor
+cd /opt/solax-monitor
+
+# Create virtual environment
+sudo python3 -m venv venv
+
+# Install package
+sudo ./venv/bin/pip install /tmp/solax_modbus-*.whl
+
+# Verify installation
+./venv/bin/python -c "import solax_modbus; print(solax_modbus.__version__)"
+```
+
+**Step 4: Configure Systemd Service**
+
+Create service file:
+
+```bash
+sudo tee /etc/systemd/system/solax-monitor.service << 'EOF'
+[Unit]
+Description=Solax X3 Hybrid Inverter Monitor
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/solax-monitor
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/solax-monitor/venv/bin/solax-monitor --ip <INVERTER-IP> --interval 5
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+```
+
+**Replace `<INVERTER-IP>` with your inverter's IP address.**
+
+Enable and start:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable solax-monitor
+sudo systemctl start solax-monitor
+
+# Verify
+sudo systemctl status solax-monitor
+```
+
+#### 2.1.3. Updates
+
+**Step 1: Build on Mac**
+
+```bash
+cd /Users/<user_name>/Documents/GitHub/solax-modbus
+./build.sh
+```
+
+**Step 2: Transfer to Pi**
+
+```bash
+scp dist/solax_modbus-*.whl pi@raspberrypi:/tmp/
+```
+
+**Step 3: Install on Pi**
+
+```bash
+# Connect to Pi
+ssh pi@raspberrypi
+
+# Transfer install script (one-time)
+scp /Users/<user_name>/Documents/GitHub/solax-modbus/install.sh .
+chmod +x install.sh
+
+# Run install script
+./install.sh solax_modbus-X.Y.Z-py3-none-any.whl
+```
+
+Script performs:
+1. Stops service
+2. Uninstalls old version
+3. Clears package cache
+4. Installs new version
+5. Verifies installation
+6. Starts service
+7. Shows service status
+
+**Verification:**
+
+```bash
+# Monitor logs for proper startup
+sudo journalctl -u solax-monitor -f
+```
+
+#### 2.1.4. Script Details
+
+**build.sh features:**
+- Verifies Python 3.9+ installed
+- Verifies build module available
+- Extracts version from `pyproject.toml`
+- Updates `__init__.py` with version
+- Cleans previous build artifacts
+- Creates wheel distribution
+- Verifies wheel exists
+- Displays transfer command
+
+**install.sh features:**
+- Requires wheel filename as argument
+- Stops service gracefully
+- Performs clean uninstall
+- Clears package cache
+- Installs from `/tmp/` location
+- Verifies installed version matches wheel
+- Restarts service
+- Displays service status
+
+**Error handling:**
+- Scripts exit on first error (`set -e`)
+- Prerequisite checks before operations
+- Version mismatch detection
+- Clear error messages with remediation guidance
+
+[Return to Table of Contents](<#table of contents>)
+
+### 2.2. Manual Deployment
+
+Manual deployment for non-standard configurations or troubleshooting.
+
+#### 2.2.1. Prerequisites
 
 **Development machine:**
 - Python 3.9+
@@ -145,7 +332,7 @@ Service logs should show successful Modbus connection and telemetry display.
 - Root/sudo access
 - Sufficient disk space (100MB minimum)
 
-### 2.2. Build Distribution
+#### 2.2.2. Build Distribution
 
 **Working directory: Project root on Mac**
 ```bash
@@ -170,7 +357,7 @@ python3 -m build
 ls -lh dist/  # Should show: solax_modbus-0.1.0-py3-none-any.whl
 ```
 
-### 2.3. Transfer to Pi
+#### 2.2.3. Transfer to Pi
 
 **Working directory: Project root on Mac**
 ```bash
@@ -181,7 +368,7 @@ scp dist/solax_modbus-*.whl pi@raspberrypi:/tmp/
 ssh pi@raspberrypi 'ls -lh /tmp/solax_modbus-*.whl'
 ```
 
-### 2.4. Install on Pi
+#### 2.2.4. Install on Pi
 
 **Working directory: Any directory on Pi**
 ```bash
@@ -208,7 +395,7 @@ sudo ./venv/bin/pip install /tmp/solax_modbus-*.whl
 ./venv/bin/solax-monitor --help
 ```
 
-### 2.5. Configure Systemd Service
+#### 2.2.5. Configure Systemd Service
 
 Create service file with your inverter IP:
 
@@ -266,13 +453,13 @@ Service starts automatically. Successful installation shows:
 - Telemetry data displayed in logs
 - No error messages in journalctl output
 
-### 2.6. Update Deployment
+#### 2.2.6. Update Deployment
 
 **Working directory: Project root on Mac**
 ```bash
 # Build new version
 cd /Users/<user_name>/Documents/GitHub/solax-modbus
-./build.sh
+python3 -m build
 
 # Transfer to Pi
 scp dist/solax_modbus-*.whl pi@raspberrypi:/tmp/
@@ -283,11 +470,7 @@ scp dist/solax_modbus-*.whl pi@raspberrypi:/tmp/
 # Connect to Pi
 ssh pi@raspberrypi
 
-# Use install script (preferred)
-chmod +x install.sh
-./install.sh solax_modbus-X.Y.Z-py3-none-any.whl
-
-# Or manually:
+# Manual upgrade
 sudo systemctl stop solax-monitor
 sudo /opt/solax-monitor/venv/bin/pip install --upgrade /tmp/solax_modbus-*.whl
 sudo systemctl start solax-monitor
@@ -295,6 +478,8 @@ sudo systemctl start solax-monitor
 # Verify upgrade
 sudo journalctl -u solax-monitor -n 50
 ```
+
+**Note:** For automated updates, use [Scripted Deployment](<#2 1 scripted deployment (recommended)>) method.
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -620,8 +805,9 @@ sudo journalctl -u solax-monitor | grep "Grid\|PV\|Battery"
 ## 7. Version History
 
 | Version | Date | Changes |
-|---------|------|---------|
+|---------|---------|---------|
 | 1.0 | 2026-01-09 | Initial deployment guide |
+| 1.1 | 2026-01-09 | Added scripted deployment workflow using build.sh and install.sh |
 
 ---
 
