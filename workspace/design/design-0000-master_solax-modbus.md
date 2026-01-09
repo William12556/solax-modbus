@@ -52,7 +52,6 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 - Modbus TCP emulator for development testing
 - Future: Time-series data storage (InfluxDB)
 - Future: Monitoring and alerting
-- Future: Control and configuration
 
 ### Out of Scope
 
@@ -126,7 +125,7 @@ flowchart LR
 | Emulator | ✓ Implemented | Test server with dynamic state simulation |
 | Data persistence | ○ Planned | InfluxDB time-series storage |
 | Alerting | ○ Planned | Threshold monitoring and notifications |
-| Control operations | ○ Planned | Write to holding registers |
+
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -151,7 +150,6 @@ flowchart TD
     subgraph "Planned"
         STORE[TimeSeriesStore<br/>InfluxDB]
         MONITOR[AlertManager<br/>Notifications]
-        CONTROL[InverterController<br/>Write Operations]
     end
     
     CLI --> CLIENT
@@ -160,14 +158,12 @@ flowchart TD
     
     CLIENT -.-> STORE
     CLIENT -.-> MONITOR
-    CLIENT -.-> CONTROL
     
     style CLI fill:#90EE90
     style CLIENT fill:#90EE90
     style DISPLAY fill:#90EE90
     style STORE fill:#FFE4B5
     style MONITOR fill:#FFE4B5
-    style CONTROL fill:#FFE4B5
 ```
 
 ### Technology Stack
@@ -255,7 +251,6 @@ target_platform:
 | TimeSeriesStore | High | influxdb-client |
 | DataValidator | High | None |
 | AlertManager | Medium | smtplib, requests |
-| InverterController | Medium | SolaxInverterClient |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -441,21 +436,7 @@ stateDiagram-v2
 - Webhook (HTTP POST)
 - Local syslog
 
----
 
-### InverterController (Planned)
-
-**Purpose:** Execute write operations to inverter holding registers.
-
-**Writable Registers:**
-
-| Address | Name | Description |
-|---------|------|-------------|
-| 0x001F | Operating Mode | 0=Self-use, 1=Feed-in, 2=Backup |
-| 0x0020-0x0023 | Charge Window | Start/end hour/minute |
-| 0x0024-0x0027 | Discharge Window | Start/end hour/minute |
-| 0x0028 | Charge Power Limit | Watts |
-| 0x0029 | Discharge Power Limit | Watts |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -652,7 +633,7 @@ logging:
 |-----------|--------|----------|--------|
 | SolaxInverterClient | Protocol | [design-c1a2b3d4-component_protocol_client.md](<design-c1a2b3d4-component_protocol_client.md>) | Active |
 | SolaxEmulator | Protocol | [design-c2b3c4d5-component_protocol_emulator.md](<design-c2b3c4d5-component_protocol_emulator.md>) | Active |
-| InverterController | Protocol | [design-f5e6f7a8-component_protocol_controller.md](<design-f5e6f7a8-component_protocol_controller.md>) | Active |
+
 | DataValidator | Data | [design-a6b7c8d9-component_data_validator.md](<design-a6b7c8d9-component_data_validator.md>) | Active |
 | TimeSeriesStore | Data | [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>) | Active |
 | DataBuffer | Data | [design-c8d9e0f1-component_data_buffer.md](<design-c8d9e0f1-component_data_buffer.md>) | Active |
@@ -687,12 +668,13 @@ logging:
 ## Version History
 
 | Version | Date | Changes |
-|---------|------|---------|
+|---------|---------|---------|
 | 1.0 | 2025-12-30 | Initial master design reverse-engineered from source code. Distinguishes implemented vs planned components. |
 | 1.1 | 2025-12-30 | Added Tier 2 domain document references: Protocol, Data, Presentation, Application. Updated planned Tier 3 component list. |
 | 1.2 | 2025-12-30 | Added Tier 3 component document references for implemented components: SolaxInverterClient, SolaxEmulator, InverterDisplay, main. |
 | 1.3 | 2025-12-30 | Added Tier 3 component document references for planned components: InverterController, DataValidator, TimeSeriesStore, DataBuffer, HTMLRenderer, AlertManager, InverterPool. Added NotificationDispatcher and PollingCoordinator as planned. |
 | 1.4 | 2026-01-08 | Removed multi-inverter support from scope. Removed InverterPool and PollingCoordinator components. Removed InverterPool section. Updated component diagrams and tables. |
+| 1.5 | 2026-01-09 | Removed all control/write operations. System is read-only monitoring only. Removed InverterController component and references. Updated scope, architecture diagrams, and component tables. |
 
 ---
 

@@ -47,7 +47,7 @@ Encapsulate all Modbus TCP communication with Solax inverters. Provides abstract
 
 **Owns:**
 - Modbus TCP client connection management
-- Register read/write operations
+- Register read operations
 - Protocol-level error handling and retry logic
 - Data type conversion (signed/unsigned, scaling)
 - Emulator for development testing
@@ -63,7 +63,7 @@ Encapsulate all Modbus TCP communication with Solax inverters. Provides abstract
 | Responsibility | Description |
 |----------------|-------------|
 | Connection lifecycle | Establish, maintain, and terminate TCP connections |
-| Register operations | Read input registers, write holding registers |
+| Register operations | Read input registers |
 | Data conversion | Apply scaling factors, handle signed integers |
 | Error recovery | Retry with exponential backoff on transient failures |
 | Test infrastructure | Provide emulator for offline development |
@@ -73,7 +73,6 @@ Encapsulate all Modbus TCP communication with Solax inverters. Provides abstract
 | Term | Definition |
 |------|------------|
 | Input Register | Read-only register (function code 0x04) |
-| Holding Register | Read-write register (function code 0x03/0x06) |
 | Unit ID | Modbus slave address identifier |
 | Scaling Factor | Multiplier to convert raw register to engineering units |
 
@@ -93,7 +92,6 @@ The Protocol domain implements the Modbus TCP client and server (emulator) funct
 flowchart LR
     subgraph "Protocol Domain"
         CLIENT[SolaxInverterClient]
-        CTRL[InverterController]
         EMU[SolaxEmulator]
     end
     
@@ -107,16 +105,12 @@ flowchart LR
     
     APP -->|poll request| CLIENT
     CLIENT -->|telemetry dict| APP
-    APP -->|control command| CTRL
-    CTRL -->|result| APP
     
     CLIENT <-->|Modbus TCP| INV
-    CTRL <-->|Modbus TCP| INV
     CLIENT <-->|Modbus TCP| EMU
     
     style CLIENT fill:#90EE90
     style EMU fill:#90EE90
-    style CTRL fill:#FFE4B5
 ```
 
 **Legend:**
@@ -132,7 +126,6 @@ flowchart LR
 | Data scaling | ✓ Implemented | Apply register scaling factors |
 | Signed conversion | ✓ Implemented | Two's complement handling |
 | Emulator server | ✓ Implemented | Dynamic state simulation |
-| Write holding registers | ○ Planned | Function code 0x06 |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -150,19 +143,16 @@ Adapter pattern isolating protocol specifics from business logic.
 flowchart TD
     subgraph "Protocol Domain"
         CLIENT[SolaxInverterClient]
-        CTRL[InverterController]
         EMU[SolaxEmulator]
         REG[Register Definitions]
     end
     
     CLIENT --> REG
-    CTRL --> CLIENT
     EMU --> REG
     
     style CLIENT fill:#90EE90
     style EMU fill:#90EE90
     style REG fill:#90EE90
-    style CTRL fill:#FFE4B5
 ```
 
 ### Technology Stack
@@ -180,10 +170,8 @@ technology_stack:
 ```
 src/
 ├── solax_poll.py           # SolaxInverterClient
-├── emulator/
-│   └── solax_emulator.py   # SolaxEmulator
-└── controller/             # (planned)
-    └── inverter_controller.py
+└── emulator/
+    └── solax_emulator.py   # SolaxEmulator
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -198,7 +186,6 @@ src/
 |-----------|------|--------|---------|
 | SolaxInverterClient | solax_poll.py | Implemented | Modbus TCP client |
 | SolaxEmulator | emulator/solax_emulator.py | Implemented | Test server |
-| InverterController | controller/inverter_controller.py | Planned | Write operations |
 
 ### SolaxInverterClient
 
@@ -258,31 +245,7 @@ stateDiagram-v2
     }
 ```
 
----
 
-### InverterController (Planned)
-
-**Tier 3 Document:** [design-XXXX-component_protocol_controller.md](planned)
-
-**Purpose:** Execute write operations to inverter holding registers.
-
-**Key Responsibilities:**
-- Write holding registers (0x06)
-- Validate values against constraints
-- Provide audit logging interface
-- Support rollback on failure
-
-**Writable Registers:**
-
-| Address | Name | Range | Description |
-|---------|------|-------|-------------|
-| 0x001F | Operating Mode | 0-3 | Self-use, Feed-in, Backup, Manual |
-| 0x0020 | Charge Start Hour | 0-23 | Hour |
-| 0x0021 | Charge Start Minute | 0-59 | Minute |
-| 0x0022 | Charge End Hour | 0-23 | Hour |
-| 0x0023 | Charge End Minute | 0-59 | Minute |
-| 0x0028 | Charge Power Limit | 0-6000 | Watts |
-| 0x0029 | Discharge Power Limit | 0-6000 | Watts |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -306,9 +269,6 @@ class ProtocolInterface:
         
     def poll_inverter(self) -> Dict[str, Any]:
         """Read all telemetry registers and return processed data."""
-        
-    def write_register(self, address: int, value: int) -> bool:
-        """Write value to holding register (planned)."""
 ```
 
 ### Internal Interfaces
@@ -354,7 +314,7 @@ def _to_unsigned_32(self, low: int, high: int) -> int:
 |-----------|-------|
 | Protocol | Modbus TCP/IP |
 | Port | 502 (configurable) |
-| Function Codes | 0x04 (read input), 0x03 (read holding), 0x06 (write single) |
+| Function Codes | 0x04 (read input registers) |
 | Timeout | 3 seconds |
 | Byte Order | Big-endian |
 | Word Order | Big-endian |
@@ -412,7 +372,6 @@ logging:
 |-----------|----------|--------|
 | SolaxInverterClient | [design-c1a2b3d4-component_protocol_client.md](<design-c1a2b3d4-component_protocol_client.md>) | Active |
 | SolaxEmulator | [design-c2b3c4d5-component_protocol_emulator.md](<design-c2b3c4d5-component_protocol_emulator.md>) | Active |
-| InverterController | [design-f5e6f7a8-component_protocol_controller.md](<design-f5e6f7a8-component_protocol_controller.md>) | Active |
 
 ### Sibling Domain Documents
 
@@ -428,7 +387,6 @@ logging:
 |-----------|------|
 | SolaxInverterClient | src/solax_poll.py |
 | SolaxEmulator | src/emulator/solax_emulator.py |
-| InverterController | src/controller/inverter_controller.py (planned) |
 
 ### Reference Documents
 
@@ -447,6 +405,7 @@ logging:
 | 1.0 | 2025-12-30 | Initial domain design |
 | 1.1 | 2025-12-30 | Added Tier 3 component document references |
 | 1.2 | 2025-12-30 | Added InverterController component document |
+| 1.3 | 2026-01-09 | Removed all control/write operations. System is read-only. Removed InverterController component and references. Updated scope, boundaries, diagrams, and interfaces. |
 
 ---
 
