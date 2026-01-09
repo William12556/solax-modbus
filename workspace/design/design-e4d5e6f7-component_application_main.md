@@ -33,7 +33,7 @@ component_info:
   version: "1.0"
   date: "2025-12-30"
   status: "Implemented"
-  source_file: "src/solax_poll.py"
+  source_file: "src/solax_modbus/main.py"
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -70,7 +70,7 @@ Application entry point providing CLI argument parsing and polling loop orchestr
 ### File Location
 
 ```
-src/solax_poll.py (lines 313-395)
+src/solax_modbus/main.py (lines 313-395)
 ```
 
 ### Dependencies
@@ -168,7 +168,7 @@ parser.add_argument('--debug', action='store_true',
 
 ```bash
 # Basic usage
-python solax_poll.py 192.168.1.100
+solax-monitor 192.168.1.100
 
 # Custom port and interval
 python solax_poll.py 192.168.1.100 --port 5020 --interval 10
@@ -297,7 +297,7 @@ logging.basicConfig(
 ### Normal Operation
 
 ```bash
-$ python src/solax_poll.py 192.168.1.100 --interval 5
+$ solax-monitor 192.168.1.100 --interval 5
 
 ========================================
      SOLAX INVERTER TELEMETRY
@@ -327,7 +327,7 @@ $ python src/solax_poll.py 192.168.1.100 --debug
 
 ```bash
 # Terminal 1
-$ python src/emulator/solax_emulator.py --port 5020
+$ python src/solax_modbus/emulator/solax_emulator.py --port 5020
 
 # Terminal 2
 $ python src/solax_poll.py localhost --port 5020
@@ -361,8 +361,8 @@ $ python src/solax_poll.py localhost --port 5020
 
 | Item | Location |
 |------|----------|
-| Function | src/solax_poll.py:313-395 |
-| Unit tests | src/tests/test_solax_poll.py |
+| Function | src/solax_modbus/main.py:313-395 |
+| Unit tests | tests/test_solax_poll.py |
 
 [Return to Table of Contents](<#table of contents>)
 

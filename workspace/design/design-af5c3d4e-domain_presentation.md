@@ -167,7 +167,7 @@ technology_stack:
 
 ```
 src/
-├── solax_poll.py           # InverterDisplay (current location)
+├── main.py                 # InverterDisplay (current location)
 ├── presentation/           # (planned refactor)
 │   ├── __init__.py
 │   ├── console.py          # InverterDisplay
@@ -187,7 +187,7 @@ src/
 
 | Component | File | Status | Purpose |
 |-----------|------|--------|---------|
-| InverterDisplay | solax_poll.py | Implemented | Console output |
+| InverterDisplay | main.py | Implemented | Console output |
 | HTMLRenderer | presentation/html.py | Planned | Web page generation |
 | Formatters | presentation/formatters.py | Partial | Value formatting |
 
@@ -403,7 +403,7 @@ logging:
 
 | Component | File |
 |-----------|------|
-| InverterDisplay | src/solax_poll.py |
+| InverterDisplay | src/solax_modbus/main.py |
 | HTMLRenderer | src/presentation/html.py (planned) |
 | Formatters | src/presentation/formatters.py (planned) |
 

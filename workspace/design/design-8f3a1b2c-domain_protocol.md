@@ -169,7 +169,7 @@ technology_stack:
 
 ```
 src/
-├── solax_poll.py           # SolaxInverterClient
+├── main.py                 # SolaxInverterClient
 └── emulator/
     └── solax_emulator.py   # SolaxEmulator
 ```
@@ -184,7 +184,7 @@ src/
 
 | Component | File | Status | Purpose |
 |-----------|------|--------|---------|
-| SolaxInverterClient | solax_poll.py | Implemented | Modbus TCP client |
+| SolaxInverterClient | main.py | Implemented | Modbus TCP client |
 | SolaxEmulator | emulator/solax_emulator.py | Implemented | Test server |
 
 ### SolaxInverterClient
@@ -385,8 +385,8 @@ logging:
 
 | Component | File |
 |-----------|------|
-| SolaxInverterClient | src/solax_poll.py |
-| SolaxEmulator | src/emulator/solax_emulator.py |
+| SolaxInverterClient | src/solax_modbus/main.py |
+| SolaxEmulator | src/solax_modbus/emulator/solax_emulator.py |
 
 ### Reference Documents
 

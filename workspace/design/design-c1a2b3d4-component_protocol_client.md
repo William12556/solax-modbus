@@ -34,7 +34,7 @@ component_info:
   version: "1.0"
   date: "2025-12-30"
   status: "Implemented"
-  source_file: "src/solax_poll.py"
+  source_file: "src/solax_modbus/main.py"
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -73,7 +73,7 @@ Modbus TCP client for Solax X3 Hybrid inverter communication. Provides connectio
 ### File Location
 
 ```
-src/solax_poll.py (lines 1-218)
+src/solax_modbus/main.py (lines 1-218)
 ```
 
 ### Dependencies
@@ -551,8 +551,8 @@ if client.connect():
 
 | Item | Location |
 |------|----------|
-| Class | src/solax_poll.py:1-218 |
-| Unit tests | src/tests/test_solax_poll.py |
+| Class | src/solax_modbus/main.py:1-218 |
+| Unit tests | tests/test_solax_poll.py |
 
 ### Reference Documents
 

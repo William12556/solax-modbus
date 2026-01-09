@@ -16,9 +16,15 @@ dev = [
     "pytest-cov>=4.0.0",
 ]
 
+[project.scripts]
+solax-monitor = "solax_modbus.main:main"
+
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "build>=0.10.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

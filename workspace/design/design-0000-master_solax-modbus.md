@@ -92,7 +92,7 @@ flowchart LR
     end
     
     subgraph "solax-modbus System"
-        POLL[solax_poll.py]
+        POLL[main.py]
     end
     
     subgraph "Future Components"
@@ -196,11 +196,12 @@ solax-modbus/
 │   └── trace/
 ├── docs/                     # Reference documentation
 ├── src/                      # Source code
-│   ├── solax_poll.py         # Main polling client
-│   ├── emulator/
-│   │   └── solax_emulator.py # Test server
-│   └── tests/
-│       └── test_solax_poll.py
+│   └── solax_modbus/         # Package
+│       ├── __init__.py       # Version tracking
+│       ├── main.py           # Main polling client
+│       ├── emulator/
+│       │   └── solax_emulator.py # Test server
+│       └── tests/
 └── tests/                    # Root test directory
 ```
 
@@ -238,11 +239,11 @@ target_platform:
 
 | Component | File | Lines | Test Coverage |
 |-----------|------|-------|---------------|
-| SolaxInverterClient | src/solax_poll.py | 1-218 | Yes |
-| InverterDisplay | src/solax_poll.py | 221-310 | Yes |
-| main() | src/solax_poll.py | 313-395 | Partial |
-| SolaxEmulatorState | src/emulator/solax_emulator.py | Full | No |
-| DynamicModbusDataBlock | src/emulator/solax_emulator.py | Full | No |
+| SolaxInverterClient | src/solax_modbus/main.py | 1-218 | Yes |
+| InverterDisplay | src/solax_modbus/main.py | 221-310 | Yes |
+| main() | src/solax_modbus/main.py | 313-395 | Partial |
+| SolaxEmulatorState | src/solax_modbus/emulator/solax_emulator.py | Full | No |
+| DynamicModbusDataBlock | src/solax_modbus/emulator/solax_emulator.py | Full | No |
 
 ### Planned Components
 
@@ -260,7 +261,7 @@ target_platform:
 
 ### SolaxInverterClient (Implemented)
 
-**File:** `src/solax_poll.py`
+**File:** `src/solax_modbus/main.py`
 
 **Purpose:** Modbus TCP client for inverter communication with retry logic and register processing.
 
@@ -375,7 +376,7 @@ stateDiagram-v2
 
 ### SolaxEmulatorState (Implemented)
 
-**File:** `src/emulator/solax_emulator.py`
+**File:** `src/solax_modbus/emulator/solax_emulator.py`
 
 **Purpose:** Modbus TCP server emulating Solax X3 Hybrid inverter for testing.
 
@@ -647,12 +648,13 @@ logging:
 
 | Component | File |
 |-----------|------|
-| SolaxInverterClient | src/solax_poll.py |
-| InverterDisplay | src/solax_poll.py |
-| main | src/solax_poll.py |
-| SolaxEmulatorState | src/emulator/solax_emulator.py |
-| DynamicModbusDataBlock | src/emulator/solax_emulator.py |
-| Unit tests | src/tests/test_solax_poll.py |
+| Package initialization | src/solax_modbus/__init__.py |
+| SolaxInverterClient | src/solax_modbus/main.py |
+| InverterDisplay | src/solax_modbus/main.py |
+| main | src/solax_modbus/main.py |
+| SolaxEmulatorState | src/solax_modbus/emulator/solax_emulator.py |
+| DynamicModbusDataBlock | src/solax_modbus/emulator/solax_emulator.py |
+| Unit tests | tests/test_solax_poll.py |
 
 ### Reference Documents
 
@@ -675,6 +677,7 @@ logging:
 | 1.3 | 2025-12-30 | Added Tier 3 component document references for planned components: InverterController, DataValidator, TimeSeriesStore, DataBuffer, HTMLRenderer, AlertManager, InverterPool. Added NotificationDispatcher and PollingCoordinator as planned. |
 | 1.4 | 2026-01-08 | Removed multi-inverter support from scope. Removed InverterPool and PollingCoordinator components. Removed InverterPool section. Updated component diagrams and tables. |
 | 1.5 | 2026-01-09 | Removed all control/write operations. System is read-only monitoring only. Removed InverterController component and references. Updated scope, architecture diagrams, and component tables. |
+| 1.6 | 2026-01-09 | Updated file paths for Python package structure. Changed src/solax_poll.py to src/solax_modbus/main.py and src/emulator/ to src/solax_modbus/emulator/. Added package initialization file. |
 
 ---
 

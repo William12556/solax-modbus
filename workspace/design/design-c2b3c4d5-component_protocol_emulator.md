@@ -32,7 +32,7 @@ component_info:
   version: "1.0"
   date: "2025-12-30"
   status: "Implemented"
-  source_file: "src/emulator/solax_emulator.py"
+  source_file: "src/solax_modbus/emulator/solax_emulator.py"
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -70,7 +70,7 @@ Modbus TCP server emulating a Solax X3 Hybrid 6.0-D inverter for development and
 ### File Location
 
 ```
-src/emulator/solax_emulator.py
+src/solax_modbus/emulator/solax_emulator.py
 ```
 
 ### Dependencies
@@ -295,7 +295,7 @@ python src/emulator/solax_emulator.py --port 5020
 python src/emulator/solax_emulator.py --port 5020
 
 # Terminal 2: Connect client
-python src/solax_poll.py localhost --port 5020
+python src/solax_modbus/main.py localhost --port 5020
 ```
 
 ### Programmatic Usage

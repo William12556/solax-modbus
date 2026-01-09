@@ -182,7 +182,7 @@ technology_stack:
 
 ```
 src/
-├── solax_poll.py           # main() entry point
+├── main.py                 # main() entry point
 ├── application/            # (planned)
 │   ├── __init__.py
 │   ├── config.py           # Configuration management
@@ -200,7 +200,7 @@ src/
 
 | Component | File | Status | Purpose |
 |-----------|------|--------|---------|
-| main | solax_poll.py | Implemented | Entry point |
+| main | main.py | Implemented | Entry point |
 | AlertManager | application/alerting.py | Planned | Threshold monitoring |
 | NotificationDispatcher | application/notifications.py | Planned | Alert delivery |
 
@@ -496,7 +496,7 @@ alerts:
 
 | Component | File |
 |-----------|------|
-| main | src/solax_poll.py |
+| main | src/solax_modbus/main.py |
 | AlertManager | src/application/alerting.py (planned) |
 | NotificationDispatcher | src/application/notifications.py (planned) |
 

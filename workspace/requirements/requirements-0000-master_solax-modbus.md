@@ -764,15 +764,15 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 
 | Requirement ID | Component | File Path |
 |----------------|-----------|-----------|
-| a1b2c3d4 | SolaxInverterClient | src/solax_poll.py |
-| b2c3d4e5 | SolaxInverterClient | src/solax_poll.py |
-| c3d4e5f6 | SolaxInverterClient | src/solax_poll.py |
-| d4e5f6a7 | SolaxInverterClient | src/solax_poll.py |
-| e5f6a7b8 | SolaxInverterClient | src/solax_poll.py |
-| f6a7b8c9 | SolaxInverterClient | src/solax_poll.py |
-| a7b8c9d0 | InverterDisplay | src/solax_poll.py |
-| b8c9d0e1 | SolaxInverterClient | src/solax_poll.py |
-| f8a9b0c1 | SolaxEmulator | src/emulator/solax_emulator.py |
+| a1b2c3d4 | SolaxInverterClient | src/solax_modbus/main.py |
+| b2c3d4e5 | SolaxInverterClient | src/solax_modbus/main.py |
+| c3d4e5f6 | SolaxInverterClient | src/solax_modbus/main.py |
+| d4e5f6a7 | SolaxInverterClient | src/solax_modbus/main.py |
+| e5f6a7b8 | SolaxInverterClient | src/solax_modbus/main.py |
+| f6a7b8c9 | SolaxInverterClient | src/solax_modbus/main.py |
+| a7b8c9d0 | InverterDisplay | src/solax_modbus/main.py |
+| b8c9d0e1 | SolaxInverterClient | src/solax_modbus/main.py |
+| f8a9b0c1 | SolaxEmulator | src/solax_modbus/emulator/solax_emulator.py |
 
 [Return to Table of Contents](<#table of contents>)
 

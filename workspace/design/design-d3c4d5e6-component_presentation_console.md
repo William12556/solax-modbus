@@ -32,7 +32,7 @@ component_info:
   version: "1.0"
   date: "2025-12-30"
   status: "Implemented"
-  source_file: "src/solax_poll.py"
+  source_file: "src/solax_modbus/main.py"
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -69,7 +69,7 @@ Format and display inverter telemetry to console output. Provides structured, hu
 ### File Location
 
 ```
-src/solax_poll.py (lines 221-310)
+src/solax_modbus/main.py (lines 221-310)
 ```
 
 ### Dependencies
@@ -356,7 +356,7 @@ while True:
 
 | Item | Location |
 |------|----------|
-| Class | src/solax_poll.py:221-310 |
+| Class | src/solax_modbus/main.py:221-310 |
 
 [Return to Table of Contents](<#table of contents>)
 
