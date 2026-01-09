@@ -546,7 +546,6 @@ if client.connect():
 |-----------|-----------------|
 | main | Uses for polling |
 | InverterDisplay | Consumes output dict |
-| InverterPool | Manages multiple instances |
 
 ### Source Code
 

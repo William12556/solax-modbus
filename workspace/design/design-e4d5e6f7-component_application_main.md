@@ -349,7 +349,6 @@ $ python src/solax_poll.py localhost --port 5020
 | Component | Document |
 |-----------|----------|
 | AlertManager | design-XXXX-component_application_alerting.md (planned) |
-| InverterPool | design-XXXX-component_application_pool.md (planned) |
 
 ### Dependencies
 

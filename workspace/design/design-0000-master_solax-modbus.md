@@ -53,7 +53,6 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 - Future: Time-series data storage (InfluxDB)
 - Future: Monitoring and alerting
 - Future: Control and configuration
-- Future: Multi-inverter coordination
 
 ### Out of Scope
 
@@ -128,7 +127,6 @@ flowchart LR
 | Data persistence | ○ Planned | InfluxDB time-series storage |
 | Alerting | ○ Planned | Threshold monitoring and notifications |
 | Control operations | ○ Planned | Write to holding registers |
-| Multi-inverter | ○ Planned | Concurrent monitoring of multiple devices |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -154,7 +152,6 @@ flowchart TD
         STORE[TimeSeriesStore<br/>InfluxDB]
         MONITOR[AlertManager<br/>Notifications]
         CONTROL[InverterController<br/>Write Operations]
-        COORD[InverterPool<br/>Multi-Inverter]
     end
     
     CLI --> CLIENT
@@ -164,7 +161,6 @@ flowchart TD
     CLIENT -.-> STORE
     CLIENT -.-> MONITOR
     CLIENT -.-> CONTROL
-    COORD -.-> CLIENT
     
     style CLI fill:#90EE90
     style CLIENT fill:#90EE90
@@ -172,7 +168,6 @@ flowchart TD
     style STORE fill:#FFE4B5
     style MONITOR fill:#FFE4B5
     style CONTROL fill:#FFE4B5
-    style COORD fill:#FFE4B5
 ```
 
 ### Technology Stack
@@ -261,8 +256,6 @@ target_platform:
 | DataValidator | High | None |
 | AlertManager | Medium | smtplib, requests |
 | InverterController | Medium | SolaxInverterClient |
-| InverterPool | Low | asyncio |
-| PollingCoordinator | Low | InverterPool |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -463,18 +456,6 @@ stateDiagram-v2
 | 0x0024-0x0027 | Discharge Window | Start/end hour/minute |
 | 0x0028 | Charge Power Limit | Watts |
 | 0x0029 | Discharge Power Limit | Watts |
-
----
-
-### InverterPool (Planned)
-
-**Purpose:** Manage concurrent monitoring of multiple inverters.
-
-**Responsibilities:**
-- Instantiate multiple SolaxInverterClient instances
-- Stagger polling to prevent network congestion
-- Aggregate fleet-wide metrics
-- Isolate per-inverter failures
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -679,9 +660,7 @@ logging:
 | HTMLRenderer | Presentation | [design-d9e0f1a2-component_presentation_html.md](<design-d9e0f1a2-component_presentation_html.md>) | Active |
 | main | Application | [design-e4d5e6f7-component_application_main.md](<design-e4d5e6f7-component_application_main.md>) | Active |
 | AlertManager | Application | [design-e0f1a2b3-component_application_alerting.md](<design-e0f1a2b3-component_application_alerting.md>) | Active |
-| InverterPool | Application | [design-f1a2b3c4-component_application_pool.md](<design-f1a2b3c4-component_application_pool.md>) | Active |
 | NotificationDispatcher | Application | design-XXXX-component_application_notifications.md | Planned |
-| PollingCoordinator | Application | design-XXXX-component_application_coordinator.md | Planned |
 
 ### Source Code Mapping
 
@@ -713,6 +692,7 @@ logging:
 | 1.1 | 2025-12-30 | Added Tier 2 domain document references: Protocol, Data, Presentation, Application. Updated planned Tier 3 component list. |
 | 1.2 | 2025-12-30 | Added Tier 3 component document references for implemented components: SolaxInverterClient, SolaxEmulator, InverterDisplay, main. |
 | 1.3 | 2025-12-30 | Added Tier 3 component document references for planned components: InverterController, DataValidator, TimeSeriesStore, DataBuffer, HTMLRenderer, AlertManager, InverterPool. Added NotificationDispatcher and PollingCoordinator as planned. |
+| 1.4 | 2026-01-08 | Removed multi-inverter support from scope. Removed InverterPool and PollingCoordinator components. Removed InverterPool section. Updated component diagrams and tables. |
 
 ---
 

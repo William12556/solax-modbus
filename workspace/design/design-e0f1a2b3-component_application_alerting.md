@@ -372,7 +372,6 @@ self.dispatcher.send(alert, channels=['email', 'sms'])
 | Component | Document |
 |-----------|----------|
 | main | [design-e4d5e6f7-component_application_main.md](<design-e4d5e6f7-component_application_main.md>) |
-| InverterPool | [design-f1a2b3c4-component_application_pool.md](<design-f1a2b3c4-component_application_pool.md>) |
 
 ### Related Components
 

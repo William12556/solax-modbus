@@ -42,7 +42,7 @@ domain_info:
 
 ### Purpose
 
-Orchestrate system operation, coordinate polling cycles, manage alerting, and support multi-inverter deployments. Serves as the entry point and control center for the application.
+Orchestrate system operation, coordinate polling cycles, and manage alerting. Serves as the entry point and control center for the application.
 
 ### Boundaries
 
@@ -50,7 +50,6 @@ Orchestrate system operation, coordinate polling cycles, manage alerting, and su
 - Application entry point and CLI
 - Polling loop control
 - Alert threshold evaluation and notification dispatch
-- Multi-inverter coordination
 - Configuration management
 - Graceful shutdown handling
 
@@ -66,7 +65,6 @@ Orchestrate system operation, coordinate polling cycles, manage alerting, and su
 | Entry point | Parse CLI arguments, initialize components |
 | Polling orchestration | Execute timed polling cycles |
 | Alert management | Evaluate thresholds, dispatch notifications |
-| Multi-inverter | Coordinate polling across multiple devices |
 | Lifecycle | Handle startup, shutdown, signal handling |
 
 ### Terminology
@@ -76,7 +74,6 @@ Orchestrate system operation, coordinate polling cycles, manage alerting, and su
 | Polling Interval | Time between successive data acquisition cycles |
 | Alert Condition | Threshold-based rule triggering notification |
 | Notification Channel | Delivery method for alerts (email, SMS, webhook) |
-| Fleet | Collection of multiple monitored inverters |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -86,7 +83,7 @@ Orchestrate system operation, coordinate polling cycles, manage alerting, and su
 
 ### Description
 
-The Application domain provides the orchestration layer coordinating all other domains. It implements the main execution loop, manages configuration, and handles system-level concerns such as alerting and multi-inverter support.
+The Application domain provides the orchestration layer coordinating all other domains. It implements the main execution loop, manages configuration, and handles system-level concerns such as alerting.
 
 ### Context Diagram
 
@@ -102,8 +99,6 @@ flowchart TB
     subgraph "Application Domain"
         MAIN[main]
         ALERT[AlertManager]
-        POOL[InverterPool]
-        COORD[PollingCoordinator]
     end
     
     subgraph "Other Domains"
@@ -118,15 +113,11 @@ flowchart TB
     MAIN --> DATA
     MAIN --> PRES
     MAIN --> ALERT
-    POOL --> PROTO
-    COORD --> POOL
     ALERT --> SMTP
     ALERT --> SMS
     
     style MAIN fill:#90EE90
     style ALERT fill:#FFE4B5
-    style POOL fill:#FFE4B5
-    style COORD fill:#FFE4B5
 ```
 
 **Legend:**
@@ -142,7 +133,6 @@ flowchart TB
 | Signal handling | ✓ Implemented | Graceful KeyboardInterrupt |
 | Configuration | ○ Planned | YAML config file support |
 | Alerting | ○ Planned | Threshold monitoring |
-| Multi-inverter | ○ Planned | Fleet coordination |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -161,20 +151,14 @@ flowchart TD
     subgraph "Application Domain"
         MAIN[main]
         ALERT[AlertManager]
-        POOL[InverterPool]
-        COORD[PollingCoordinator]
         NOTIFY[NotificationDispatcher]
     end
     
     MAIN --> ALERT
-    MAIN --> POOL
-    POOL --> COORD
     ALERT --> NOTIFY
     
     style MAIN fill:#90EE90
     style ALERT fill:#FFE4B5
-    style POOL fill:#FFE4B5
-    style COORD fill:#FFE4B5
     style NOTIFY fill:#FFE4B5
 ```
 
@@ -192,7 +176,6 @@ technology_stack:
       - "pyyaml 6.0+ (configuration)"
       - "smtplib (email alerts)"
       - "requests (webhooks)"
-      - "asyncio (multi-inverter)"
 ```
 
 ### Directory Structure
@@ -204,8 +187,7 @@ src/
 │   ├── __init__.py
 │   ├── config.py           # Configuration management
 │   ├── alerting.py         # AlertManager
-│   ├── notifications.py    # NotificationDispatcher
-│   └── coordinator.py      # InverterPool, PollingCoordinator
+│   └── notifications.py    # NotificationDispatcher
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -221,8 +203,6 @@ src/
 | main | solax_poll.py | Implemented | Entry point |
 | AlertManager | application/alerting.py | Planned | Threshold monitoring |
 | NotificationDispatcher | application/notifications.py | Planned | Alert delivery |
-| InverterPool | application/coordinator.py | Planned | Multi-inverter |
-| PollingCoordinator | application/coordinator.py | Planned | Scheduling |
 
 ### main (Implemented)
 
@@ -334,54 +314,6 @@ notifications:
     url: "https://hooks.slack.com/services/..."
 ```
 
----
-
-### InverterPool (Planned)
-
-**Tier 3 Document:** [design-XXXX-component_application_pool.md](planned)
-
-**Purpose:** Manage collection of inverter connections.
-
-**Key Responsibilities:**
-- Instantiate multiple SolaxInverterClient instances
-- Track per-inverter connection state
-- Aggregate fleet-wide metrics
-- Isolate individual inverter failures
-
-**Fleet Aggregation:**
-
-| Metric | Aggregation |
-|--------|-------------|
-| Total PV power | Sum across all inverters |
-| Total battery capacity | Sum across all inverters |
-| Net grid power | Sum across all inverters |
-| System status | Worst-case (any fault = fleet fault) |
-
----
-
-### PollingCoordinator (Planned)
-
-**Tier 3 Document:** [design-XXXX-component_application_coordinator.md](planned)
-
-**Purpose:** Schedule and coordinate polling across inverters.
-
-**Key Responsibilities:**
-- Stagger polling to prevent network congestion
-- Enforce maximum concurrent connections
-- Handle backpressure when processing is slow
-- Provide polling metrics
-
-**Scheduling Strategy:**
-
-```
-For N inverters with interval I and max_concurrent M:
-  - Stagger offset = I / N
-  - Inverter 0: poll at t=0, I, 2I, ...
-  - Inverter 1: poll at t=offset, I+offset, ...
-  - Inverter N-1: poll at t=(N-1)*offset, ...
-  - Limit concurrent polls to M
-```
-
 [Return to Table of Contents](<#table of contents>)
 
 ---
@@ -444,32 +376,6 @@ def get_active_alerts(self) -> List[Alert]:
     """Return list of currently active alerts."""
 ```
 
-#### InverterPool
-
-```python
-def add_inverter(self, config: InverterConfig) -> str:
-    """
-    Add inverter to pool.
-    
-    Returns:
-        Assigned inverter ID.
-    """
-
-def remove_inverter(self, inverter_id: str) -> bool:
-    """Remove inverter from pool."""
-
-def poll_all(self) -> Dict[str, Dict[str, Any]]:
-    """
-    Poll all inverters.
-    
-    Returns:
-        Dictionary mapping inverter_id to telemetry dict.
-    """
-
-def get_aggregate_metrics(self) -> Dict[str, Any]:
-    """Return fleet-wide aggregated metrics."""
-```
-
 [Return to Table of Contents](<#table of contents>)
 
 ---
@@ -511,10 +417,10 @@ logging:
 | Metric | Target |
 |--------|--------|
 | Startup time | <5 seconds |
-| Polling overhead | <100ms per inverter |
+| Polling overhead | <100ms |
 | Alert evaluation | <10ms per measurement |
-| Memory (10 inverters) | ≤512MB |
-| CPU (10 inverters) | ≤10% |
+| Memory | ≤256MB |
+| CPU | ≤10% |
 
 ### Reliability
 
@@ -522,7 +428,6 @@ logging:
 |-------------|----------------|
 | Graceful shutdown | Signal handler for SIGINT, SIGTERM |
 | Connection recovery | Automatic reconnect with backoff |
-| Partial failure | Continue with available inverters |
 | Alert persistence | State survives restart (planned) |
 
 ### Configuration
@@ -578,8 +483,6 @@ alerts:
 | main | [design-e4d5e6f7-component_application_main.md](<design-e4d5e6f7-component_application_main.md>) | Active |
 | AlertManager | [design-e0f1a2b3-component_application_alerting.md](<design-e0f1a2b3-component_application_alerting.md>) | Active |
 | NotificationDispatcher | design-XXXX-component_application_notifications.md | Planned |
-| InverterPool | [design-f1a2b3c4-component_application_pool.md](<design-f1a2b3c4-component_application_pool.md>) | Active |
-| PollingCoordinator | design-XXXX-component_application_coordinator.md | Planned |
 
 ### Sibling Domain Documents
 
@@ -596,8 +499,6 @@ alerts:
 | main | src/solax_poll.py |
 | AlertManager | src/application/alerting.py (planned) |
 | NotificationDispatcher | src/application/notifications.py (planned) |
-| InverterPool | src/application/coordinator.py (planned) |
-| PollingCoordinator | src/application/coordinator.py (planned) |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -610,6 +511,7 @@ alerts:
 | 1.0 | 2025-12-30 | Initial domain design |
 | 1.1 | 2025-12-30 | Added Tier 3 component document reference |
 | 1.2 | 2025-12-30 | Added AlertManager and InverterPool component document references |
+| 1.3 | 2026-01-08 | Removed multi-inverter coordination. Removed InverterPool and PollingCoordinator components. Updated NFR targets for single-inverter deployment. |
 
 ---
 

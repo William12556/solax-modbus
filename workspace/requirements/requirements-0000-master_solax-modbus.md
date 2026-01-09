@@ -54,10 +54,10 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 - Time-series data persistence
 - Threshold-based alerting
 - Configuration write operations
-- Multi-inverter fleet coordination
 - Development emulator
 
 **Out of Scope:**
+- Multi-inverter fleet coordination
 - Hardware procurement
 - Network infrastructure
 - Web-based UI (console interface only)
@@ -358,24 +358,7 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   dependencies: ["c5d6e7f8"]
 ```
 
-### FR-017: Multi-Inverter Coordination
-
-```yaml
-- id: "e7f8a9b0"
-  type: "functional"
-  description: "System SHALL support concurrent monitoring of multiple inverters (up to 100)"
-  acceptance_criteria:
-    - "Independent connection management per inverter"
-    - "Failure isolation (one inverter failure does not affect others)"
-    - "Staggered polling to prevent network congestion"
-    - "Aggregate fleet metrics (total generation, combined battery capacity)"
-    - "Per-inverter and fleet-wide views"
-  source: "Industrial solar installation requirements"
-  rationale: "Large installations require fleet-level coordination and monitoring"
-  dependencies: ["a1b2c3d4", "b8c9d0e1"]
-```
-
-### FR-018: Development Emulator
+### FR-017: Development Emulator
 
 ```yaml
 - id: "f8a9b0c1"
@@ -423,10 +406,10 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   category: "performance"
   description: "System SHALL operate within embedded hardware memory constraints"
   acceptance_criteria:
-    - "Resident memory footprint ≤512MB for 10-inverter deployment"
+    - "Resident memory footprint ≤256MB for single-inverter deployment"
     - "Memory usage stable over 30-day runtime"
     - "No memory leaks detected in 72-hour stress test"
-  target_metric: "RSS ≤512MB"
+  target_metric: "RSS ≤256MB"
   source: "Raspberry Pi 4 deployment constraint"
   rationale: "Embedded deployment requires efficient memory usage"
   dependencies: []
@@ -524,20 +507,20 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   dependencies: []
 ```
 
-### NFR-008: Scalability
+### NFR-008: Storage Efficiency
 
 ```yaml
 - id: "b6c7d8e9"
   type: "non_functional"
-  category: "scalability"
-  description: "System SHALL scale linearly with number of monitored inverters"
+  category: "efficiency"
+  description: "System SHALL manage storage growth through retention policies"
   acceptance_criteria:
-    - "Linear resource scaling up to 100 inverters"
-    - "Database storage growth predictable and bounded"
-    - "Architecture supports horizontal scaling (future)"
-  target_metric: "O(n) scaling to 100 inverters"
-  source: "Large installation requirements"
-  rationale: "Commercial installations require multi-inverter support"
+    - "Database storage growth predictable and bounded by retention policies"
+    - "Downsampling reduces long-term storage requirements"
+    - "Storage consumption linear with polling frequency"
+  target_metric: "Storage growth <10GB per year"
+  source: "Long-term operational sustainability"
+  rationale: "Embedded systems have limited storage capacity"
   dependencies: []
 ```
 
@@ -728,7 +711,6 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   type: "architectural"
   description: "System SHALL support future extension via plugin architecture"
   acceptance_criteria:
-    - "Protocol adapters for additional inverter types"
     - "Notification channel plugins"
     - "Data store adapters (beyond InfluxDB)"
     - "Plugin discovery and loading mechanism"
@@ -772,7 +754,6 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | b4c5d6e7 | design-e0f1a2b3-component_application_alerting.md | Notification Dispatch |
 | c5d6e7f8 | design-f5e6f7a8-component_protocol_controller.md | InverterController |
 | d6e7f8a9 | design-f5e6f7a8-component_protocol_controller.md | Audit Logging |
-| e7f8a9b0 | design-f1a2b3c4-component_application_pool.md | InverterPool |
 | f8a9b0c1 | design-c2b3c4d5-component_protocol_emulator.md | SolaxEmulator |
 
 ### Test References
@@ -809,8 +790,7 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 - Data quality and persistence: FR-009 through FR-012
 - Monitoring and alerting: FR-013 through FR-014
 - Configuration control: FR-015 through FR-016
-- Multi-inverter support: FR-017
-- Development infrastructure: FR-018
+- Development infrastructure: FR-017
 - Performance constraints: NFR-001 through NFR-002
 - Reliability: NFR-003 through NFR-004
 - Maintainability: NFR-005
@@ -875,6 +855,7 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-01-08 | Initial requirements document reverse-engineered from design documents and deprecated SDS |
+| 1.1 | 2026-01-08 | Removed FR-017 Multi-Inverter Coordination. Moved multi-inverter to out-of-scope. Updated NFR-002 for single-inverter (256MB). Replaced NFR-008 Scalability with Storage Efficiency. Updated AR-008 Extensibility. Removed traceability entries. |
 
 ---
 
