@@ -1,159 +1,182 @@
--# Solax Modbus Monitoring System
+# Solax Modbus Monitoring System
 
-Real-time monitoring and control system for Solax X3 Hybrid 6.0-D solar inverters using Modbus TCP protocol.
+Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modbus TCP protocol.
 
 ## Features
 
-- Direct Modbus TCP communication (no cloud dependencies)
-- Multi-inverter support (up to 100 units)
-- Time-series data storage (InfluxDB)
-- Configurable alerting (email, SMS, webhook)
-- REST API for integration
-- Battery management and scheduling
-- Real-time telemetry acquisition
+- Direct Modbus TCP communication (offline operation, no cloud dependencies)
+- Read-only monitoring (safe, non-intrusive)
+- Comprehensive telemetry display:
+  - Three-phase grid metrics (voltage, current, power)
+  - Dual MPPT PV generation (per-string and total)
+  - Battery system status (voltage, current, SOC, temperature)
+  - Energy accounting (grid import/export, load consumption)
+- Console-based real-time display with power flow visualization
+- Configurable polling intervals
+- Modbus TCP emulator for offline development
 
 ## Quick Start
 
 ### Prerequisites
 
-- Python 3.11+
-- InfluxDB 2.7+
-- Debian 12 (Bookworm) or later (recommended)
-- Network access to Solax inverters (Modbus TCP port 502)
+**Development Machine (Mac):**
+- Python 3.9+
+- Build tools: `pip install build`
+- Git repository clone
+
+**Raspberry Pi:**
+- Debian 12 (tested platform)
+- Python 3.9+
+- Network access to Solax inverter (Modbus TCP port 502)
 
 ### Installation
 
-#### Option 1: Git Clone
+#### Build on Mac
 
 ```bash
-# Clone repository
-git clone https://github.com/username/solax-modbus.git
-cd solax-modbus
+cd /path/to/solax-modbus
 
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
+# Use build script
+chmod +x build.sh
+./build.sh
 ```
 
-#### Option 2: Manual Installation (No Git Required)
+#### Deploy to Raspberry Pi
 
 ```bash
-# Download and extract release archive
-wget https://github.com/username/solax-modbus/archive/refs/tags/v1.0.0.tar.gz
-tar -xzf v1.0.0.tar.gz
-cd solax-modbus-1.0.0
+# Transfer wheel
+scp dist/solax_modbus-*.whl pi@raspberrypi:/tmp/
 
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
+# Connect to Pi
+ssh pi@raspberrypi
 
-# Install dependencies manually
-pip install pymodbus>=3.5.0
-pip install influxdb-client>=1.38.0
-pip install pyyaml>=6.0
-pip install requests>=2.31.0
-pip install pytest>=7.4.0
+# Initial setup
+sudo mkdir -p /opt/solax-monitor
+cd /opt/solax-monitor
+sudo python3 -m venv venv
+sudo ./venv/bin/pip install /tmp/solax_modbus-*.whl
 ```
 
-**Alternative: Direct File Transfer**
-
-If internet access is limited:
+### Configure Service
 
 ```bash
-# On source machine with internet:
-# Download dependencies
-pip download -r requirements.txt -d ./packages
+# Create systemd service
+sudo tee /etc/systemd/system/solax-monitor.service << 'EOF'
+[Unit]
+Description=Solax X3 Hybrid Inverter Monitor
+After=network.target
 
-# Transfer entire directory to target machine via USB/SCP
-# Then on target machine:
-cd solax-modbus
-python3 -m venv venv
-source venv/bin/activate
-pip install --no-index --find-links=./packages -r requirements.txt
-```
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/solax-monitor
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/solax-monitor/venv/bin/solax-monitor --ip <INVERTER-IP> --interval 5
+Restart=always
+RestartSec=10
 
-### Configuration
+[Install]
+WantedBy=multi-user.target
+EOF
 
-```bash
-# Copy configuration template
-cp config.yaml.example config.yaml
-
-# Edit configuration (set inverter IP, database credentials)
-nano config.yaml
-```
-
-Minimum configuration:
-
-```yaml
-database:
-  host: localhost
-  port: 8086
-  database: solar_monitoring
-
-inverters:
-  - id: inv001
-    host: 192.168.1.100
-    port: 502
-    unit_id: 1
-    poll_interval: 5
-```
-
-### Run
-
-```bash
-# Development
-python src/main.py
-
-# Production (systemd)
+# Enable and start
+sudo systemctl daemon-reload
 sudo systemctl enable solax-monitor
 sudo systemctl start solax-monitor
 ```
 
+**Replace `<INVERTER-IP>` with your inverter's IP address.**
+
 ### Verify
 
 ```bash
-# Check health
-curl http://localhost:8080/api/v1/health
+# Check service status
+sudo systemctl status solax-monitor
 
-# View telemetry
-curl http://localhost:8080/api/v1/inverters/inv001/telemetry
+# Monitor logs
+sudo journalctl -u solax-monitor -f
+```
+
+### Updates
+
+```bash
+# Build on Mac
+cd /path/to/solax-modbus
+./build.sh
+scp dist/solax_modbus-*.whl pi@raspberrypi:/tmp/
+
+# Install on Pi using install script
+ssh pi@raspberrypi
+./install.sh solax_modbus-X.Y.Z-py3-none-any.whl
 ```
 
 ## Documentation
 
-- [Software Design Specification](<docs/specifications/solax-modbus-software-design-specification.md>)
-- [API Reference](<docs/api/README.md>)
-- [Architecture](<docs/architecture/README.md>)
+- [Deployment Guide](docs/deployment-guide.md) - Comprehensive installation and configuration
+- [Design Documents](workspace/design/) - System architecture and component specifications
+- [Test Documentation](workspace/test/) - Test plans and results
 
 ## Architecture
 
 ```
-Monitoring Server ──Modbus TCP──> Solax Inverters
-       │
-       ├──> InfluxDB (time-series data)
-       ├──> Alert Services (email/SMS)
-       └──> REST API (port 8080)
+Raspberry Pi ──Modbus TCP (port 502)──> Solax X3 Hybrid Inverter
+     │
+     └──> Console Display (journalctl logs)
 ```
+
+**Components:**
+- `SolaxInverterClient`: Modbus TCP communication with exponential backoff
+- `InverterDisplay`: Formatted telemetry output with power flow visualization
+- `SolaxEmulator`: Offline development emulator
 
 ## System Requirements
 
-| Component | Minimum | Recommended |
-|-----------|---------|-------------|
-| CPU | Quad-core ARM | Quad-core x86_64 |
-| RAM | 4GB | 8GB |
-| Storage | 64GB | 128GB SSD |
-| Network | 100 Mbps | 1 Gbps |
+**Raspberry Pi:**
+- Raspberry Pi 4 (tested)
+- Debian 12 (Bookworm)
+- 100MB disk space
+- Network connectivity to inverter
 
-## Support
+**Development:**
+- macOS or Linux
+- Python 3.9+
+- Git
 
-- Issues: https://github.com/username/solax-modbus/issues
-- Documentation: `docs/` directory
+## Development
 
-## Important Notice
-This software is currently very unproven and in early development stages. The implementation is experimental in nature, serving as a learning exercise in AI-assisted development workflows, protocol-driven project management, and cross-platform embedded systems development. **Actual fitness for purpose is not guaranteed.**
+**Run tests:**
+```bash
+cd /path/to/solax-modbus
+source venv/bin/activate
+pytest
+pytest --cov=src --cov-report=html
+```
+
+**Development with emulator:**
+```bash
+# Terminal 1: Start emulator
+python -m solax_modbus.emulator
+
+# Terminal 2: Connect client
+solax-monitor --ip 127.0.0.1 --interval 2
+```
+
+## Project Status
+
+**Current Implementation:**
+- Single-inverter monitoring (read-only)
+- Validated with Solax X3 Hybrid 6.0-D
+- Debian 12 deployment on Raspberry Pi 4
+- Scripted build and installation workflow
+
+**Development Focus:**
+This project serves as a practical implementation of:
+- LLM Orchestration Framework governance
+- AI-assisted embedded systems development
+- Systematic documentation and traceability practices
+
+**Important Notice:**
+Experimental software in active development. Read-only operation ensures safe monitoring without inverter control risks. Fitness for production use not guaranteed.
 ## License
 
 MIT License - see [LICENSE](<LICENSE>) file.
