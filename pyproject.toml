@@ -1,6 +1,6 @@
 [project]
 name = "solax-modbus"
-version = "0.1.0"
+version = "0.1.2"
 description = "Modbus TCP monitoring system for Solax X3 Hybrid solar inverters"
 authors = [{name = "William Watson"}]
 license = {text = "MIT"}

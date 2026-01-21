@@ -18,7 +18,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler('solax_poll.log')
+        logging.FileHandler('/tmp/solax_poll.log')
     ]
 )
 logger = logging.getLogger(__name__)
@@ -162,7 +162,7 @@ class SolaxInverterClient:
             result = self.client.read_input_registers(
                 address=address,
                 count=count,
-                slave=self.unit_id
+                unit=self.unit_id
             )
             
             if not result.isError():

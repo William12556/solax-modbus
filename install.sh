@@ -16,28 +16,29 @@ VERSION=$(echo "$WHEEL" | cut -d'-' -f2)
 
 echo "==> Installing solax-modbus version $VERSION"
 
-# Stop service (ignore if not running)
-echo "==> Stopping service..."
-sudo systemctl stop solax-monitor || true
-
-# Uninstall existing package
-echo "==> Cleaning existing installation..."
-sudo /opt/solax-monitor/venv/bin/pip uninstall -y solax-modbus 2>/dev/null || true
-
 # Verify venv exists
 if [ ! -d "/opt/solax-monitor/venv" ]; then
     echo "ERROR: Virtual environment not found at /opt/solax-monitor/venv"
-    echo "For first-time installation, follow deployment guide initial setup procedures"
+    echo "For first-time installation, create virtual environment:"
+    echo "  sudo mkdir -p /opt/solax-monitor"
+    echo "  sudo python3 -m venv /opt/solax-monitor/venv"
     exit 1
 fi
 
-# Clear cache
-echo "==> Clearing package cache..."
-sudo rm -rf /opt/solax-monitor/venv/lib/python*/site-packages/solax_modbus*
+# Uninstall existing package (pip handles cleanup)
+echo "==> Cleaning existing installation..."
+/opt/solax-monitor/venv/bin/pip uninstall -y solax-modbus 2>/dev/null || true
 
 # Install new version
-echo "==> Installing from /tmp/$WHEEL"
-sudo /opt/solax-monitor/venv/bin/pip install "/tmp/$WHEEL"
+# Handle both relative and absolute paths
+if [[ "$WHEEL" = /* ]]; then
+    WHEEL_PATH="$WHEEL"
+else
+    WHEEL_PATH="/tmp/$WHEEL"
+fi
+
+echo "==> Installing from $WHEEL_PATH"
+/opt/solax-monitor/venv/bin/pip install "$WHEEL_PATH"
 
 # Verify version
 echo "==> Verifying installation..."
@@ -48,11 +49,14 @@ if [ "$INSTALLED" != "$VERSION" ]; then
     exit 1
 fi
 
-# Start service
-echo "==> Starting service..."
-sudo systemctl start solax-monitor
-
 echo ""
 echo "✓ Installation successful: version $INSTALLED"
 echo ""
-sudo systemctl status solax-monitor --no-pager -l | head -10
+echo "Run monitor with:"
+echo "  /opt/solax-monitor/venv/bin/solax-monitor <inverter-ip> [options]"
+echo ""
+echo "Options:"
+echo "  --port PORT         Modbus TCP port (default: 502)"
+echo "  --unit-id ID        Modbus unit ID (default: 1)"
+echo "  --interval SECONDS  Polling interval (default: 5)"
+echo "  --debug             Enable debug logging"

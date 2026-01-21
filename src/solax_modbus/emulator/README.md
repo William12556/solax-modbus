@@ -45,12 +45,12 @@ client = ModbusTcpClient('localhost', port=502)
 client.connect()
 
 # Read grid voltage (register 0x0000)
-result = client.read_input_registers(0x0000, 1, slave=1)
+result = client.read_input_registers(0x0000, 1, unit=1)
 voltage = result.registers[0] / 10.0  # Scale: 0.1V
 print(f"Grid voltage: {voltage}V")
 
 # Read battery SOC (register 0x001D)
-result = client.read_input_registers(0x001D, 1, slave=1)
+result = client.read_input_registers(0x001D, 1, unit=1)
 soc = result.registers[0]
 print(f"Battery SOC: {soc}%")
 

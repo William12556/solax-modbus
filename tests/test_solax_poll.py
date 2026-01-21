@@ -137,7 +137,7 @@ class TestSolaxInverterClient:
         mock_modbus.read_input_registers.assert_called_once_with(
             address=0x0003,
             count=3,
-            slave=1
+            unit=1
         )
     
     def test_read_registers_modbus_error(self, client):
