@@ -13,8 +13,8 @@ import time
 import math
 from datetime import datetime
 from pymodbus.server import StartTcpServer
-from pymodbus.device import ModbusDeviceIdentification
-from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSlaveContext, ModbusServerContext
+from pymodbus.server.server import ModbusDeviceIdentification
+from pymodbus.datastore import ModbusSequentialDataBlock, ModbusDeviceContext, ModbusServerContext
 from pymodbus.datastore.store import BaseModbusDataBlock
 import threading
 
@@ -296,13 +296,13 @@ def run_emulator():
     holding_block = DynamicModbusDataBlock(0, state.get_holding_registers())
     
     # Create datastore
-    store = ModbusSlaveContext(
+    store = ModbusDeviceContext(
         di=ModbusSequentialDataBlock(0, [0]*100),  # Discrete Inputs
         co=ModbusSequentialDataBlock(0, [0]*100),  # Coils
         hr=holding_block,  # Holding Registers
         ir=input_block     # Input Registers
     )
-    context = ModbusServerContext(slaves={MODBUS_UNIT_ID: store}, single=False)
+    context = ModbusServerContext(devices={MODBUS_UNIT_ID: store}, single=False)
     
     # Device identification
     identity = ModbusDeviceIdentification()
