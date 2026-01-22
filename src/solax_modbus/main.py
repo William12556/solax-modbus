@@ -162,7 +162,7 @@ class SolaxInverterClient:
             result = self.client.read_input_registers(
                 address=address,
                 count=count,
-                unit=self.unit_id
+                device_id=self.unit_id
             )
             
             if not result.isError():
