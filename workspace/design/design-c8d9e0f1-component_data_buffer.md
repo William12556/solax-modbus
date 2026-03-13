@@ -347,7 +347,7 @@ def clear(self) -> None:
 ### Parent Documents
 
 - Domain: [design-9e4b2c3d-domain_data.md](<design-9e4b2c3d-domain_data.md>)
-- Master: [design-0000-master_solax-modbus.md](<design-0000-master_solax-modbus.md>)
+- Master: [design-solax-modbus-master.md](<design-solax-modbus-master.md>)
 
 ### Sibling Components (Data Domain)
 

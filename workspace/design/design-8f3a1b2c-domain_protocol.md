@@ -4,7 +4,7 @@ Created: 2025 December 30
 
 **Document Type:** Tier 2 Domain Design  
 **Document ID:** design-8f3a1b2c-domain_protocol  
-**Parent:** [design-0000-master_solax-modbus](<design-0000-master_solax-modbus.md>)  
+**Parent:** [design-solax-modbus-master](<design-solax-modbus-master.md>)  
 **Status:** Active  
 
 ---
@@ -30,7 +30,7 @@ domain_info:
   name: "Protocol"
   version: "1.0"
   date: "2025-12-30"
-  parent_document: "design-0000-master_solax-modbus.md"
+  parent_document: "design-solax-modbus-master.md"
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -364,7 +364,7 @@ logging:
 
 ### Parent Document
 
-- [design-0000-master_solax-modbus.md](<design-0000-master_solax-modbus.md>)
+- [design-solax-modbus-master.md](<design-solax-modbus-master.md>)
 
 ### Tier 3 Component Documents
 

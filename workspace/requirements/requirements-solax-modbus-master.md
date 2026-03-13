@@ -4,7 +4,7 @@
 Created: 2026 January 08
 
 **Document Type:** Requirements Specification  
-**Document ID:** requirements-0000-master_solax-modbus  
+**Document ID:** requirements-solax-modbus-master  
 **Status:** Active  
 
 ---
@@ -732,13 +732,13 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 
 | Requirement ID | Design Document | Design Section |
 |----------------|-----------------|----------------|
-| a1b2c3d4 | design-0000-master_solax-modbus.md | System Overview |
+| a1b2c3d4 | design-solax-modbus-master.md | System Overview |
 | a1b2c3d4 | design-8f3a1b2c-domain_protocol.md | Protocol Domain |
 | a1b2c3d4 | design-c1a2b3d4-component_protocol_client.md | SolaxInverterClient |
-| b2c3d4e5 | design-0000-master_solax-modbus.md | Data Design |
-| c3d4e5f6 | design-0000-master_solax-modbus.md | Data Design |
-| d4e5f6a7 | design-0000-master_solax-modbus.md | Data Design |
-| e5f6a7b8 | design-0000-master_solax-modbus.md | Data Design |
+| b2c3d4e5 | design-solax-modbus-master.md | Data Design |
+| c3d4e5f6 | design-solax-modbus-master.md | Data Design |
+| d4e5f6a7 | design-solax-modbus-master.md | Data Design |
+| e5f6a7b8 | design-solax-modbus-master.md | Data Design |
 | f6a7b8c9 | design-8f3a1b2c-domain_protocol.md | Data Type Conversion |
 | a7b8c9d0 | design-af5c3d4e-domain_presentation.md | Presentation Domain |
 | a7b8c9d0 | design-d3c4d5e6-component_presentation_console.md | InverterDisplay |

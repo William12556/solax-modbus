@@ -70,7 +70,7 @@ Created all folders with README.md files:
 - `workspace/test/`, `closed/`, `result/`, `result/closed/`
 - `workspace/ai/`
 
-Created traceability matrix skeleton: `workspace/trace/trace-0000-master_traceability-matrix.md`
+Created traceability matrix skeleton: `workspace/trace/trace-traceability-matrix-master.md`
 
 ### Phase 4: Created docs/ and tests/ Folders
 
@@ -180,7 +180,7 @@ Create with README.md:
 
 **5. Create traceability matrix skeleton**
 ```
-Create workspace/trace/trace-0000-master_traceability-matrix.md
+Create workspace/trace/trace-traceability-matrix-master.md
 ```
 
 **6. Create tests/ folder**

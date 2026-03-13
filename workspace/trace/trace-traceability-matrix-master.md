@@ -1,6 +1,6 @@
 # Traceability Matrix
 
-**Document:** trace-0000-master_traceability-matrix.md  
+**Document:** trace-traceability-matrix-master.md  
 **Project:** solax-modbus  
 **Status:** Active
 
@@ -49,16 +49,16 @@
 
 | ID | Requirement | Target | Design | Code | Test | Status |
 |----|-------------|--------|--------|------|------|--------|
-| a9b0c1d2 | Polling performance | P99 <1s | design-0000-master_solax-modbus.md | src/solax_modbus/main.py | TBD | Partial |
-| b0c1d2e3 | Memory efficiency | RSS ≤512MB | design-0000-master_solax-modbus.md | src/solax_modbus/main.py | TBD | Partial |
-| c1d2e3f4 | System reliability | 99.5% uptime | design-0000-master_solax-modbus.md | src/solax_modbus/main.py | TBD | Partial |
-| d2e3f4a5 | Error recovery | MTTR <5min | design-0000-master_solax-modbus.md | src/solax_modbus/main.py | TBD | Partial |
-| e3f4a5b6 | Code maintainability | Coverage >80% | design-0000-master_solax-modbus.md | src/solax_modbus/main.py | tests/ | Partial |
-| f4a5b6c7 | Network security | Zero unauthorized access | design-0000-master_solax-modbus.md | TBD | TBD | Planned |
-| a5b6c7d8 | Data protection | Zero plaintext credentials | design-0000-master_solax-modbus.md | TBD | TBD | Planned |
+| a9b0c1d2 | Polling performance | P99 <1s | design-solax-modbus-master.md | src/solax_modbus/main.py | TBD | Partial |
+| b0c1d2e3 | Memory efficiency | RSS ≤512MB | design-solax-modbus-master.md | src/solax_modbus/main.py | TBD | Partial |
+| c1d2e3f4 | System reliability | 99.5% uptime | design-solax-modbus-master.md | src/solax_modbus/main.py | TBD | Partial |
+| d2e3f4a5 | Error recovery | MTTR <5min | design-solax-modbus-master.md | src/solax_modbus/main.py | TBD | Partial |
+| e3f4a5b6 | Code maintainability | Coverage >80% | design-solax-modbus-master.md | src/solax_modbus/main.py | tests/ | Partial |
+| f4a5b6c7 | Network security | Zero unauthorized access | design-solax-modbus-master.md | TBD | TBD | Planned |
+| a5b6c7d8 | Data protection | Zero plaintext credentials | design-solax-modbus-master.md | TBD | TBD | Planned |
 | b6c7d8e9 | Scalability | O(n) to 100 inverters | design-f1a2b3c4-component_application_pool.md | TBD | TBD | Planned |
-| c7d8e9f0 | Installation simplicity | <30min deployment | design-0000-master_solax-modbus.md | pyproject.toml | TBD | Partial |
-| d8e9f0a1 | Diagnostic capability | MTTD <15min | design-0000-master_solax-modbus.md | src/solax_modbus/main.py | TBD | Partial |
+| c7d8e9f0 | Installation simplicity | <30min deployment | design-solax-modbus-master.md | pyproject.toml | TBD | Partial |
+| d8e9f0a1 | Diagnostic capability | MTTD <15min | design-solax-modbus-master.md | src/solax_modbus/main.py | TBD | Partial |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -87,7 +87,7 @@
 
 | Design Doc | Requirements | Code | Tests |
 |------------|--------------|------|-------|
-| design-0000-master_solax-modbus.md | All FR/NFR/AR | src/* | tests/* |
+| design-solax-modbus-master.md | All FR/NFR/AR | src/* | tests/* |
 | design-8f3a1b2c-domain_protocol.md | a1b2c3d4, b8c9d0e1, c5d6e7f8 | src/solax_modbus/main.py | TBD |
 | design-9e4b2c3d-domain_data.md | c9d0e1f2, d0e1f2a3, e1f2a3b4, f2a3b4c5 | TBD | TBD |
 | design-af5c3d4e-domain_presentation.md | a7b8c9d0 | src/solax_modbus/main.py | TBD |

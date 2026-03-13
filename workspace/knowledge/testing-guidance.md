@@ -919,7 +919,7 @@ Claude Desktop verifies:
 ### Traceability Matrix Updates
 
 After test execution, Claude Desktop updates traceability matrix (P05) in:
-`workspace/trace/trace-0000-master_traceability-matrix.md`
+`workspace/trace/trace-traceability-matrix-master.md`
 
 ### Required Linkages
 

@@ -341,7 +341,7 @@ def render_multi_inverter(
 ### Parent Documents
 
 - Domain: [design-af5c3d4e-domain_presentation.md](<design-af5c3d4e-domain_presentation.md>)
-- Master: [design-0000-master_solax-modbus.md](<design-0000-master_solax-modbus.md>)
+- Master: [design-solax-modbus-master.md](<design-solax-modbus-master.md>)
 
 ### Sibling Components (Presentation Domain)
 

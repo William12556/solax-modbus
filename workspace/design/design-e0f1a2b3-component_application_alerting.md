@@ -365,7 +365,7 @@ self.dispatcher.send(alert, channels=['email', 'sms'])
 ### Parent Documents
 
 - Domain: [design-bf6d4e5f-domain_application.md](<design-bf6d4e5f-domain_application.md>)
-- Master: [design-0000-master_solax-modbus.md](<design-0000-master_solax-modbus.md>)
+- Master: [design-solax-modbus-master.md](<design-solax-modbus-master.md>)
 
 ### Sibling Components (Application Domain)
 
