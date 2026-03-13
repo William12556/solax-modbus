@@ -93,25 +93,11 @@ dependencies:
 ```mermaid
 classDiagram
     class InverterDisplay {
-        +display_statistics(data: dict) void
-        -_format_grid_section(grid: dict) str
-        -_format_pv_section(pv: dict) str
-        -_format_battery_section(battery: dict) str
-        -_format_power_flow(feed_in: int) str
-        -_format_energy_section(today: float, total: float) str
+        +display_statistics(data: dict)$ void
     }
 ```
 
-### Method Overview
-
-| Method | Purpose |
-|--------|---------|
-| display_statistics | Main entry point, orchestrates display |
-| _format_grid_section | Format three-phase grid data |
-| _format_pv_section | Format PV string data with totals |
-| _format_battery_section | Format battery with direction |
-| _format_power_flow | Format grid import/export |
-| _format_energy_section | Format energy totals |
+`display_statistics` is a static method. There are no private helper methods — all formatting is inline within the single public method.
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -163,64 +149,18 @@ INVERTER
 
 ### Section Details
 
-#### Header
+All sections are conditional — rendered only if the corresponding keys are present in the input dict.
 
-| Field | Format | Source |
-|-------|--------|--------|
-| Title | Centered, uppercase | Static |
-| Timestamp | YYYY-MM-DD HH:MM:SS | data['timestamp'] |
-
-#### System Status
-
-| Field | Format | Source |
-|-------|--------|--------|
-| Run Mode | String | data['run_mode'] |
-
-#### Grid Section
-
-| Field | Format | Source |
-|-------|--------|--------|
-| Voltage R/S/T | ###.#V | data['grid']['voltage_r/s/t'] |
-| Current R/S/T | ##.#A | data['grid']['current_r/s/t'] |
-| Power R/S/T | ####W | data['grid']['power_r/s/t'] |
-| Frequency | ##.## Hz | data['grid']['frequency'] |
-
-#### Solar PV Section
-
-| Field | Format | Source |
-|-------|--------|--------|
-| String 1 | V × A = W | pv1_voltage, pv1_current, pv1_power |
-| String 2 | V × A = W | pv2_voltage, pv2_current, pv2_power |
-| Total | ####W | Calculated sum |
-
-#### Battery Section
-
-| Field | Format | Source |
-|-------|--------|--------|
-| Voltage | ##.#V | data['battery']['voltage'] |
-| Current | ##.#A + direction | data['battery']['current'] |
-| Power | ####W | data['battery']['power'] |
-| SOC | ###% | data['battery']['soc'] |
-| Temperature | ##°C | data['battery']['temperature'] |
-
-#### Power Flow Section
-
-| Field | Format | Source |
-|-------|--------|--------|
-| Grid | "Importing/Exporting ###W" | data['feed_in_power'] |
-
-#### Energy Section
-
-| Field | Format | Source |
-|-------|--------|--------|
-| Today | ###.# kWh | data['energy_today'] |
-| Total | #####.# kWh | data['energy_total'] |
-
-#### Inverter Section
-
-| Field | Format | Source |
-|-------|--------|--------|
-| Temperature | ##°C | data['inverter_temperature'] |
+| Section | Emoji | Key(s) Used |
+|---------|-------|-------------|
+| Header | — | `timestamp` |
+| System Status | ⚡ | `run_mode` |
+| Grid (Three-Phase AC) | 📊 | `grid_voltage_r`, `grid_current_r`, `grid_power_r`, `grid_frequency_r` (and S/T) |
+| Solar PV Generation | ☀️ | `pv1_voltage`, `pv1_current`, `pv1_power`, `pv2_*` |
+| Battery System | 🔋 | `battery_voltage`, `battery_current`, `battery_power`, `battery_soc`, `battery_temperature` |
+| Power Flow | ⚡ | `feed_in_power` |
+| Energy Totals | 📈 | `energy_today`, `energy_total` |
+| Inverter | 🔧 | `inverter_temperature` |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -233,63 +173,55 @@ INVERTER
 #### display_statistics()
 
 ```python
-def display_statistics(self, data: Dict[str, Any]) -> None:
+@staticmethod
+def display_statistics(data: Dict[str, Any]) -> None:
     """
     Format and print inverter telemetry to console.
     
     Args:
-        data: Telemetry dictionary from SolaxInverterClient.poll_inverter()
-              Expected keys: timestamp, grid, pv, battery, feed_in_power,
-              energy_today, energy_total, inverter_temperature, run_mode
+        data: Flat telemetry dictionary from SolaxInverterClient.poll_inverter().
+              All keys optional; missing keys suppress the corresponding section.
               
     Prints:
         Formatted multi-section display to stdout.
-        
-    Note:
-        Handles missing/None values gracefully by displaying "N/A".
-        Clears screen before display (optional).
     """
 ```
 
 ### Input Data Contract
 
+Flat dictionary produced by `SolaxInverterClient.poll_inverter()`. All keys optional.
+
 ```python
-# Expected input structure
 {
-    'timestamp': str,           # ISO format datetime
-    'run_mode': str,            # Human-readable mode name
-    'grid': {
-        'voltage_r': float,     # Volts
-        'voltage_s': float,
-        'voltage_t': float,
-        'current_r': float,     # Amperes
-        'current_s': float,
-        'current_t': float,
-        'power_r': int,         # Watts
-        'power_s': int,
-        'power_t': int,
-        'frequency': float,     # Hz
-    },
-    'pv': {
-        'pv1_voltage': float,
-        'pv1_current': float,
-        'pv1_power': int,
-        'pv2_voltage': float,
-        'pv2_current': float,
-        'pv2_power': int,
-        'total_power': int,
-    },
-    'battery': {
-        'voltage': float,
-        'current': float,       # Positive=charge, negative=discharge
-        'power': int,
-        'soc': int,             # 0-100%
-        'temperature': int,     # Celsius
-    },
-    'feed_in_power': int,       # Positive=export, negative=import
-    'energy_today': float,      # kWh
-    'energy_total': float,      # kWh
-    'inverter_temperature': int,
+    'timestamp': str,               # 'YYYY-MM-DD HH:MM:SS'
+    'run_mode': str,                # e.g. 'Normal'
+    'grid_voltage_r': float,        # V
+    'grid_current_r': float,        # A (signed)
+    'grid_power_r': int,            # W (signed)
+    'grid_frequency_r': float,      # Hz
+    'grid_voltage_s': float,
+    'grid_current_s': float,
+    'grid_power_s': int,
+    'grid_frequency_s': float,
+    'grid_voltage_t': float,
+    'grid_current_t': float,
+    'grid_power_t': int,
+    'grid_frequency_t': float,
+    'pv1_voltage': float,           # V
+    'pv2_voltage': float,
+    'pv1_current': float,           # A
+    'pv2_current': float,
+    'pv1_power': int,               # W
+    'pv2_power': int,
+    'battery_voltage': float,       # V
+    'battery_current': float,       # A (positive=charge)
+    'battery_power': int,           # W
+    'battery_soc': int,             # 0-100
+    'battery_temperature': int,     # °C
+    'feed_in_power': int,           # W (positive=export)
+    'energy_today': float,          # kWh
+    'energy_total': float,          # kWh
+    'inverter_temperature': int,    # °C
 }
 ```
 
@@ -302,7 +234,7 @@ def display_statistics(self, data: Dict[str, Any]) -> None:
 ### Basic Usage
 
 ```python
-from solax_poll import InverterDisplay, SolaxInverterClient
+from solax_modbus.main import InverterDisplay, SolaxInverterClient
 
 client = SolaxInverterClient(ip='192.168.1.100')
 display = InverterDisplay()
@@ -318,12 +250,11 @@ if client.connect():
 
 ```python
 import time
+from solax_modbus.main import InverterDisplay, SolaxInverterClient
 
 while True:
     data = client.poll_inverter()
     if data:
-        # Clear screen (optional)
-        print('\033[2J\033[H', end='')
         display.display_statistics(data)
     time.sleep(5)
 ```
@@ -337,7 +268,7 @@ while True:
 ### Parent Documents
 
 - Domain: [design-af5c3d4e-domain_presentation.md](<design-af5c3d4e-domain_presentation.md>)
-- Master: [design-0000-master_solax-modbus.md](<design-0000-master_solax-modbus.md>)
+- Master: [design-solax-modbus-master.md](<design-solax-modbus-master.md>)
 
 ### Sibling Components (Presentation Domain)
 
@@ -367,6 +298,7 @@ while True:
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-12-30 | Initial component design documenting implemented class |
+| 1.1 | 2026-03-13 | Corrected class diagram (static method only); removed non-existent private helpers; corrected input contract to flat dict; updated section detail table; updated usage imports |
 
 ---
 

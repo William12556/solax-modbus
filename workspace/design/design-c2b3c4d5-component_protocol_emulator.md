@@ -102,37 +102,35 @@ dependencies:
 classDiagram
     class SolaxEmulatorState {
         +float battery_soc
-        +float battery_power
-        +float pv1_power
-        +float pv2_power
-        +float grid_power
         +int run_mode
-        +Thread update_thread
-        +bool running
-        +update_state()
-        +start()
-        +stop()
-        -_calculate_pv_power(hour)
-        -_update_battery()
-        -_update_registers()
+        +int operating_mode
+        +float inverter_temp
+        +float battery_temp
+        +float last_update
+        +get_pv_power() tuple
+        +update_state() void
+        +get_input_registers() list
+        +get_holding_registers() list
+        -_to_signed_16bit(value) int
     }
     
     class DynamicModbusDataBlock {
-        +SolaxEmulatorState state
-        +getValues(address, count)
-        +setValues(address, values)
+        +int address
+        +list values
+        +validate(address, count) bool
+        +getValues(address, count) list
+        +setValues(address, values) void
     }
     
-    SolaxEmulatorState --> DynamicModbusDataBlock
+    class state_update_loop {
+        <<function>>
+    }
+    
+    state_update_loop --> SolaxEmulatorState
+    state_update_loop --> DynamicModbusDataBlock
 ```
 
-### SolaxEmulatorState
-
-Maintains simulated inverter state and updates registers periodically.
-
-### DynamicModbusDataBlock
-
-Custom Modbus data block that returns dynamically calculated values from emulator state.
+`state_update_loop` runs in a daemon thread, calling `SolaxEmulatorState.update_state()` then writing register arrays into the `DynamicModbusDataBlock` instances each second. `SolaxEmulatorState` and `DynamicModbusDataBlock` are independent — the state object holds no reference to the data blocks.
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -244,31 +242,20 @@ The emulator serves the same registers as the physical inverter:
 | Energy Total | 0x0052 | 2 | Accumulated |
 | Inverter Status | 0x0008 | 2 | Fixed + run mode |
 
-### Server Configuration
-
-```python
-def create_server_context():
-    """
-    Create Modbus server context with emulator data blocks.
-    
-    Returns:
-        ModbusServerContext configured for single slave (unit_id=1)
-    """
-```
-
 ### Starting the Server
 
 ```python
-def run_emulator(host: str = '0.0.0.0', port: int = 502):
+def run_emulator():
     """
     Start the emulator server.
     
-    Args:
-        host: Bind address (default all interfaces)
-        port: TCP port (default 502)
-        
-    Note:
-        Blocks until interrupted. Use Ctrl+C to stop.
+    Network configuration via module-level constants:
+        MODBUS_HOST = '0.0.0.0'
+        MODBUS_PORT = 502
+        MODBUS_UNIT_ID = 1
+    
+    Starts state_update_loop in a daemon thread, then blocks
+    on StartTcpServer until Ctrl+C.
     """
 ```
 
@@ -281,40 +268,21 @@ def run_emulator(host: str = '0.0.0.0', port: int = 502):
 ### Command Line
 
 ```bash
-# Start emulator on default port 502
-python src/emulator/solax_emulator.py
-
-# Start on alternate port
-python src/emulator/solax_emulator.py --port 5020
+# Start emulator (port 502 requires root or port forwarding)
+python src/solax_modbus/emulator/solax_emulator.py
 ```
 
 ### Testing with Client
 
 ```bash
-# Terminal 1: Start emulator
-python src/emulator/solax_emulator.py --port 5020
+# Terminal 1
+python src/solax_modbus/emulator/solax_emulator.py
 
-# Terminal 2: Connect client
-python src/solax_modbus/main.py localhost --port 5020
+# Terminal 2
+python -m solax_modbus.main 127.0.0.1
 ```
 
-### Programmatic Usage
-
-```python
-from emulator.solax_emulator import run_emulator
-import threading
-
-# Start emulator in background thread
-emulator_thread = threading.Thread(
-    target=run_emulator,
-    kwargs={'port': 5020}
-)
-emulator_thread.daemon = True
-emulator_thread.start()
-
-# Use client against emulator
-client = SolaxInverterClient(ip='localhost', port=5020)
-```
+To use a non-default port, edit `MODBUS_PORT` in `solax_emulator.py` before starting.
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -325,7 +293,7 @@ client = SolaxInverterClient(ip='localhost', port=5020)
 ### Parent Documents
 
 - Domain: [design-8f3a1b2c-domain_protocol.md](<design-8f3a1b2c-domain_protocol.md>)
-- Master: [design-0000-master_solax-modbus.md](<design-0000-master_solax-modbus.md>)
+- Master: [design-solax-modbus-master.md](<design-solax-modbus-master.md>)
 
 ### Sibling Components (Protocol Domain)
 
@@ -338,7 +306,19 @@ client = SolaxInverterClient(ip='localhost', port=5020)
 
 | Item | Location |
 |------|----------|
-| Module | src/emulator/solax_emulator.py |
+| Module | src/solax_modbus/emulator/solax_emulator.py |
+
+[Return to Table of Contents](<#table of contents>)
+
+---
+
+## Known Limitations
+
+| ID | Limitation |
+|----|------------|
+| MP-001 | Emulator register addresses do not match client `REGISTER_MAPPINGS`. Client reads grid data from 0x006A; emulator populates 0x0000–0x0008. Integration testing against the emulator produces incorrect values. Resolution deferred. |
+| MP-002 | `run_emulator()` does not accept runtime host/port arguments. Network configuration requires editing module constants. |
+| MP-003 | Register array is 128 entries (0x00–0x7F) only. Registers above 0x7F are not served. |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -349,6 +329,7 @@ client = SolaxInverterClient(ip='localhost', port=5020)
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-12-30 | Initial component design documenting implemented emulator |
+| 1.1 | 2026-03-13 | Corrected class diagram (relationships, accurate attributes/methods); corrected run_emulator() interface; corrected source path; added Known Limitations section (MP-001, MP-002, MP-003) |
 
 ---
 

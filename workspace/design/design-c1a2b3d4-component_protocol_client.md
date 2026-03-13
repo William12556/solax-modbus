@@ -181,18 +181,22 @@ RUN_MODES = {
 
 #### Grid Data (0x006A, 12 registers)
 
+Registers are interleaved per phase: each phase occupies four consecutive offsets (V, I, P, F).
+
 | Offset | Field | Type | Scale | Unit |
 |--------|-------|------|-------|------|
 | 0 | Grid Voltage R | uint16 | 0.1 | V |
-| 1 | Grid Voltage S | uint16 | 0.1 | V |
-| 2 | Grid Voltage T | uint16 | 0.1 | V |
-| 3 | Grid Current R | int16 | 0.1 | A |
-| 4 | Grid Current S | int16 | 0.1 | A |
-| 5 | Grid Current T | int16 | 0.1 | A |
-| 6 | Grid Power R | int16 | 1 | W |
-| 7 | Grid Power S | int16 | 1 | W |
-| 8 | Grid Power T | int16 | 1 | W |
-| 9 | Grid Frequency | uint16 | 0.01 | Hz |
+| 1 | Grid Current R | int16 | 0.1 | A |
+| 2 | Grid Power R | int16 | 1 | W |
+| 3 | Grid Frequency R | uint16 | 0.01 | Hz |
+| 4 | Grid Voltage S | uint16 | 0.1 | V |
+| 5 | Grid Current S | int16 | 0.1 | A |
+| 6 | Grid Power S | int16 | 1 | W |
+| 7 | Grid Frequency S | uint16 | 0.01 | Hz |
+| 8 | Grid Voltage T | uint16 | 0.1 | V |
+| 9 | Grid Current T | int16 | 0.1 | A |
+| 10 | Grid Power T | int16 | 1 | W |
+| 11 | Grid Frequency T | uint16 | 0.01 | Hz |
 
 #### PV Voltage/Current (0x0003, 4 registers)
 
@@ -212,13 +216,17 @@ RUN_MODES = {
 
 #### Battery Data (0x0014, 9 registers)
 
+Not all offsets are used. Offsets 3, 5–7 are reserved/unused.
+
 | Offset | Field | Type | Scale | Unit |
 |--------|-------|------|-------|------|
-| 0 | Battery Voltage | uint16 | 0.1 | V |
+| 0 | Battery Voltage | int16 | 0.1 | V |
 | 1 | Battery Current | int16 | 0.1 | A |
 | 2 | Battery Power | int16 | 1 | W |
-| 3 | Battery Temperature | int16 | 1 | °C |
-| 4 | Battery SOC | uint16 | 1 | % |
+| 3 | (reserved) | — | — | — |
+| 4 | Battery Temperature | int16 | 1 | °C |
+| 5–7 | (reserved) | — | — | — |
+| 8 | Battery SOC | uint16 | 1 | % |
 
 #### Feed-in Power (0x0046, 2 registers)
 
@@ -365,6 +373,8 @@ def read_registers(
     Raises:
         No exceptions raised; errors logged and None returned.
     """
+    # Internally passes device_id=self.unit_id to pymodbus read_input_registers()
+    # pymodbus >= 3.11.4 requires 'device_id' parameter (previously 'slave' or 'unit')
 ```
 
 #### poll_inverter()
@@ -397,42 +407,39 @@ def poll_inverter(self) -> Dict[str, Any]:
 
 ### Output Data Structure
 
+The output dictionary is flat — all keys at the top level.
+
 ```python
 {
-    'timestamp': '2025-12-30T14:30:45.123456',
-    'grid': {
-        'voltage_r': 230.1,
-        'voltage_s': 229.8,
-        'voltage_t': 230.3,
-        'current_r': 5.2,
-        'current_s': 5.1,
-        'current_t': 5.3,
-        'power_r': 1200,
-        'power_s': 1170,
-        'power_t': 1210,
-        'frequency': 50.02
-    },
-    'pv': {
-        'pv1_voltage': 385.2,
-        'pv1_current': 8.5,
-        'pv1_power': 3274,
-        'pv2_voltage': 0.0,
-        'pv2_current': 0.0,
-        'pv2_power': 0,
-        'total_power': 3274
-    },
-    'battery': {
-        'voltage': 51.2,
-        'current': -10.5,
-        'power': -538,
-        'soc': 75,
-        'temperature': 22
-    },
-    'feed_in_power': -244,
-    'energy_today': 12.5,
-    'energy_total': 1234.5,
-    'inverter_temperature': 35,
-    'run_mode': 'Normal'
+    'timestamp': '2025-12-30 14:30:45',
+    'grid_voltage_r': 230.1,       # V
+    'grid_current_r': 5.2,         # A (signed)
+    'grid_power_r': 1200,          # W (signed)
+    'grid_frequency_r': 50.02,     # Hz
+    'grid_voltage_s': 229.8,
+    'grid_current_s': 5.1,
+    'grid_power_s': 1170,
+    'grid_frequency_s': 50.01,
+    'grid_voltage_t': 230.3,
+    'grid_current_t': 5.3,
+    'grid_power_t': 1210,
+    'grid_frequency_t': 50.02,
+    'pv1_voltage': 385.2,          # V
+    'pv2_voltage': 382.1,
+    'pv1_current': 8.5,            # A
+    'pv2_current': 8.2,
+    'pv1_power': 3274,             # W
+    'pv2_power': 3120,
+    'battery_voltage': 51.2,       # V (signed)
+    'battery_current': -10.5,      # A (signed; positive=charge)
+    'battery_power': -538,         # W (signed)
+    'battery_temperature': 22,     # °C
+    'battery_soc': 75,             # %
+    'feed_in_power': -244,         # W (signed; positive=export)
+    'energy_today': 12.5,          # kWh
+    'energy_total': 1234.5,        # kWh
+    'inverter_temperature': 35,    # °C
+    'run_mode': 'Normal',
 }
 ```
 
@@ -480,25 +487,16 @@ logger = logging.getLogger('solax_modbus.protocol.client')
 ### Basic Example
 
 ```python
-from solax_poll import SolaxInverterClient
+from solax_modbus.main import SolaxInverterClient
 
-# Create client
-client = SolaxInverterClient(
-    ip='192.168.1.100',
-    port=502,
-    unit_id=1
-)
+client = SolaxInverterClient(ip='192.168.1.100', port=502, unit_id=1)
 
-# Connect with retry
 if client.connect():
-    # Poll telemetry
     data = client.poll_inverter()
-    
     if data:
-        print(f"PV Power: {data['pv']['total_power']}W")
-        print(f"Battery SOC: {data['battery']['soc']}%")
-    
-    # Cleanup
+        pv_total = data.get('pv1_power', 0) + data.get('pv2_power', 0)
+        print(f"PV Power: {pv_total}W")
+        print(f"Battery SOC: {data.get('battery_soc', 0)}%")
     client.disconnect()
 ```
 
@@ -506,6 +504,7 @@ if client.connect():
 
 ```python
 import time
+from solax_modbus.main import SolaxInverterClient
 
 client = SolaxInverterClient(ip='192.168.1.100')
 
@@ -531,7 +530,7 @@ if client.connect():
 ### Parent Documents
 
 - Domain: [design-8f3a1b2c-domain_protocol.md](<design-8f3a1b2c-domain_protocol.md>)
-- Master: [design-0000-master_solax-modbus.md](<design-0000-master_solax-modbus.md>)
+- Master: [design-solax-modbus-master.md](<design-solax-modbus-master.md>)
 
 ### Sibling Components (Protocol Domain)
 
@@ -569,6 +568,7 @@ if client.connect():
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-12-30 | Initial component design documenting implemented class |
+| 1.1 | 2026-03-13 | Corrected grid register layout (interleaved per phase); corrected battery offsets (temp=4, soc=8); corrected output dict to flat structure; updated usage imports; added device_id note |
 
 ---
 
