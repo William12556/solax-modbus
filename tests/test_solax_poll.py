@@ -13,7 +13,7 @@ from pymodbus.exceptions import ModbusException
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-from solax_poll import SolaxInverterClient, InverterDisplay
+from solax_modbus.main import SolaxInverterClient, InverterDisplay
 
 
 class TestSolaxInverterClient:
@@ -33,7 +33,7 @@ class TestSolaxInverterClient:
         assert client.max_retries == 3
         assert client.retry_delay == 1
     
-    @patch('solax_poll.ModbusTcpClient')
+    @patch('solax_modbus.main.ModbusTcpClient')
     def test_connect_success(self, mock_modbus_class, client):
         """Test successful connection to inverter."""
         mock_modbus = Mock()
@@ -47,8 +47,8 @@ class TestSolaxInverterClient:
         mock_modbus_class.assert_called_once_with('192.168.1.100', port=502)
         mock_modbus.connect.assert_called_once()
     
-    @patch('solax_poll.ModbusTcpClient')
-    @patch('solax_poll.time.sleep')
+    @patch('solax_modbus.main.ModbusTcpClient')
+    @patch('solax_modbus.main.time.sleep')
     def test_connect_with_retry(self, mock_sleep, mock_modbus_class, client):
         """Test connection retry with exponential backoff."""
         mock_modbus = Mock()
@@ -63,8 +63,8 @@ class TestSolaxInverterClient:
         # Check exponential backoff delays
         assert mock_sleep.call_args_list == [call(1), call(2)]
     
-    @patch('solax_poll.ModbusTcpClient')
-    @patch('solax_poll.time.sleep')
+    @patch('solax_modbus.main.ModbusTcpClient')
+    @patch('solax_modbus.main.time.sleep')
     def test_connect_failure_after_retries(self, mock_sleep, mock_modbus_class, client):
         """Test connection failure after max retries."""
         mock_modbus = Mock()
@@ -137,7 +137,7 @@ class TestSolaxInverterClient:
         mock_modbus.read_input_registers.assert_called_once_with(
             address=0x0003,
             count=3,
-            unit=1
+            device_id=1
         )
     
     def test_read_registers_modbus_error(self, client):
@@ -315,10 +315,10 @@ class TestInverterDisplay:
 class TestMainExecution:
     """Test suite for main execution logic."""
     
-    @patch('solax_poll.argparse.ArgumentParser.parse_args')
-    @patch('solax_poll.SolaxInverterClient')
-    @patch('solax_poll.InverterDisplay')
-    @patch('solax_poll.time.sleep')
+    @patch('solax_modbus.main.argparse.ArgumentParser.parse_args')
+    @patch('solax_modbus.main.SolaxInverterClient')
+    @patch('solax_modbus.main.InverterDisplay')
+    @patch('solax_modbus.main.time.sleep')
     def test_main_loop_keyboard_interrupt(self, mock_sleep, mock_display_class, 
                                          mock_client_class, mock_parse_args):
         """Test main loop handles keyboard interrupt gracefully."""
@@ -347,7 +347,7 @@ class TestMainExecution:
         mock_sleep.side_effect = KeyboardInterrupt()
         
         # Import and run main
-        from solax_poll import main
+        from solax_modbus.main import main
         
         # Should exit gracefully without raising exception
         try:
