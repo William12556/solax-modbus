@@ -530,17 +530,19 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 - id: "c7d8e9f0"
   type: "non_functional"
   category: "usability"
-  description: "System SHALL be deployable with minimal technical knowledge"
+  description: "System SHALL be deployable with minimal technical knowledge on all supported platforms"
   acceptance_criteria:
     - "Installation requires <10 manual steps"
     - "Configuration via human-readable YAML"
     - "Automated dependency installation via pyproject.toml"
-    - "Systemd service for automatic startup"
+    - "Linux: systemd service for automatic startup"
+    - "macOS: manual start only; no service registration performed"
     - "Health check endpoint for monitoring tools"
   target_metric: "Time-to-production <30 minutes"
   source: "Deployment efficiency requirements"
   rationale: "Complex installation increases operational risk and cost"
   dependencies: []
+  notes: "Change: change-b4e7f1a9"
 ```
 
 ### NFR-010: Diagnostic Capability
@@ -612,17 +614,21 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 ```yaml
 - id: "a1b2c3d4"
   type: "architectural"
-  description: "System SHALL operate on specified embedded Linux platform"
+  description: "System SHALL operate on all supported target platforms"
   acceptance_criteria:
-    - "Target platform: Debian 12 (Bookworm) on ARM64"
-    - "Reference hardware: Raspberry Pi 4 (4GB)"
-    - "Development platform: macOS / Linux"
+    - "Linux target: Debian 12 (Bookworm) on ARM64 (Raspberry Pi 4)"
+    - "macOS target: any supported macOS release, x86_64 and ARM64 (Apple Silicon)"
+    - "Development platform: macOS (primary), Linux"
     - "Cross-platform compatibility via standard Python"
+    - "install.sh detects OS and applies platform-appropriate install path and service configuration"
   constraints:
     - "No platform-specific extensions without abstraction"
-    - "Deployment via systemd service"
-  source: "Deployment platform decision"
-  rationale: "Raspberry Pi provides cost-effective embedded platform for edge deployment"
+    - "Linux deployment via systemd service"
+    - "macOS deployment: manual start only; no service registration"
+    - "macOS install path: ~/.local/opt/solax-monitor"
+    - "Linux install path: /opt/solax-monitor"
+  source: "Deployment platform decision; change-b4e7f1a9"
+  rationale: "macOS support enables use of development platform as production monitoring host"
   dependencies: []
 ```
 
@@ -856,6 +862,7 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 |---------|------|---------|
 | 1.0 | 2026-01-08 | Initial requirements document reverse-engineered from design documents and deprecated SDS |
 | 1.1 | 2026-01-08 | Removed FR-017 Multi-Inverter Coordination. Moved multi-inverter to out-of-scope. Updated NFR-002 for single-inverter (256MB). Replaced NFR-008 Scalability with Storage Efficiency. Updated AR-008 Extensibility. Removed traceability entries. |
+| 1.2 | 2026-03-14 | AR-003: added macOS as supported target platform (x86_64 and ARM64). NFR-009: added macOS manual-start acceptance criterion; systemd criterion scoped to Linux only. Change: change-b4e7f1a9. |
 
 ---
 

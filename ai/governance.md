@@ -555,6 +555,7 @@ exclude_lines = [
     - Strategic Domain: Reads template from ai/templates/T02-change.md
     - Strategic Domain: Creates change documents exclusively from issue documents using T02 template and saves them in folder workspace/change
     - Strategic Domain: For human-requested source code changes, first creates issue document via P04, then creates change document referencing that issue
+    - Strategic Domain: For enhancement or requirement change requests, creates issue document via P04 with type `enhancement` or `requirement_change` and origin `requirement_change`, then creates change document referencing that issue
     - Exception: Non-source-code changes (workspace/ documents per 1.4.11) may be implemented directly after human approval without issue/change documents
   - §1.4.2 Document coupling
     - Strategic Domain: Ensures one-to-one coupling between issue and change documents
@@ -1140,6 +1141,7 @@ flowchart TD
 | 7.5     | 2026-03-11 | Narrowed scope to Apple Silicon + MLX |
 | 7.6     | 2026-03-11 | Integrated AEL into workflow |
 | 7.7     | 2026-03-12 | Added name registry |
+| 7.8     | 2026-03-14 | Added enhancement and requirement_change paths to P03 §1.4.1: creates T03 issue with type `enhancement` or `requirement_change` before T02 change document; resolves omission where T03 type enum had no accommodation for non-defect change requests |
 
 ---
 [Return to Table of Contents](<#table of contents>)

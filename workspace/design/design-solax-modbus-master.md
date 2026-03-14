@@ -209,24 +209,37 @@ solax-modbus/
 
 ```yaml
 development_environment:
-  platform: "macOS / Linux"
+  platform: "macOS (primary), Linux"
   python_version: "3.9+"
   toolchain:
     - pytest
     - pymodbus
 ```
 
-### Target Platform
+### Target Platforms
 
 ```yaml
-target_platform:
-  type: "embedded"
-  os: "Debian 12 (Bookworm)"
-  architecture: "ARM64 (Raspberry Pi 4)"
-  constraints:
-    - "Memory: ≤512MB"
-    - "CPU: ≤10% sustained"
-    - "Network: Local LAN access to inverter"
+target_platforms:
+  - name: "Raspberry Pi / Debian"
+    os: "Debian 12 (Bookworm)"
+    architecture: "ARM64 (Raspberry Pi 4)"
+    service_manager: "systemd"
+    install_path: "/opt/solax-monitor"
+    auto_start: true
+    constraints:
+      - "Memory: ≤512MB"
+      - "CPU: ≤10% sustained"
+      - "Network: Local LAN access to inverter"
+  - name: "macOS"
+    os: "macOS (any supported release)"
+    architecture: "x86_64, ARM64 (Apple Silicon)"
+    service_manager: "none"
+    install_path: "~/.local/opt/solax-monitor"
+    auto_start: false
+    constraints:
+      - "python3 must be available in PATH"
+      - "Network: Local LAN access to inverter"
+      - "Manual start required"
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -678,6 +691,7 @@ logging:
 | 1.4 | 2026-01-08 | Removed multi-inverter support from scope. Removed InverterPool and PollingCoordinator components. Removed InverterPool section. Updated component diagrams and tables. |
 | 1.5 | 2026-01-09 | Removed all control/write operations. System is read-only monitoring only. Removed InverterController component and references. Updated scope, architecture diagrams, and component tables. |
 | 1.6 | 2026-01-09 | Updated file paths for Python package structure. Changed src/solax_poll.py to src/solax_modbus/main.py and src/emulator/ to src/solax_modbus/emulator/. Added package initialization file. |
+| 1.7 | 2026-03-14 | Added macOS as supported target platform. Replaced single target_platform block with target_platforms list. Updated development_environment platform field. Change: change-b4e7f1a9. |
 
 ---
 
