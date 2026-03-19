@@ -8,6 +8,7 @@ Self-contained emulator for testing Modbus TCP communication with Solax inverter
 Simulates input registers (telemetry) and holding registers (configuration).
 """
 
+import argparse
 import logging
 import time
 import math
@@ -22,7 +23,7 @@ import threading
 # CONFIGURATION CONSTANTS
 # ============================================================================
 
-# Network Configuration
+# Network Configuration (used as defaults; runtime values passed via CLI)
 MODBUS_HOST = '0.0.0.0'  # Listen on all interfaces
 MODBUS_PORT = 502
 MODBUS_UNIT_ID = 1
@@ -275,14 +276,14 @@ def state_update_loop(state, input_block, holding_block):
 # MAIN EMULATOR
 # ============================================================================
 
-def run_emulator():
+def run_emulator(host, port, unit_id):
     """Start Modbus TCP emulator server."""
     logger.info("=" * 60)
     logger.info("Solax X3 Hybrid Inverter Modbus TCP Emulator")
     logger.info("=" * 60)
-    logger.info(f"Host: {MODBUS_HOST}")
-    logger.info(f"Port: {MODBUS_PORT}")
-    logger.info(f"Unit ID: {MODBUS_UNIT_ID}")
+    logger.info(f"Host: {host}")
+    logger.info(f"Port: {port}")
+    logger.info(f"Unit ID: {unit_id}")
     logger.info(f"PV Capacity: {PV1_MAX_POWER + PV2_MAX_POWER}W")
     logger.info(f"Battery: {BATTERY_CAPACITY}Wh @ {BATTERY_VOLTAGE}V")
     logger.info(f"Initial SOC: {INITIAL_BATTERY_SOC}%")
@@ -302,7 +303,7 @@ def run_emulator():
         hr=holding_block,  # Holding Registers
         ir=input_block     # Input Registers
     )
-    context = ModbusServerContext(devices={MODBUS_UNIT_ID: store}, single=False)
+    context = ModbusServerContext(devices={unit_id: store}, single=False)
     
     # Device identification
     identity = ModbusDeviceIdentification()
@@ -329,7 +330,7 @@ def run_emulator():
         StartTcpServer(
             context=context,
             identity=identity,
-            address=(MODBUS_HOST, MODBUS_PORT)
+            address=(host, port)
         )
     except KeyboardInterrupt:
         logger.info("\nShutting down emulator...")
@@ -343,4 +344,26 @@ def run_emulator():
 # ============================================================================
 
 if __name__ == "__main__":
-    run_emulator()
+    parser = argparse.ArgumentParser(
+        description="Solax X3 Hybrid Inverter Modbus TCP Emulator"
+    )
+    parser.add_argument(
+        "--host",
+        default=MODBUS_HOST,
+        help=f"Host address to listen on (default: {MODBUS_HOST})"
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=MODBUS_PORT,
+        help=f"TCP port to listen on (default: {MODBUS_PORT})"
+    )
+    parser.add_argument(
+        "--unit-id",
+        type=int,
+        default=MODBUS_UNIT_ID,
+        dest="unit_id",
+        help=f"Modbus unit ID (default: {MODBUS_UNIT_ID})"
+    )
+    args = parser.parse_args()
+    run_emulator(host=args.host, port=args.port, unit_id=args.unit_id)

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Solax-Modbus Install Script
 # Supports: Linux (Debian/Raspberry Pi), macOS
-# Usage: ./install.sh <wheel-filename>
+# Usage: ./install.sh <path-to-wheel>
 #
 # Linux:  installs to /opt/solax-monitor/, registers systemd service
 # macOS:  installs to ~/.local/opt/solax-monitor/, manual start only
@@ -33,17 +33,32 @@ VENV_DIR="$INSTALL_DIR/venv"
 # Argument validation
 # ---------------------------------------------------------------------------
 if [ -z "$1" ]; then
-    echo "ERROR: Wheel filename required"
-    echo "Usage: ./install.sh solax_modbus-X.Y.Z-py3-none-any.whl"
+    echo "ERROR: Wheel path required"
+    echo "Usage: ./install.sh <path-to-wheel>"
+    echo "Example: ./install.sh dist/solax_modbus-0.1.0-py3-none-any.whl"
     exit 1
 fi
 
-WHEEL="$1"
-VERSION=$(echo "$WHEEL" | cut -d'-' -f2)
+# Resolve wheel path: absolute paths used as-is; relative paths resolved
+# against the current working directory
+if [[ "$1" = /* ]]; then
+    WHEEL_PATH="$1"
+else
+    WHEEL_PATH="$(pwd)/$1"
+fi
+
+if [ ! -f "$WHEEL_PATH" ]; then
+    echo "ERROR: Wheel file not found: $WHEEL_PATH"
+    exit 1
+fi
+
+WHEEL_FILE="$(basename "$WHEEL_PATH")"
+VERSION=$(echo "$WHEEL_FILE" | cut -d'-' -f2)
 
 echo "==> Installing solax-modbus version $VERSION"
 echo "==> Platform: $OS"
 echo "==> Install directory: $INSTALL_DIR"
+echo "==> Wheel: $WHEEL_PATH"
 
 # ---------------------------------------------------------------------------
 # python3 availability check
@@ -81,13 +96,6 @@ fi
 echo "==> Cleaning existing installation..."
 "$VENV_DIR/bin/pip" uninstall -y solax-modbus 2>/dev/null || true
 
-# Handle both relative and absolute wheel paths
-if [[ "$WHEEL" = /* ]]; then
-    WHEEL_PATH="$WHEEL"
-else
-    WHEEL_PATH="/tmp/$WHEEL"
-fi
-
 echo "==> Installing from $WHEEL_PATH"
 "$VENV_DIR/bin/pip" install "$WHEEL_PATH"
 
@@ -107,7 +115,7 @@ echo "✓ Installation successful: version $INSTALLED"
 echo ""
 
 # ---------------------------------------------------------------------------
-# Post-install: platform-specific service registration
+# Post-install: platform-specific instructions
 # ---------------------------------------------------------------------------
 if [ "$OS" = "Linux" ]; then
     echo "Run monitor with:"
