@@ -23,6 +23,7 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 - Python 3.9+
 - Build tools: `pip install build`
 - Git repository clone
+- `gh` CLI for release publishing: `brew install gh`, then `gh auth login`
 
 **Raspberry Pi:**
 - Debian 12 (tested platform)
@@ -35,32 +36,48 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 
 ```bash
 cd /path/to/solax-modbus
-
-# Use build script
 chmod +x build.sh
 ./build.sh
 ```
 
 #### Deploy to Raspberry Pi
 
+**Option A — Development deployment (SCP)**
+
 ```bash
-# Transfer wheel
-scp dist/solax_modbus-*.whl pi@raspberrypi:/tmp/
+# Transfer wheel and install script
+scp dist/solax_modbus-*.whl install.sh pi@<hostname>:/tmp/
 
-# Connect to Pi
-ssh pi@raspberrypi
+# Install on Pi
+ssh pi@<hostname>
+chmod +x /tmp/install.sh && /tmp/install.sh /tmp/solax_modbus-*.whl
+```
 
-# Initial setup
-sudo mkdir -p /opt/solax-monitor
-cd /opt/solax-monitor
-sudo python3 -m venv venv
-sudo ./venv/bin/pip install /tmp/solax_modbus-*.whl
+**Option B — GitHub release**
+
+Publish a release from Mac:
+
+```bash
+chmod +x release.sh
+./release.sh
+```
+
+Then install on Pi from the published release:
+
+```bash
+# Latest release
+curl -fsSL https://github.com/William12556/solax-modbus/releases/latest/download/install.sh -o install.sh
+chmod +x install.sh && ./install.sh
+
+# Specific version
+./install.sh 0.1.5
 ```
 
 ### Configure Service
 
+systemd registration is manual. Create a unit file on the Pi after installation:
+
 ```bash
-# Create systemd service
 sudo tee /etc/systemd/system/solax-monitor.service << 'EOF'
 [Unit]
 Description=Solax X3 Hybrid Inverter Monitor
@@ -79,7 +96,6 @@ RestartSec=10
 WantedBy=multi-user.target
 EOF
 
-# Enable and start
 sudo systemctl daemon-reload
 sudo systemctl enable solax-monitor
 sudo systemctl start solax-monitor
@@ -90,24 +106,33 @@ sudo systemctl start solax-monitor
 ### Verify
 
 ```bash
-# Check service status
 sudo systemctl status solax-monitor
-
-# Monitor logs
 sudo journalctl -u solax-monitor -f
 ```
 
 ### Updates
 
-```bash
-# Build on Mac
-cd /path/to/solax-modbus
-./build.sh
-scp dist/solax_modbus-*.whl pi@raspberrypi:/tmp/
+Increment `version` in `pyproject.toml`, then follow the same workflow used for initial installation.
 
-# Install on Pi using install script
-ssh pi@raspberrypi
-./install.sh solax_modbus-X.Y.Z-py3-none-any.whl
+**Development deployment:**
+
+```bash
+# Mac
+./build.sh
+scp dist/solax_modbus-*.whl install.sh pi@<hostname>:/tmp/
+
+# Pi
+/tmp/install.sh /tmp/solax_modbus-*.whl
+```
+
+**GitHub release:**
+
+```bash
+# Mac
+./release.sh
+
+# Pi
+./install.sh
 ```
 
 ## Documentation

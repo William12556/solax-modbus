@@ -21,6 +21,7 @@ Created: 2026 January 09
 - Python 3.9+
 - Build module: `pip install build`
 - Project repository: `/Users/<user_name>/Documents/GitHub/solax-modbus`
+- `gh` CLI for release publishing: `brew install gh`, then `gh auth login`
 
 **Raspberry Pi:**
 - Debian-based OS (tested on Debian 12)
@@ -34,6 +35,7 @@ Created: 2026 January 09
 # On Mac
 python3 --version  # 3.9+
 python3 -m pip show build
+gh --version             # required for release.sh only
 
 # On Pi
 python3 --version  # 3.9+
@@ -44,56 +46,91 @@ ping <INVERTER-IP>
 
 ## 2. Initial Installation
 
-### 2.1. Build Package
+Two workflows are provided: development deployment and general deployment.
+
+---
+
+### Development Deployment
+
+For use during development and testing. The wheel is built locally and transferred directly to the Pi via SCP. No GitHub release is created.
+
+**Step 1 — Build (Mac)**
 
 ```bash
-# On Mac, in project root
 cd /Users/<user_name>/Documents/GitHub/solax-modbus
 
-# Make script executable (one-time)
-chmod +x build.sh
+# One-time
+chmod +x build.sh install.sh
 
-# Build distribution
 ./build.sh
 ```
 
-The `build.sh` script:
-- Verifies Python 3.9+ and build module installed
-- Extracts version from `pyproject.toml`
-- Cleans previous builds
-- Creates wheel in `dist/`
-- Displays transfer command
+`build.sh` verifies prerequisites, builds the wheel into `dist/`, and prints next-step commands.
 
-### 2.2. Transfer to Pi
+**Step 2 — Transfer and install**
 
 ```bash
-# From Mac
-scp dist/solax_modbus-*.whl pi@<hostname>:/tmp/
-```
+# Transfer wheel and install script
+scp dist/solax_modbus-*.whl install.sh pi@<hostname>:/tmp/
 
-### 2.3. Install on Pi
-
-```bash
-# Connect to Pi
+# Install on Pi
 ssh pi@<hostname>
-
-# Create installation directory
-sudo mkdir -p /opt/solax-monitor
-cd /opt/solax-monitor
-
-# Create virtual environment
-sudo python3 -m venv venv
-
-# Install package
-sudo ./venv/bin/pip install /tmp/solax_modbus-*.whl
-
-# Verify
-./venv/bin/python -c "import solax_modbus; print(solax_modbus.__version__)"
+chmod +x /tmp/install.sh && /tmp/install.sh /tmp/solax_modbus-*.whl
 ```
 
-### 2.4. Configure Service
+---
 
-Create systemd service file:
+### General Deployment
+
+For publishing a release to GitHub. `release.sh` calls `build.sh`, then publishes a tagged GitHub release with the wheel and `install.sh` as downloadable assets.
+
+**Step 1 — Build and publish (Mac)**
+
+```bash
+chmod +x release.sh
+./release.sh
+```
+
+**Step 2 — Install on Pi**
+
+**Option A — curl (recommended)**
+
+```bash
+curl -fsSL https://github.com/William12556/solax-modbus/releases/latest/download/install.sh -o install.sh
+chmod +x install.sh && ./install.sh
+```
+
+Or with wget:
+
+```bash
+wget -qO install.sh https://github.com/William12556/solax-modbus/releases/latest/download/install.sh
+chmod +x install.sh && ./install.sh
+```
+
+To install a specific version:
+
+```bash
+./install.sh 0.1.5
+```
+
+**Option B — pipe to bash**
+
+```bash
+curl -fsSL https://github.com/William12556/solax-modbus/releases/latest/download/install.sh | bash
+```
+
+Note: the script executes without prior inspection.
+
+---
+
+`install.sh` (all options):
+- Creates virtual environment at `/opt/solax-monitor/venv/` (Linux) or `~/.local/opt/solax-monitor/venv/` (macOS)
+- Installs the wheel
+- Verifies installed version
+
+### 2.3. Configure Service
+
+systemd registration is manual. Create a unit file after installation:
 
 ```bash
 sudo tee /etc/systemd/system/solax-monitor.service << 'EOF'
@@ -143,47 +180,39 @@ Expected: Service active, Modbus connection established, telemetry display activ
 
 ## 3. Updates
 
-### 3.1. Build New Version
+Increment `version` in `pyproject.toml`, then follow the same workflow used for initial installation.
+
+**Development deployment:**
 
 ```bash
-# On Mac, in project root
-cd /Users/<user_name>/Documents/GitHub/solax-modbus
+# Mac
 ./build.sh
+scp dist/solax_modbus-*.whl install.sh pi@<hostname>:/tmp/
+
+# Pi
+/tmp/install.sh /tmp/solax_modbus-*.whl
 ```
 
-### 3.2. Transfer and Install
+**General deployment:**
 
 ```bash
-# Transfer wheel
-scp dist/solax_modbus-*.whl pi@<hostname>:/tmp/
+# Mac
+./release.sh
 
-# Connect to Pi
-ssh pi@<hostname>
+# Pi — Option A
+./install.sh
 
-# Transfer install script (one-time)
-scp /Users/<user_name>/Documents/GitHub/solax-modbus/install.sh .
-chmod +x install.sh
-
-# Run install script
-./install.sh solax_modbus-X.Y.Z-py3-none-any.whl
+# Pi — Option B
+curl -fsSL https://github.com/William12556/solax-modbus/releases/latest/download/install.sh | bash
 ```
 
-The `install.sh` script:
-- Stops service
-- Uninstalls old version
-- Clears package cache
-- Installs new version
-- Verifies version match
-- Restarts service
-- Displays service status
-
-### 3.3. Verify Update
+### 3.1. Verify Update
 
 ```bash
 sudo journalctl -u solax-monitor -f
 ```
 
-Expected: Service restarts successfully, telemetry display resumes.
+Expected: Service restarts and telemetry resumes.
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -453,6 +482,7 @@ sudo journalctl -u solax-monitor | grep "Grid\|PV\|Battery"
 | 1.0 | 2026-01-09 | Initial deployment guide |
 | 1.1 | 2026-01-09 | Added scripted deployment workflow |
 | 2.0 | 2026-01-21 | Simplified to script-based workflow only, removed redundant manual procedures |
+| 2.1 | 2026-03-19 | Added GitHub release workflow; three install modes (GitHub download, SCP, pipe-to-bash); release.sh; manual systemd registration |
 
 ---
 
