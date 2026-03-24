@@ -33,6 +33,7 @@ component_info:
   date: "2025-12-30"
   status: "Implemented"
   source_file: "src/solax_modbus/emulator/solax_emulator.py"
+  platforms: "macOS, Linux"
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -265,24 +266,39 @@ def run_emulator():
 
 ## Usage
 
+### Platform Support
+
+The emulator is implemented in pure Python with no OS-specific dependencies. It runs on macOS and Linux. Port 502 is a privileged port on both platforms; `sudo` is required unless an alternative port is used via `--port`.
+
 ### Command Line
 
 ```bash
-# Start emulator (port 502 requires root or port forwarding)
-python src/solax_modbus/emulator/solax_emulator.py
+# macOS or Linux — sudo required for port 502
+sudo python src/solax_modbus/emulator/solax_emulator.py
+
+# Use a non-privileged port to avoid sudo
+python src/solax_modbus/emulator/solax_emulator.py --port 5020
 ```
 
 ### Testing with Client
 
 ```bash
 # Terminal 1
-python src/solax_modbus/emulator/solax_emulator.py
+sudo python src/solax_modbus/emulator/solax_emulator.py
 
 # Terminal 2
 python -m solax_modbus.main 127.0.0.1
 ```
 
-To use a non-default port, edit `MODBUS_PORT` in `solax_emulator.py` before starting.
+If using a non-privileged port:
+
+```bash
+# Terminal 1
+python src/solax_modbus/emulator/solax_emulator.py --port 5020
+
+# Terminal 2
+python -m solax_modbus.main 127.0.0.1 --port 5020
+```
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -330,6 +346,7 @@ To use a non-default port, edit `MODBUS_PORT` in `solax_emulator.py` before star
 |---------|------|---------|
 | 1.0 | 2025-12-30 | Initial component design documenting implemented emulator |
 | 1.1 | 2026-03-13 | Corrected class diagram (relationships, accurate attributes/methods); corrected run_emulator() interface; corrected source path; added Known Limitations section (MP-001, MP-002, MP-003) |
+| 1.2 | 2026-03-24 | Corrected platform scope: emulator runs on macOS and Linux (not Pi only). Updated Component Information, added Platform Support section, updated Usage commands to include sudo and non-privileged port alternative. |
 
 ---
 
