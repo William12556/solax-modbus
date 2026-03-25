@@ -68,7 +68,7 @@ chmod +x release.sh
 
 ## Install — Raspberry Pi Linux
 
-Installs to `/opt/solax-monitor/`.
+Installs to `/opt/solax-monitor/`. A symlink is created at `/usr/local/bin/solax-monitor` so the command is available without a full path. The symlink is verified on each install and corrected if stale.
 
 ### Primary — GitHub release
 
@@ -102,6 +102,8 @@ chmod +x /tmp/install.sh && /tmp/install.sh /tmp/solax_modbus-*.whl
 ## Install — Apple macOS
 
 Installs to `~/.local/opt/solax-monitor/`. No `sudo` required. Manual start only — no service registration.
+
+The installer adds `~/.local/opt/solax-monitor/venv/bin` to `PATH` in your shell profile (`~/.zshrc` or `~/.bash_profile`). Open a new terminal after installation for the change to take effect.
 
 ### Primary — GitHub release
 
@@ -249,14 +251,20 @@ pytest --cov=src --cov-report=html
 
 **Development with emulator:**
 
-The emulator runs on macOS and Linux. Port 502 requires elevated privileges on both platforms.
+The emulator runs on macOS and Linux. Port 502 requires elevated privileges on both platforms; use `--port` to specify an unprivileged port instead.
 
 ```bash
-# Terminal 1: Start emulator (requires sudo for port 502 — macOS and Linux)
-sudo python -m solax_modbus.emulator
+# Terminal 1: Start emulator on an unprivileged port
+python -m solax_modbus.emulator.solax_emulator --port 5020
 
-# Terminal 2: Connect client
-solax-monitor --ip 127.0.0.1 --interval 2
+# Terminal 2: Connect monitor to emulator port
+solax-monitor 127.0.0.1 --port 5020
+```
+
+To use the default port 502, `sudo` is required on both macOS and Linux:
+
+```bash
+sudo python -m solax_modbus.emulator.solax_emulator
 ```
 
 [Return to Table of Contents](<#table-of-contents>)
@@ -295,6 +303,7 @@ MIT License — see [LICENSE](<LICENSE>) file.
 | 1.0 | 2026-03-19 | Initial README |
 | 1.1 | 2026-03-24 | Restructured installation: added Publish section; separated Raspberry Pi Linux and Apple macOS install sections; added developer SCP path for each platform |
 | 1.2 | 2026-03-24 | Corrected emulator platform constraint: emulator runs on macOS and Linux (not Pi only); sudo required on both for port 502 |
+| 1.3 | 2026-03-24 | Updated PATH configuration: Linux symlink to /usr/local/bin/; macOS PATH added to shell profile; updated emulator development commands |
 
 ---
 

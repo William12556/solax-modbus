@@ -7,8 +7,8 @@
 #   ./install.sh <version>                    # fetch specific version from GitHub
 #   ./install.sh <path-to-wheel>              # install from local wheel file
 #
-# Linux:  installs to /opt/solax-monitor/, manual systemd registration
-# macOS:  installs to ~/.local/opt/solax-monitor/, manual start only
+# Linux:  installs to /opt/solax-monitor/, symlink in /usr/local/bin/
+# macOS:  installs to ~/.local/opt/solax-monitor/, PATH added to shell profile
 #
 # Change: change-b4e7f1a9-macos-platform-support
 
@@ -157,18 +157,51 @@ echo "✓ Installation successful: version $INSTALLED"
 echo ""
 
 # ---------------------------------------------------------------------------
-# Post-install: platform-specific instructions
+# PATH configuration: platform-specific
 # ---------------------------------------------------------------------------
 if [ "$OS" = "Linux" ]; then
-    echo "Run monitor with:"
-    echo "  $VENV_DIR/bin/solax-monitor <inverter-ip> [options]"
-    echo ""
+    # Linux: symlink into /usr/local/bin (already in PATH on Debian/Raspberry Pi)
+    SYMLINK="/usr/local/bin/solax-monitor"
+    TARGET="$VENV_DIR/bin/solax-monitor"
+
+    if [ -L "$SYMLINK" ] && [ "$(readlink "$SYMLINK")" = "$TARGET" ]; then
+        echo "==> Symlink already correct: $SYMLINK"
+    else
+        echo "==> Configuring symlink: $SYMLINK -> $TARGET"
+        sudo ln -sf "$TARGET" "$SYMLINK"
+    fi
+
+else
+    # macOS: append venv bin to shell profile if not already present
+    if [ "$SHELL" = "/bin/zsh" ]; then
+        SHELL_PROFILE="$HOME/.zshrc"
+    else
+        SHELL_PROFILE="$HOME/.bash_profile"
+    fi
+
+    PATH_LINE="export PATH=\"$VENV_DIR/bin:\$PATH\""
+
+    if grep -qF "$VENV_DIR/bin" "$SHELL_PROFILE" 2>/dev/null; then
+        echo "==> PATH already configured in $SHELL_PROFILE"
+    else
+        echo "$PATH_LINE" >> "$SHELL_PROFILE"
+        echo "==> Added $VENV_DIR/bin to PATH in $SHELL_PROFILE"
+        echo ""
+        echo "NOTE: Open a new terminal for the PATH change to take effect."
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# Post-install instructions
+# ---------------------------------------------------------------------------
+echo ""
+echo "Run monitor with:"
+echo "  solax-monitor <inverter-ip> [options]"
+echo ""
+
+if [ "$OS" = "Linux" ]; then
     echo "To register as a systemd service, create a unit file manually."
 else
-    # macOS: manual start only, no service registration
-    echo "Run monitor with:"
-    echo "  $VENV_DIR/bin/solax-monitor <inverter-ip> [options]"
-    echo ""
     echo "Note: Automatic launch on login is not configured."
     echo "      Start the monitor manually when required."
 fi

@@ -317,7 +317,7 @@ async def main_async(args: argparse.Namespace) -> int:
             worker_model   = args.worker_model   or model
             reviewer_model = args.reviewer_model or model
             rc = await run_loop(client, mcp, worker_model, reviewer_model,
-                                work_recipe, rev_recipe, task, max_iter, phase_max_iter, state_dir)
+                                work_recipe, rev_recipe, task, max_iter, state_dir)
     finally:
         await mcp.close()
 
