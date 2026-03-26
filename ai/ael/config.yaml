@@ -15,6 +15,12 @@ mcp_servers:
     env:
       PATH: "/opt/homebrew/opt/node@24/bin:/usr/local/bin:/usr/bin:/bin"
 
+  mcp-grep:
+    command: "/Users/williamwatson/mcp-grep-env/bin/python"
+    args:
+      - "-m"
+      - "mcp_grep.server"
+
 # Inference endpoint readiness
 readiness:
   timeout_seconds: 60
@@ -22,6 +28,17 @@ readiness:
 
 # Loop control
 loop:
-  max_iterations: 5          # outer Ralph Loop cycle limit
-  phase_max_iterations: 20  # tool-call iterations per phase (work or review)
+  max_iterations: 5         # Ralph Loop outer iterations (work+review cycles)
+  phase_max_iterations: 20  # Inner tool-call iterations per phase
+  mcp_error_threshold: 3    # Write RALPH-BLOCKED.md after this many consecutive MCP errors per phase
+  max_tool_calls_per_iteration: 10  # Truncate tool calls per iteration beyond this count
   state_dir: ".ael/ralph"
+
+# Context budget
+# context_window: null resolves from model config.json on disk.
+# Set explicitly to override (e.g. when model is remote and not stored locally).
+context:
+  models_dir: "/Users/williamwatson/ai-models"
+  context_window: null      # tokens; null = read from model config.json
+  budget_warn_pct: 0.80     # print warning at this fraction of context window
+  budget_abort_pct: 0.95    # abort phase at this fraction
