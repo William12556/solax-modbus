@@ -42,6 +42,7 @@ import json
 import logging
 import os
 import re
+import subprocess
 import sys
 import time
 import uuid
@@ -649,6 +650,30 @@ async def run_phase(
                     return 1
             else:
                 mcp_error_count = 0
+                # P4: post-write Python syntax check
+                if tc["name"] in ("write", "edit", "write_file", "create_file"):
+                    _py_path = tc["arguments"].get("path", "")
+                    if _py_path and _py_path.endswith(".py"):
+                        proc = subprocess.run(
+                            ["python", "-m", "py_compile", _py_path],
+                            capture_output=True,
+                            text=True,
+                        )
+                        if proc.returncode != 0:
+                            err = proc.stderr.strip()
+                            log.warning("syntax error in %s: %s", _py_path, err)
+                            console.print(
+                                f"[red][ael] syntax error: {escape(_py_path)}: "
+                                f"{escape(err[:200])}[/red]"
+                            )
+                            messages.append({
+                                "role": "user",
+                                "content": (
+                                    f"Syntax error detected in {_py_path}:\n\n"
+                                    f"{err}\n\n"
+                                    "Correct the file before continuing."
+                                ),
+                            })
 
         # Check for work-complete signal written by the model via MCP
         if os.path.exists(os.path.join(state_dir, "work-complete.txt")):
