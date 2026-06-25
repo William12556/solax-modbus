@@ -28,7 +28,7 @@ affected_scope:
     - name: "solax_emulator.py"
       file_path: "src/solax_modbus/emulator/solax_emulator.py"
   designs:
-    - design_ref: "workspace/design/design-c2b3c4d5-component_protocol_emulator.md"
+    - design_ref: "ai/workspace/design/design-c2b3c4d5-component_protocol_emulator.md"
   version: "0.1.4"
 
 reproduction:
@@ -104,7 +104,7 @@ verification_enhanced:
 
 traceability:
   design_refs:
-    - "workspace/design/design-c2b3c4d5-component_protocol_emulator.md"
+    - "ai/workspace/design/design-c2b3c4d5-component_protocol_emulator.md"
   change_refs: []
   test_refs: []
 

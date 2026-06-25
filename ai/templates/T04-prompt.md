@@ -24,30 +24,15 @@ prompt_info:
   task_type: ""  # code_generation, debug, refactor, optimization
   source_ref: ""  # design-<uuid> or change-<uuid>
   date: ""
-  priority: ""  # critical, high, medium, low
   iteration: 1  # Increments with each debug cycle
   coupled_docs:
     change_ref: "change-<uuid>"  # Must reference source change UUID
     change_iteration: 1  # Must match change.iteration
 
-behavioral_standards:
-  source: ""  # Path to behavioral-standards.yaml (e.g., "workspace/knowledge/behavioral-standards.yaml")
-  enforcement_level: ""  # strict, advisory, disabled
-
-
-tactical_execution:
-  mode: ""  # ralph_loop, direct
-  worker_model: ""  # Model name for code generation
-  reviewer_model: ""  # Model name for review (ralph_loop only)
-  max_iterations: 10  # Loop iteration limit (ralph_loop only)
-  boundary_conditions:
-    token_budget: 50000
-    time_limit_minutes: 30
-
 context:
   purpose: ""  # What this code accomplishes
   integration: ""  # How it fits in project
-  knowledge_references: [] # workspace/knowledge/ docs consulted
+  knowledge_references: [] # ai/workspace/knowledge/ docs consulted
   constraints:
     - ""  # Technical limitations
 
@@ -132,7 +117,7 @@ success_criteria:
   - ""
 
 element_registry:
-  source: ""  # Path to name registry master (e.g., "workspace/design/design-<project>-name_registry-master.md")
+  source: ""  # Path to name registry master (e.g., "ai/workspace/design/design-<project>-name_registry-master.md")
   entries:    # Relevant entries for this code generation task (copied from registry)
     modules:
       - name: ""
@@ -149,12 +134,16 @@ element_registry:
         module: ""
         type: ""
 
-notes: ""
+tactical_brief: ""
+# REQUIRED — must be populated before issuing AEL command.
+# Plain text ~200-400 tokens. Include: file(s) to modify, hard constraints,
+# implementation steps, deliverable paths, success criteria.
+# Omit all governance metadata.
+# FORMAT: orchestrator detects tactical_brief only in ```yaml blocks with tactical_brief
+# as the root key. When using per-section YAML blocks, author §8.0 as a dedicated
+# ```yaml block (not ```text) with tactical_brief: as the sole root key.
 
-metadata:
-  copyright: "Copyright (c) 2025 William Watson. This work is licensed under the MIT License."
-  template_version: "1.0"
-  schema_type: "t04_prompt"
+notes: ""
 ```
 
 ---
@@ -170,6 +159,7 @@ required:
   - specification
   - design
   - deliverable
+  - tactical_brief
 
 properties:
   prompt_info:
@@ -196,13 +186,6 @@ properties:
         type: string
       date:
         type: string
-      priority:
-        type: string
-        enum:
-          - critical
-          - high
-          - medium
-          - low
       iteration:
         type: integer
         minimum: 1
@@ -218,45 +201,6 @@ properties:
           change_iteration:
             type: integer
             minimum: 1
-  
-  behavioral_standards:
-    type: object
-    properties:
-      source:
-        type: string
-        pattern: "^workspace/knowledge/.*\\.yaml$"
-        description: "Path to behavioral standards YAML file"
-      enforcement_level:
-        type: string
-        enum:
-          - strict
-          - advisory
-          - disabled
-        description: "Level of behavioral constraint enforcement"
-
-  tactical_execution:
-    type: object
-    properties:
-      mode:
-        type: string
-        enum:
-          - ralph_loop
-          - direct
-      worker_model:
-        type: string
-      reviewer_model:
-        type: string
-      max_iterations:
-        type: integer
-        minimum: 1
-        maximum: 100
-      boundary_conditions:
-        type: object
-        properties:
-          token_budget:
-            type: integer
-          time_limit_minutes:
-            type: integer
   
   context:
     type: object
@@ -436,6 +380,26 @@ properties:
         items:
           type: string
   
+  output_format:
+    type: object
+    properties:
+      structure:
+        type: string
+        enum:
+          - code_only
+          - code_with_comments
+          - full_explanation
+      integration_notes:
+        type: string
+        enum:
+          - none
+          - brief
+          - detailed
+      constraints:
+        type: array
+        items:
+          type: string
+  
   deliverable:
     type: object
     required:
@@ -514,23 +478,13 @@ properties:
                 type:
                   type: string
   
+  tactical_brief:
+    type: string
+    minLength: 1
+    description: "Required — concise AEL task payload. Must not be empty. Used by orchestrator in preference to full document."
+  
   notes:
     type: string
-  
-  metadata:
-    type: object
-    required:
-      - template_version
-      - schema_type
-    properties:
-      copyright:
-        type: string
-      template_version:
-        type: string
-      schema_type:
-        type: string
-        enum:
-          - t04_prompt
 ```
 
 ---
@@ -544,7 +498,12 @@ properties:
 | 1.2     | 2025-02-13 | Added behavioral_standards section for autonomous loop execution behavioral constraints |
 | 1.3     | 2025-02-13 | Added tactical_execution section for Ralph Loop integration: mode selection, worker/reviewer model specification, iteration limits, boundary conditions |
 | 1.4     | 2026-03-12 | Added element_registry field with source reference and scoped entries for canonical naming contract |
+| 1.5     | 2026-03-18 | Added tactical_brief field: concise AEL task payload authored by Strategic Domain; orchestrator uses brief in preference to full document to reduce model context consumption |
+| 1.6     | 2026-03-24 | Removed behavioral_standards, tactical_execution, metadata, priority fields (governance-only, zero AEL utility); fixed tactical_brief placeholder (was #-comment block causing fallback to raw document); added tactical_brief to schema required with minLength:1; removed orphaned mcp_config and malformed enum items from schema |
+| 1.7     | 2026-03-25 | Added FORMAT comment to tactical_brief field: orchestrator detects tactical_brief only in ```yaml blocks with tactical_brief as root key; per-section prompts must author §8.0 as a dedicated ```yaml block (not ```text) |
+| 1.8     | 2026-06-14 | Relocated example paths under ai/: knowledge_references comment and element_registry source example use ai/workspace/ |
+| 1.9     | 2026-06-16 | Standardised copyright footer format |
 
 ---
 
-Copyright (c) 2025 William Watson. This work is licensed under the MIT License.
+Copyright (c) 2026 William Watson. MIT License.

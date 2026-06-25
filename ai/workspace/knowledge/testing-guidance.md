@@ -69,7 +69,7 @@ Execution → Results → Issue Creation (if needed) → Closure
 **Process:**
 1. Read template from `ai/templates/T05-test.md`
 2. Create test document from generated source code
-3. Save to `workspace/test/test-<uuid>-<name>.md`
+3. Save to `ai/workspace/test/test-<uuid>-<name>.md`
 4. Couple to source prompt via UUID reference
 5. Match iteration numbers with source prompt
 
@@ -155,7 +155,7 @@ pytest -v tests/
 **Process:**
 1. Review test execution output
 2. Create result document using T06 template
-3. Save to `workspace/test/result/result-<uuid>-<n>.md`
+3. Save to `ai/workspace/test/result/result-<uuid>-<n>.md`
 4. Reference parent test UUID
 5. Match parent test iteration number
 
@@ -919,7 +919,7 @@ Claude Desktop verifies:
 ### Traceability Matrix Updates
 
 After test execution, Claude Desktop updates traceability matrix (P05) in:
-`workspace/trace/trace-traceability-matrix-master.md`
+`ai/workspace/trace/trace-traceability-matrix-master.md`
 
 ### Required Linkages
 

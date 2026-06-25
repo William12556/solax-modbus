@@ -187,13 +187,13 @@ technology_stack:
 solax-modbus/
 ├── ai/                       # Governance framework
 │   ├── governance.md
-│   └── templates/
-├── workspace/                # Development artifacts
-│   ├── design/
-│   ├── change/
-│   ├── issues/
-│   ├── test/
-│   └── trace/
+│   ├── templates/
+│   └── workspace/            # Development artifacts
+│       ├── design/
+│       ├── change/
+│       ├── issues/
+│       ├── test/
+│       └── trace/
 ├── docs/                     # Reference documentation
 ├── src/                      # Source code
 │   └── solax_modbus/         # Package

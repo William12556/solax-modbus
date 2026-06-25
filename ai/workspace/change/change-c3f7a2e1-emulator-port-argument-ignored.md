@@ -16,7 +16,7 @@ change_info:
 
 source:
   type: "bug"
-  reference: "workspace/issues/issue-c3f7a2e1-emulator-port-argument-ignored.md"
+  reference: "ai/workspace/issues/issue-c3f7a2e1-emulator-port-argument-ignored.md"
   description: >
     Emulator ignores --port, --host, and --unit-id CLI arguments.
     run_emulator() uses hardcoded module-level constants throughout.
@@ -32,7 +32,7 @@ scope:
       file_path: "src/solax_modbus/emulator/solax_emulator.py"
       change_type: "modify"
   affected_designs:
-    - design_ref: "workspace/design/design-c2b3c4d5-component_protocol_emulator.md"
+    - design_ref: "ai/workspace/design/design-c2b3c4d5-component_protocol_emulator.md"
       sections:
         - "Entry Point"
   out_of_scope:
@@ -130,7 +130,7 @@ verification:
 
 traceability:
   design_updates:
-    - design_ref: "workspace/design/design-c2b3c4d5-component_protocol_emulator.md"
+    - design_ref: "ai/workspace/design/design-c2b3c4d5-component_protocol_emulator.md"
       sections_updated:
         - "Entry Point"
       update_date: ""

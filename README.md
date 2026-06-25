@@ -1,4 +1,4 @@
-# Solax Modbus Monitoring System
+ # Solax Modbus Monitoring System
 
 Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modbus TCP protocol.
 
@@ -207,8 +207,8 @@ scp dist/solax_modbus-*.whl install.sh pi@<hostname>:/tmp/
 ## Documentation
 
 - [Deployment Guide](docs/deployment-guide.md) — Comprehensive installation and configuration
-- [Design Documents](workspace/design/) — System architecture and component specifications
-- [Test Documentation](workspace/test/) — Test plans and results
+- [Design Documents](ai/workspace/design/) — System architecture and component specifications
+- [Test Documentation](ai/workspace/test/) — Test plans and results
 
 [Return to Table of Contents](<#table-of-contents>)
 

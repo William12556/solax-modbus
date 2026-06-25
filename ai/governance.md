@@ -1,3 +1,5 @@
+Created: 2025 October 30
+
 # LLM Orchestration Framework
 
 ---
@@ -18,20 +20,20 @@
   - [P10: Requirements](<#1.11 p10 requirements>)
   
 [Templates](<#2.0 templates>)
-  - [T01: Design](templates/T01-design.md)
-  - [T02: Change](templates/T02-change.md)
-  - [T03: Issue](templates/T03-issue.md)
-  - [T04: Prompt](templates/T04-prompt.md)
-  - [T05: Test](templates/T05-test.md)
-  - [T06: Result](templates/T06-result.md)
-  - [T07: Requirements](templates/T07-requirements.md)
+  - [T01: Design](T01-design.md)
+  - [T02: Change](T02-change.md)
+  - [T03: Issue](T03-issue.md)
+  - [T04: Prompt](T04-prompt.md)
+  - [T05: Test](T05-test.md)
+  - [T06: Result](T06-result.md)
+  - [T07: Requirements](T07-requirements.md)
   
-[Workflow](<#2.0 workflow>)
+[Workflow](workflow.md)
 
 [Version History](<#version history>)
 
 ---
-###### Governance Prime Directive: Follow workflow [flowchart](<#3.0 framework execution flowchart>)
+###### Governance Prime Directive: Follow workflow [flowchart](workflow.md)
 ---
 ## 1.0 Protocols (Directives)
 
@@ -52,7 +54,7 @@
     - Strategic Domain: Plan and control: design, change, test and launching of code generation
       - Implementation options: Claude Desktop, API-based LLM
     - Tactical Domain: Execute: code generation
-      - Implementation options: Ralph Loop (AEL), custom agents, direct invocation
+      - Implementation options: Ralph Loop (AEL), Claude Code, claude-omlx, custom agents, direct invocation
     - Communication: MCP filesystem (model-independent)
   - §1.1.5 Forbidden
     - Both domains: Unrequested creation, addition, removal or change of source code and documents is forbidden
@@ -81,7 +83,7 @@
     - Strategic Domain: Uses T04 template to create code generation or debug prompts for Tactical Domain
     - Strategic Domain: Embeds complete Tier 3 component design specifications and schema within prompt documents
     - Strategic Domain: Ensures prompt documents are self-contained requiring no external file references
-    - Strategic Domain: Saves T04 prompt to workspace/prompt/prompt-\<uuid\>-\<name\>.md
+    - Strategic Domain: Saves T04 prompt to ai/workspace/prompt/prompt-\<uuid\>-\<name\>.md
     - Strategic Domain: Provides ready-to-execute AEL command in conversation after human approval
     - Human: Executes AEL command from project root
     - AEL: Reads T04 prompt as task; runs worker/reviewer Ralph Loop until SHIP or BLOCKED
@@ -90,7 +92,7 @@
     - Command format:
 ```bash
 python ai/ael/src/orchestrator.py --mode loop \
-  --task workspace/prompt/prompt-<uuid>-<n>.md
+  --task ai/workspace/prompt/prompt-<uuid>-<n>.md
 ```
   - §1.1.9 Quality
     - Human review and approval of design, change and initiation of code generation is required
@@ -118,9 +120,10 @@ python ai/ael/src/orchestrator.py --mode loop \
   - §1.1.11 Autonomous Execution Loop (AEL)
     - Reference implementation: Ralph Loop via Python AEL orchestrator (`ai/ael/`)
     - AEL provides autonomous iterative code generation within governance boundaries
-    - Loop State Directory: `.ael/ralph/` (ephemeral, per-task)
+    - Loop State Directory: `ai/state/ralph/` (ephemeral, per-task)
     - Loop Entry: After human approval of T04 Prompt
     - Integration Scripts: Project-scoped scripts reside in `<project>/bin/`. Scripts are version-controlled project artifacts. Global installation (e.g. `~/bin/`) is not required.
+    - Claude Desktop Interface: `ael-mcp` (standalone repository) provides `start_ael`, `ael_status`, and `reset_ael` MCP tools for use within the Claude Desktop profile; registers once in Claude Desktop MCP configuration; serves all downstream projects via `project_dir` parameter; reference: §1.2.8
     - Loop Execution: Worker/reviewer cycle until SHIP or boundary exceeded
     - Loop Exit: SHIP → Strategic Domain captures work-summary.txt in T06 Result; BLOCKED → Strategic Domain seeds T03 Issue from RALPH-BLOCKED.md
     - State Files:
@@ -142,10 +145,10 @@ python ai/ael/src/orchestrator.py --mode loop \
     - GitHub repository is authoritative source for all project artifacts
     - Human: Tags design document commits when approved as baseline for code generation via GitHub Desktop (History → right-click commit → Create Tag → Push Tags)
     - Strategic Domain: Performs configuration audit verifying generated code matches approved design baseline commits
-    - Strategic Domain: Uses config-audit template from workspace/audit/config-audit-template.md
+    - Strategic Domain: Uses config-audit template from ai/workspace/audit/config-audit-template.md
     - Strategic Domain: Verifies code matches tagged design baseline specifications
     - Strategic Domain: Documents findings in config-audit-NNNN-YYYY-MM-DD.md
-    - Strategic Domain: Stores configuration audits in workspace/audit/
+    - Strategic Domain: Stores configuration audits in ai/workspace/audit/
     - Critical deviations: Creates issues via P04 for remediation
   - §1.1.13 Versioning
     - All versioning is handled via GitHub
@@ -160,12 +163,12 @@ python ai/ael/src/orchestrator.py --mode loop \
     - Release notes filename: RELEASE_NOTES_vMAJOR.MINOR.PATCH.md
   - §1.1.14 Document Lifecycle Management
     - §1.1.14.1 Active State
-      - Active documents reside in workspace/\<class\>/
+      - Active documents reside in ai/workspace/\<class\>/
       - Active documents are mutable during iteration cycles
       - Iteration field increments with each debug/refinement cycle
       - Git commit required after each iteration increment
     - §1.1.14.2 Closed State
-      - Upon human acceptance, documents moved to workspace/\<class\>/closed/
+      - Upon human acceptance, documents moved to ai/workspace/\<class\>/closed/
       - Closed documents are immutable
       - Closed documents preserve final iteration number
       - Access: Read-only reference for future work
@@ -183,12 +186,13 @@ python ai/ael/src/orchestrator.py --mode loop \
       - Git commit records closure transition
       - Closed documents referenced but not modified
     - §1.1.14.5 Closed Subfolder Structure
-      - workspace/issues/closed/
-      - workspace/change/closed/
-      - workspace/prompt/closed/
-      - workspace/audit/closed/
-      - workspace/test/closed/
-      - workspace/test/result/closed/
+      - ai/workspace/issues/closed/
+      - ai/workspace/change/closed/
+      - ai/workspace/prompt/closed/
+      - ai/workspace/audit/closed/
+      - ai/workspace/test/closed/
+      - ai/workspace/report/closed/
+      - ai/workspace/test/result/closed/
     - §1.1.14.6 Access Constraints
       - Closed documents: Read-only access for reference
       - No modifications permitted to closed documents
@@ -205,13 +209,8 @@ python ai/ael/src/orchestrator.py --mode loop \
     - Production environments use normal mode for operational efficiency
     - Log artifacts preserved for failure analysis
   - §1.1.16 Knowledge Base
-    - Strategic Domain: Consults workspace/knowledge/ before creating documents or code
-    - Tactical Domain: Consults workspace/knowledge/ before implementing changes
-    - Both domains: Add newly discovered patterns and solutions to knowledge base
-    - Knowledge documents contain: problem statements, solutions, examples, rationale
-    - Behavioral standards: workspace/knowledge/behavioral-standards.yaml defines deterministic behavioral constraints for autonomous execution
-    - Behavioral standards: Referenced in T04 prompts via behavioral_standards.source field
-    - Behavioral standards: Enforcement levels (strict, advisory, disabled) control constraint application
+    - Projects may optionally maintain a knowledge/ subdirectory under ai/workspace/ for institutional knowledge capture
+    - Knowledge documents may contain: problem statements, solutions, examples, rationale
     - Knowledge base prevents repeated problem-solving across development cycles
   - §1.1.17 Templates
     - Templates T01-T07 are external documents in ai/templates/ directory
@@ -226,30 +225,33 @@ python ai/ael/src/orchestrator.py --mode loop \
     - Strategic Domain: Read template from ai/templates/ before creating documents
     - Tactical Domain: Read templates when referenced in prompt documents
     - Templates contain YAML structure and JSON Schema validation rules
-  - §1.1.18 Skills Management
-    - Tactical Domain: Utilizes skills from <skills_dir>/ for reusable workflows
-    - Skills organization: governance/, testing/, validation/, audit/ subdirectories
+  - §1.1.18 Skills Management (Claude Code profiles only)
+    - Tactical Domain: Utilizes skills from .claude/ for reusable workflows
+    - Skills organization: governance/, testing/, validation/, audit/ subdirectories under .claude/
     - Hot-reload enabled: Skill modifications activate without session restart
     - Forked contexts: Validation skills execute in isolated sub-agent contexts
     - Lifecycle hooks: PreToolUse (schema validation), PostToolUse (compliance verification), Stop (cleanup)
     - Skills repository: Project-specific skills checked into git for team sharing
-    - Personal skills: ~/<skills_dir>/ for individual workflow preferences
-    - Implementation: See implementation profile in ai/profiles/
+    - Implementation: See ai/profiles/claude.md or ai/profiles/claude-omlx.md
     - Common skills examples:
-      - governance/validate-design.md: Schema validation before T04 prompt creation
-      - testing/generate-pytest.md: Automated pytest generation from T05 documentation
-      - validation/coupling-check.md: Verify iteration synchronization in coupled documents
-      - audit/protocol-compliance.md: Check generated code against protocol requirements
+      - .claude/governance/validate-design.md: Schema validation before T04 prompt creation
+      - .claude/testing/generate-pytest.md: Automated pytest generation from T05 documentation
+      - .claude/validation/coupling-check.md: Verify iteration synchronization in coupled documents
+      - .claude/audit/protocol-compliance.md: Check generated code against protocol requirements
   - §1.1.19 Context Optimization
-    - Tactical Domain context file location: Project root (checked into git for team sharing)
+    - Tactical Domain context file location:
+      - AEL profile: ai/context.md (checked into git)
+      - Claude Code profiles: CLAUDE.md at project root (checked into git)
     - Local context file: Personal preferences (.gitignore'd)
+      - Claude Code profiles: CLAUDE.local.md at project root
+    - AEL auto-load: worker recipe reads project_root/ai/context.md at task start if present
     - Content specification:
       - Project overview and technology stack
       - Common bash commands (build, test, lint)
       - Code style guidelines
       - Repository conventions (branch naming, commit patterns)
       - Governance framework location: ai/governance.md
-      - Design documents location: workspace/design/
+      - Design documents location: ai/workspace/design/
       - Protocol compliance requirements summary
       - Platform-specific tooling and dependencies
     - Token efficiency: Externalize stable context from T04 prompts
@@ -295,18 +297,25 @@ build/
 .obsidian/
 *.canvas
 
-# AI framework
+# AI framework (consolidated under ai/)
+# Owned-project (tracked) mode below: the framework lives in ai/ and is
+# version-controlled; only transient state and generated output are ignored.
+# Third-party fork (isolation) mode: replace this section with two lines —
+#   /ai/
+#   /CLAUDE.md
+# — to keep the framework out of the fork's history entirely.
 deprecated/
-workspace/admin/
-workspace/ai/
-workspace/proposal/
-workspace/proposal/closed/
+ai/workspace/report/
+ai/workspace/ai/
+ai/workspace/proposal/
+ai/workspace/proposal/closed/
+ai/state/
+ai/dashboard-alerts.md
 
 # Tactical Domain
 CLAUDE.local.md
 .claude/settings.json
 .claude/commands/
-.ael/ralph/
 
 # other
 10000
@@ -318,52 +327,50 @@ test.txt
 
   - §1.2.3 README
     - Create initial skeleton 'README.md' document in each folder
-  - §1.2.4 Initialize project from skel/
-    - Human: Copy `skel/` from the framework repository to the desired parent directory
-    - Human: Rename the copied directory to `<project name>`
-    - No recipe path configuration required. `ralph-loop.sh` resolves recipes relative to its own location.
+  - §1.2.4 Initialize downstream project
+    - Human: Run `bin/propagate.sh <project-root>` from the framework repository root to push `ai/` into the downstream project directory
+    - Human: Rename the target directory to `<project name>` if not already named
+    - No recipe path configuration required. Orchestrator resolves recipes relative to its own location.
   - §1.2.5 Traceability Matrix
-     - Create skeleton trace-traceability-matrix-master.md in workspace/trace/
+     - Create skeleton trace-traceability-matrix-master.md in ai/workspace/trace/
   - §1.2.6 Project folder structure
     - Note: This structure applies to projects using the framework, not to the LLM-Governance-and-Orchestration repository itself
     - The governance framework repository contains only ai/, doc/, and templates/ directories
     - Layout
 ```
     └── <project name>/
-        ├── ai/                       # Framework operational rules
-        │   └── governance.md
-        ├── <tactical_config>/        # Tactical Domain configuration (profile-specific)
-        │   ├── <skills_dir>/         # Project-specific skills
-        │   │   ├── governance/
-        │   │   ├── testing/
-        │   │   ├── validation/
-        │   │   └── audit/
-        │   └── commands/
-        ├── <tactical_context>        # Tactical Domain context file (team shared)
+        ├── ai/                       # Framework — operational rules + execution space
+        │   ├── governance.md
+        │   ├── context.md            # AEL profile only — Tactical Domain context (team shared)
+        │   ├── state/                # AEL loop state (ephemeral, excluded from git)
+        │   ├── dashboard-alerts.md   # govwatch output (excluded from git)
+        │   └── workspace/            # Framework execution space
+        │       ├── report/            # Reports (excluded from git)
+        │       │   └── closed/
+        │       ├── requirements/
+        │       │   └── closed/
+        │       ├── design/
+        │       ├── change/
+        │       │   └── closed/
+        │       ├── issues/
+        │       │   └── closed/
+        │       ├── proposal/         # (excluded from git)
+        │       │   └── closed/
+        │       ├── prompt/
+        │       │   └── closed/
+        │       ├── trace/
+        │       ├── audit/
+        │       │   └── closed/
+        │       ├── test/
+        │       │   ├── closed/
+        │       │   └── result/
+        │       │       └── closed/
+        ├── .claude/                  # Claude Code profiles only (excluded from git)
+        │   └── settings.json
+        ├── CLAUDE.md                 # Claude Code profiles only (team shared)
+        ├── CLAUDE.local.md           # Claude Code profiles only (excluded from git)
         ├── venv/                     # Python virtual environment (excluded from git)
         ├── dist/                     # Python build artefacts (excluded from git)
-        ├── workspace/                # Framework execution space
-        │   ├── admin/                # Administrative reports (excluded from git)
-        │   ├── requirements/
-        │   │   └── closed/
-        │   ├── design/
-        │   ├── change/
-        │   │   └── closed/
-        │   ├── knowledge/            # Institutional knowledge
-        │   ├── issues/
-        │   │   └── closed/
-        │   ├── proposal/             # (excluded from git)
-        │   │   └── closed/
-        │   ├── prompt/
-        │   │   └── closed/
-        │   ├── trace/
-        │   ├── audit/
-        │   │   └── closed/
-        │   ├── test/
-        │   │   ├── closed/
-        │   │   └── result/
-        │   │       └── closed/
-        │   └── ai/                   # Optional: (excluded from git)
         ├── docs/                     # Technical Documents
         ├── bin/                      # Project-scoped integration scripts
         ├── tests/                    # Test files (root level)
@@ -397,9 +404,35 @@ pip list
       - Create `CLAUDE.md` at project root with project context
       - Create `.claude/` directory structure per §1.2.6
       - Reference: [claude.md](profiles/claude.md)
+    - **claude-omlx profile** (Tactical Domain = Claude Code CLI → oMLX → Devstral):
+      - Ensure oMLX is running on `http://127.0.0.1:8000` with Devstral loaded
+      - Install Claude Code: `npm install -g @anthropic-ai/claude-code`
+      - No Anthropic API key required
+      - Create `CLAUDE.md` at project root with project context
+      - Create `.claude/` directory structure per §1.2.6
+      - Reference: [claude-omlx.md](profiles/claude-omlx.md)
+    - **ael-mcp setup (Claude Desktop profile, optional)**:
+      - Clone: `git clone https://github.com/William12556/ael-mcp`
+      - Verify `mcp` package: `python3 -m pip show mcp`; install if absent: `pip3 install mcp`
+      - Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "ael-mcp": {
+      "command": "/path/to/python3",
+      "args": ["/path/to/ael-mcp/server.py"]
+    }
+  }
+}
+```
+      - Replace `/path/to/python3` with the interpreter that has `mcp` installed
+      - Restart Claude Desktop to load the new MCP server
+      - Reference: §1.1.11
     - **AEL setup (both profiles)**:
       - Install AEL dependencies: `pip install -r ai/ael/requirements.txt`
       - Configure `ai/ael/config.yaml` with inference endpoint and MCP server definitions
+      - Run `python ai/ael/src/budget.py` to generate initial context-budget.md in state directory
+      - Re-run `budget.py` after any model change
       - Recipe location: `<project name>/ai/ael/recipes/`
       - Reference: §1.1.11, §1.2.4
 
@@ -496,7 +529,6 @@ exclude_lines = [
     - Testing: Informal validation, no formal test documentation required
     - Transition: Successful prototypes promote to formal design workflow
     - Human decision: Determines when exploration transitions to formal development
-    - Knowledge capture: Findings documented in workspace/knowledge/ for reuse
     - Audit exemption: Exploration work excluded from P08 compliance audits
     - Git workflow: Feature branches for exploration, merge on formalization
   - §1.3.9 Cross-Linking Requirements
@@ -520,7 +552,7 @@ exclude_lines = [
     - Strategic Domain: Documents validation results in master design document
     - Strategic Domain: Resolves discrepancies before proceeding to code generation
   - §1.3.14 Document Storage
-    - Strategic Domain: Saves all design documents in workspace/design
+    - Strategic Domain: Saves all design documents in ai/workspace/design
   - §1.3.15 Visual Documentation Requirements
     - Strategic Domain: Embeds Mermaid diagrams directly within design documents at all tiers
     - Tier 1 Master: System architecture, overall component relationships, system-level state machines
@@ -532,7 +564,7 @@ exclude_lines = [
     - Strategic Domain: Maintains diagram consistency with textual design specifications
   - §1.3.16 Name Registry
     - Strategic Domain: Creates design-\<project\>-name_registry-master.md at Tier 1 design phase
-    - Strategic Domain: Stores registry in workspace/design/
+    - Strategic Domain: Stores registry in ai/workspace/design/
     - Registry document contains two sections:
       - Mermaid class diagram: visual representation of all program elements and relationships (human comprehension)
       - YAML element table: machine-readable canonical name list (T04 prompt inclusion)
@@ -553,10 +585,11 @@ exclude_lines = [
 #### 1.4 P03 Change
   - §1.4.1 Change document creation
     - Strategic Domain: Reads template from ai/templates/T02-change.md
-    - Strategic Domain: Creates change documents exclusively from issue documents using T02 template and saves them in folder workspace/change
+    - Strategic Domain: Creates change documents exclusively from issue documents using T02 template and saves them in folder ai/workspace/change
     - Strategic Domain: For human-requested source code changes, first creates issue document via P04, then creates change document referencing that issue
     - Strategic Domain: For enhancement or requirement change requests, creates issue document via P04 with type `enhancement` or `requirement_change` and origin `requirement_change`, then creates change document referencing that issue
-    - Exception: Non-source-code changes (workspace/ documents per 1.4.11) may be implemented directly after human approval without issue/change documents
+    - Exception: Non-source-code changes (ai/workspace/ documents per 1.4.10) may be implemented directly after human approval without issue/change documents
+    - Exception: Initial implementation of source code from an approved design document does not require issue or change documents. The forward path is: approved design → T04 prompt → Tactical Domain execution → review. Issue and change documents are required only when execution fails (AEL BLOCKED) or tests fail.
   - §1.4.2 Document coupling
     - Strategic Domain: Ensures one-to-one coupling between issue and change documents
     - Strategic Domain: Every source code change document must reference exactly one source issue document via UUID
@@ -600,21 +633,35 @@ exclude_lines = [
     - Strategic Domain: Maintains documentation currency with code state
     - Strategic Domain: Cross-links updated documents to source change document
   - §1.4.11 Documentation domain
-    - Change documentation is only required for source code changes in src/. Change documentation to documents in the workspace/ is not required and can be made directly after human approval.
+    - Change documentation is only required for source code changes in src/. Change documentation to documents in the ai/workspace/ is not required and can be made directly after human approval.
+  - §1.4.12 Trivial Change Exemption
+    - Definitions:
+      - Trivial: the outcome is fully predictable before implementation; no analysis, experimentation, or design judgement is required to determine the correct solution.
+      - Surgical: confined to a single, well-bounded location in the codebase; does not disturb surrounding logic, interfaces, or dependent components.
+    - A qualifying change must be both trivial and surgical simultaneously. Either quality alone is insufficient.
+    - When all five criteria below are satisfied, Strategic Domain may implement directly after human approval — no T03, T02, T04, or AEL required. Git commit history is the sole audit record for exempt changes.
+    - Criteria (all must hold simultaneously):
+      - (1) Confined to a single function or entry point
+      - (2) Net line delta ≤20 lines
+      - (3) No interface changes (signatures, contracts, public APIs)
+      - (4) Unambiguous with no design decisions required
+      - (5) Human approval obtained before implementation
+    - If any criterion fails, standard T03 → T02 → T04 → AEL workflow applies.
 
 [Return to Table of Contents](<#table of contents>)
 
 #### 1.5 P04 Issue
   - §1.5.1 Issue creation from test results
     - Strategic Domain: Reads template from ai/templates/T03-issue.md
-    - Strategic Domain: Creates issue documents from errors reported in workspace/test/result using T03 template and saves them in folder workspace/issues
+    - Strategic Domain: Before specifying any target file_path in a T03 issue, reads the project entry point configuration (pyproject.toml [project.scripts] or equivalent) and confirms the named file is in the deployment path
+    - Strategic Domain: Creates issue documents from errors reported in ai/workspace/test/result using T03 template and saves them in folder ai/workspace/issues
   - §1.5.2 Reserved for future use
     - Strategic Domain: Reserved for future use
   - §1.5.3 Debug workflow
     - Tactical Domain: Debugs issues submitted from Tactical Domain and returns change proposal to Strategic Domain
   - §1.5.4 Issue updates
     - Strategic Domain: Reads template from ai/templates/T03-issue.md
-    - Strategic Domain: Updates issue documents from bugs using T03 template and saves them in folder workspace/issues
+    - Strategic Domain: Updates issue documents from bugs using T03 template and saves them in folder ai/workspace/issues
   - §1.5.5 Non-Conformance Reporting
     - Strategic Domain: Documents instances where generated code deviates from design specifications
     - Strategic Domain: Records deviation type, severity, affected components
@@ -638,7 +685,7 @@ exclude_lines = [
 
 #### 1.6 P05 Trace
   - §1.6.1 Traceability Matrix Management
-    - Strategic Domain: Maintains traceability matrix in workspace/trace/trace-traceability-matrix-master.md
+    - Strategic Domain: Maintains traceability matrix in ai/workspace/trace/trace-traceability-matrix-master.md
     - Strategic Domain: Updates matrix when requirements, designs, code, or tests modified
   - §1.6.2 Traceability Verification
     - Strategic Domain: Verifies bidirectional links exist: requirements ↔ design ↔ code ↔ test (navigable forward and backward)
@@ -649,7 +696,7 @@ exclude_lines = [
     - Strategic Domain: Updates matrix when designs, code, or tests modified
     - Strategic Domain: Ensures orphaned requirements or implementations identified
   - §1.6.4 Traceability Matrix Structure
-    - Strategic Domain: Maintains single traceability matrix in workspace/trace/trace-traceability-matrix-master.md
+    - Strategic Domain: Maintains single traceability matrix in ai/workspace/trace/trace-traceability-matrix-master.md
     - Required sections:
       - Functional Requirements: ID, Requirement, Design, Code, Test, Status
       - Non-Functional Requirements: ID, Requirement, Target, Design, Code, Test, Status
@@ -665,7 +712,7 @@ exclude_lines = [
   - §1.7.1 Purpose
   - §1.7.2 Test documentation
     - Strategic Domain: Reads template from ai/templates/T05-test.md
-    - Strategic Domain: Creates test documents from source code generated by Tactical Domain using T05 template and saves them in folder workspace/test
+    - Strategic Domain: Creates test documents from source code generated by Tactical Domain using T05 template and saves them in folder ai/workspace/test
   - §1.7.3 Test Script Creation
     - Test location: tests/ directory at project root (not src/tests/)
     - Strategic Domain: Automatic precursor to test execution
@@ -718,12 +765,12 @@ exclude_lines = [
     - Iteration synchronization maintained through debug cycles
     - Strategic Domain verifies coupling before test execution
   - §1.7.13 Test Result Lifecycle
-    - Results named: result-<uuid>-<n>.md in workspace/test/result/
+    - Results named: result-<uuid>-<n>.md in ai/workspace/test/result/
     - Result references parent test UUID in coupled_docs.test_ref field
     - Result iteration matches parent test iteration
     - Failed results trigger issue creation (new UUID assigned)
     - Passed results enable document closure workflow
-    - Result documents moved to workspace/test/result/closed/ upon acceptance
+    - Result documents moved to ai/workspace/test/result/closed/ upon acceptance
   - §1.7.14 Distribution Creation (Human executes)
     - Human: Distribution build when code generation complete and tests pass
 ```
@@ -790,6 +837,17 @@ pip install dist/*.whl
       - Strategic Domain: Documents platform-specific limitations in test documentation
       - Mocking strategy must isolate tests from platform differences
       - Integration/system tests require target hardware availability
+  - §1.7.18 Test Constraint Summary
+
+    | Constraint | Rule |
+    |---|---|
+    | Unit tests | Mandatory for every component |
+    | System/acceptance/performance tests | Target platform only |
+    | Progressive validation | Stages 1→2→3 in order, no skipping |
+    | Document closure | Requires Stage 3 regression pass |
+    | Coupling mismatch | Blocks workflow — resolve before proceeding |
+    | External dependencies in unit tests | Always mocked |
+    | Ephemeral scripts | Removed at document closure |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -846,7 +904,7 @@ pip install dist/*.whl
     - Strategic Domain: Calculates compliance metrics (percentage, deficiency counts by severity)
   - §1.9.5 Audit Deliverables
     - Strategic Domain: Creates audit report following naming format: audit-<uuid>-<audit name>.md
-    - Strategic Domain: Stores audit reports in workspace/audit/ folder
+    - Strategic Domain: Stores audit reports in ai/workspace/audit/ folder
     - Audit report structure:
     - Executive summary with compliance status and critical issue count
     - Protocol-by-protocol compliance assessment
@@ -862,32 +920,28 @@ pip install dist/*.whl
     - Strategic Domain: References source code audit report in issue documents
     - Strategic Domain: Issue resolution follows standard P04 → P03 → implementation workflow
     - Strategic Domain: Tracks remediation progress in audit report updates
-  - §1.9.7 Audit Closure
-    - Strategic Domain: Conducts follow-up audit after remediation completed
-    - Strategic Domain: Verifies all critical issues resolved
-    - Strategic Domain: Documents closure with final compliance metrics
-    - Human: Approves audit closure and authorizes proceeding to next phase
-  - §1.9.8 Audit Trail
+  - §1.9.7 Audit Trail
     - Strategic Domain: Maintains chronological audit history
     - Strategic Domain: Links related audits (initial → follow-up → closure)
     - Strategic Domain: Preserves audit reports for process improvement analysis
-  - §1.9.9 Audit Closure
-    - §1.9.9.1 Closure Criteria
+  - §1.9.8 Audit Closure
+    - §1.9.8.1 Closure Criteria
       - All critical findings fully resolved
       - All high-priority findings addressed or mitigated with documented acceptance
       - Completion documented in audit report
       - Human approval obtained
-    - §1.9.9.2 Closure Process
+    - §1.9.8.2 Closure Process
+      - Strategic Domain: Conducts follow-up audit after remediation completed
       - Strategic Domain: Verifies all closure criteria satisfied
       - Strategic Domain: Documents closure status with final compliance metrics
       - Strategic Domain: Records closure date and approver
       - Human: Reviews closure documentation
-      - Human: Approves audit closure or identifies remaining work
-    - §1.9.9.3 Post-Closure Archival
-      - Strategic Domain: Moves closed audit report to workspace/audit/closed/
+      - Human: Approves audit closure and authorizes proceeding to next phase
+    - §1.9.8.3 Post-Closure Archival
+      - Strategic Domain: Moves closed audit report to ai/workspace/audit/closed/
       - Strategic Domain: Updates audit traceability links in master traceability matrix
       - Strategic Domain: Preserves read-only access for future reference
-    - §1.9.9.4 Reopening Closed Audits
+    - §1.9.8.4 Reopening Closed Audits
       - Prohibited: Closed audits are immutable
       - New findings: Create new audit with reference to closed audit
       - Follow-up verification: Covered by new audit cycle
@@ -902,7 +956,7 @@ pip install dist/*.whl
     - Prompt documents are always Tactical Domain specific.
     - Strategic Domain: Reads template from ai/templates/T04-prompt.md
     - Strategic Domain: Creates prompt documents from design and change documents using T04 template
-    - Strategic Domain: Saves prompts with naming format prompt-<uuid>-<n>.md in workspace/prompt/
+    - Strategic Domain: Saves prompts with naming format prompt-<uuid>-<name>.md in ai/workspace/prompt/
     - Strategic Domain: UUID assignment follows workflow initiation pattern:
     - First document created in workflow (Issue OR Change) generates new 8-character UUID
     - All subsequently coupled documents (Change, Prompt, Test, Result) inherit that UUID
@@ -910,6 +964,14 @@ pip install dist/*.whl
     - Strategic Domain: Rewrites prompt documents in place when revisions required
     - Strategic Domain: Embeds complete design specifications and schema within prompt documents
     - Strategic Domain: Ensures prompt documents are self-contained requiring no external file references
+    - Strategic Domain: Populates tactical_brief field with a concise plain-text AEL task payload (~200-400 tokens); brief contains only: file(s) to modify, hard constraints, implementation steps, deliverable path(s), success criteria; all governance metadata omitted from brief
+    - Strategic Domain: Checks whether context-budget.md exists in AEL state directory before authoring tactical_brief; if absent, instructs human to run `python ai/ael/src/budget.py` from project root before proceeding
+    - Strategic Domain: Reads context-budget.md and adjusts brief size to fit within available context headroom
+    - Strategic Domain: Verifies tactical_brief field is non-empty before issuing AEL command; an empty or placeholder brief causes orchestrator fallback to full raw document, inflating context and risking saturation
+    - Strategic Domain: Ensures tactical_brief is authored in a ```yaml fenced block with tactical_brief as the root key; the orchestrator scans only ```yaml blocks — plain text or non-YAML fenced blocks are not detected and cause fallback to raw document; when using per-section YAML blocks, §8.0 must be a dedicated ```yaml block (not ```text) with tactical_brief: as the sole root key
+    - Strategic Domain: config.yaml `loop.max_iterations` controls the number of outer Ralph Loop cycles (worker + reviewer pass pairs); `loop.phase_max_iterations` controls the number of inner tool-call iterations per phase; these are distinct values and must not be conflated in T04 prompt notes
+    - Strategic Domain: AEL end is logged as `INFO AEL end rc=N` in the .LOG file on all exits including unexpected termination; absence of this line in a log indicates unclean exit (signal, crash, or resource failure); log review should check for this line before concluding outcome
+    - Strategic Domain: Before specifying any target file path in a T04 prompt, reads the project entry point configuration (pyproject.toml [project.scripts] or equivalent) and confirms the named file is in the deployment path
     - Strategic Domain: Embeds element_registry field in T04 prompt from name registry master, scoped to elements relevant to the code generation task
     - Strategic Domain: Prompt references source change UUID in coupled_docs.change_ref field
     - Strategic Domain: Prompt iteration number matches source change iteration number
@@ -921,16 +983,26 @@ pip install dist/*.whl
     - Strategic Domain: If context file absent, generates initial context file with project context
     - Strategic Domain: Generated context file requires human approval before proceeding
     - Context file name: Defined in implementation profile (ai/profiles/)
-    - Strategic Domain: After human approval of T04 prompt, provides ready-to-execute AEL command in conversation
-    - Human: Executes command from project root directory
-    - AEL exits with SHIP (proceed to review) or BLOCKED (create T03 Issue)
-    - Human: Notifies Strategic Domain of AEL outcome
-    - Example command:
+    - Strategic Domain: After human approval of T04 prompt, presents AEL execution options; human selects preferred option:
+    - **Option A — Human executes (all profiles):**
+      - Strategic Domain: Provides ready-to-execute AEL command in conversation
+      - Human: Executes command from project root directory
+      - AEL exits with SHIP (proceed to review) or BLOCKED (create T03 Issue)
+      - Human: Notifies Strategic Domain of AEL outcome
+      - Example command:
 
 ```bash
 python ai/ael/src/orchestrator.py --mode loop \
-  --task workspace/prompt/prompt-<uuid>-<n>.md
+  --task ai/workspace/prompt/prompt-<uuid>-<n>.md
 ```
+
+    - **Option B — Strategic Domain launches via ael-mcp (Claude Desktop profile only):**
+      - Human: Chooses to delegate AEL launch to Strategic Domain
+      - Strategic Domain: Calls `start_ael` with `project_dir` and T04 prompt path as `task` parameter
+      - AEL runs detached; Strategic Domain returns `run_id`, PID, and log path
+      - Human: Requests status check when ready
+      - Strategic Domain: Calls `ael_status`; reports SHIP or BLOCKED outcome
+      - On BLOCKED: Strategic Domain reads `RALPH-BLOCKED.md` and creates T03 Issue per P04
 
   - §1.10.4 Wildcard Permissions
     - Tactical Domain: Supports wildcard patterns in permission grants for batch operations
@@ -960,7 +1032,7 @@ python ai/ael/src/orchestrator.py --mode loop \
     - Strategic Domain: Validates completeness, clarity, testability
     - Strategic Domain: Identifies conflicts and dependencies
     - Strategic Domain: Creates requirements-<project>-master.md using T07 template
-    - Strategic Domain: Saves in workspace/requirements/
+    - Strategic Domain: Saves in ai/workspace/requirements/
   - §1.11.3 Requirements Validation
     - Strategic Domain: Verifies each requirement has objective acceptance criteria
     - Strategic Domain: Ensures requirements are testable and unambiguous
@@ -971,8 +1043,8 @@ python ai/ael/src/orchestrator.py --mode loop \
     - Strategic Domain: Establishes baseline for design phase
     - Strategic Domain: Initializes traceability matrix with requirements
   - §1.11.5 Requirements Lifecycle
-    - Active: workspace/requirements/requirements-<project>-master.md
-    - Closed: workspace/requirements/closed/ after human acceptance
+    - Active: ai/workspace/requirements/requirements-<project>-master.md
+    - Closed: ai/workspace/requirements/closed/ after human acceptance
     - Reopening: Move from closed/ to active, proceed with change workflow
     - No iteration numbering - git history tracks all changes
   - §1.11.6 Requirements Change Management
@@ -985,85 +1057,7 @@ python ai/ael/src/orchestrator.py --mode loop \
 
 ## 2.0 Workflow
 
-```mermaid
-flowchart TD
-    Init[P01: Project Initialization] --> Start([Human: Initiate Requirements])
-    Start --> D1_Elicit[Strategic Domain: Requirements Elicitation P10]
-    
-    D1_Elicit --> H_Req{Human: Review Requirements}
-    H_Req -->|Revise| D1_Elicit
-    H_Req -->|Approve| D1_Baseline[Strategic Domain: Baseline Requirements]
-    D1_Baseline --> D1_Design[Strategic Domain: Create master design T01]
-    
-    D1_Design --> H1{Human: Review<br/>master design}
-    H1 -->|Revise| D1_Design
-    H1 -->|Approve| D1_Decompose[Strategic Domain: Decompose to<br/>design elements T01]
-    
-    D1_Decompose --> H2{Human: Review<br/>design elements}
-    H2 -->|Revise| D1_Decompose
-    H2 -->|Approve| Trace1[Strategic Domain: Update<br/>traceability matrix P05]
-    
-    Trace1 --> D1_Tag[Human: Tag baseline<br/>in GitHub]
-    
-    D1_Tag --> D1_Prompt[Strategic Domain: Create T04 prompt<br/>with design + schema]
-    
-    D1_Prompt --> H3{Human: Approve<br/>code generation}
-    H3 -->|Revise| D1_Prompt
-    H3 -->|Approve| D1_Instruct[Strategic Domain: Create<br/>ready-to-execute command]
-    
-    D1_Instruct --> H_Invoke[Human: Execute AEL command]
-    H_Invoke --> AEL_Loop[AEL: Ralph Loop<br/>worker/reviewer cycle]
-    AEL_Loop --> AEL_Result{SHIP or<br/>BLOCKED?}
-    AEL_Result -->|BLOCKED| D1_Issue
-    AEL_Result -->|SHIP| D1_Review[Strategic Domain: Review<br/>generated code]
-    
-    D1_Review --> Trace2[Strategic Domain: Update<br/>traceability matrix P05]
-    Trace2 --> D1_Audit[Strategic Domain: Config audit<br/>code vs baseline]
-    D1_Audit --> D1_Test_Doc[Strategic Domain: Create test doc T05]
-
-    D1_Test_Doc --> D1_Generate_Tests[Strategic Domain: Generate pytest files from T05]
-    D1_Generate_Tests --> H_Execute[Human: Execute tests]
-    H_Execute --> D1_Review_Results[Strategic Domain: Review test results]
-    D1_Review_Results --> Trace3[Strategic Domain: Update<br/>traceability matrix P05]
-    Trace3 --> Test_Result{Tests pass?}
-    
-    Test_Result -->|Fail| D1_Issue[Strategic Domain: Create issue T03]
-    D1_Issue --> Issue_Type{Issue type?}
-    
-    Issue_Type -->|Bug| D1_Change[Strategic Domain: Create change T02]
-    D1_Change --> H4{Human: Review<br/>change}
-    H4 -->|Revise| D1_Change
-    H4 -->|Approve| D1_Debug_Prompt[Strategic Domain: Create debug<br/>prompt T04]
-    
-    D1_Debug_Prompt --> H5{Human: Approve<br/>debug}
-    H5 -->|Revise| D1_Debug_Prompt
-    H5 -->|Approve| D1_Debug_Instruct[Strategic Domain: Create<br/>ready-to-execute command]
-    D1_Debug_Instruct --> H_Invoke
-    
-    Issue_Type -->|Design flaw| D1_Design_Change[Strategic Domain: Create change T02]
-    D1_Design_Change --> H6{Human: Review<br/>change}
-    H6 -->|Revise| D1_Design_Change
-    H6 -->|Approve| D1_Update_Design[Strategic Domain: Update design]
-    D1_Update_Design --> Trace4[Strategic Domain: Update<br/>traceability matrix P05]
-    Trace4 --> D1_Prompt
-    
-    Test_Result -->|Pass| Progressive{Progressive<br/>validation<br/>complete?}
-    
-    Progressive -->|Targeted only| Integration_Val[Strategic Domain: Execute<br/>integration validation]
-    Integration_Val --> Integration_Result{Integration<br/>tests pass?}
-    Integration_Result -->|Fail| D1_Issue
-    Integration_Result -->|Pass| Regression_Val
-    
-    Progressive -->|Integration done| Regression_Val[Strategic Domain: Execute<br/>full regression suite]
-    Regression_Val --> Regression_Result{Regression<br/>tests pass?}
-    Regression_Result -->|Fail| D1_Issue
-    Regression_Result -->|Pass| H7
-    
-    Progressive -->|Full regression| H7{Human: Accept<br/>deliverable?}
-    H7 -->|Reject| D1_Issue
-    H7 -->|Accept| D1_Close[Strategic Domain: Close documents<br/>Move to closed/<br/>Git commit]
-    D1_Close --> Complete([Complete])
-```
+See [workflow.md](workflow.md).
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -1072,80 +1066,100 @@ flowchart TD
 ## Version History
 
 | Version | Date       | Description |
-| ------- | ---------- | ----------- |
+| ------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1.0     | 2025-10-30 | Initial enumeration |
 | 1.1     | 2025-11-03 | Added T02 Change template and schema |
 | 1.2     | 2025-11-03 | Added T03 Issue template and schema |
 | 1.3     | 2025-11-03 | Added T04 Prompt template and schema |
-| 1.4     | 2025-11-06 | Integrated IEEE/ISO standards-based directives |
+| 1.4     | 2025-11-06 | Integrated IEEE/ISO standards-based directives: P00 (§1.1.11-§1.1.12), P02 (§1.3.5-§1.3.8), P03 (§1.4.5-§1.4.9), P04 (§1.5.5-§1.5.6), P05 (§1.6.2-§1.6.3), P06 (§1.7.2-§1.7.4), new P07 Quality Assurance (§1.8.1) |
 | 1.5     | 2025-11-06 | Added T05 Test template and schema |
-| 1.6     | 2025-11-06 | Replaced flowchart with revised version |
-| 1.7     | 2025-11-06 | Enhanced T04 Prompt template |
-| 1.8     | 2025-11-11 | Added P01 initialization to flowchart |
-| 1.9     | 2025-11-11 | Added .gitignore specification |
-| 2.0     | 2025-11-11 | Added pyproject.toml skeleton |
-| 2.1     | 2025-11-12 | Specified GitHub Desktop tagging |
-| 2.2     | 2025-11-12 | Added Claude Code Configuration |
-| 2.3     | 2025-11-13 | Added tests/ subfolder |
-| 2.4     | 2025-11-13 | Enhanced P06 Test |
-| 2.5     | 2025-11-13 | Added audit/ subfolder |
-| 2.6     | 2025-11-13 | Added P08 Audit protocol |
-| 2.7     | 2025-11-13 | Added audit document class |
-| 2.8     | 2025-11-13 | Added Framework Application clarification |
-| 2.9     | 2025-11-14 | Added traceability matrix skeleton |
-| 3.0     | 2025-11-14 | Replaced MCP with filesystem communication |
-| 3.1     | 2025-11-14 | Added P09 Prompt protocol |
-| 3.2     | 2025-11-16 | Removed prompt iteration numbering |
-| 3.3     | 2025-11-19 | Enhanced P00 Control and Communication |
-| 3.4     | 2025-11-20 | Restructured instruction document directives |
-| 3.5     | 2025-11-20 | Enhanced Configuration Management |
-| 3.6     | 2025-11-21 | Enforced one-to-one issue-change coupling |
-| 3.7     | 2025-11-26 | Restructured P02 Design into three-tier hierarchy |
-| 3.8     | 2025-11-28 | Implemented iteration-based document coupling |
-| 3.9     | 2025-11-28 | Added Python virtual environment support |
-| 4.0     | 2025-11-28 | Integrated traceability matrix updates |
-| 4.1     | 2025-11-28 | Added P08 Audit Closure |
-| 4.2     | 2025-11-30 | Enhanced P06 Test with progressive validation |
-| 4.3     | 2025-12-03 | Added workspace/proposal/ directory |
-| 4.4     | 2025-12-03 | Added Logging Standards |
-| 4.5     | 2025-12-04 | Simplified human handoff mechanism |
-| 4.6     | 2025-12-04 | Added Knowledge Base |
-| 4.7     | 2025-12-10 | Enhanced Human Handoff |
-| 4.8     | 2025-12-11 | Enhanced Test Script Creation |
-| 4.9     | 2025-12-11 | Test directory relocation |
-| 5.0     | 2025-12-11 | Added document closure node |
-| 5.1     | 2025-12-12 | Removed platform-specific assumptions |
-| 5.2     | 2025-12-12 | Enhanced T01 Design template |
-| 5.3     | 2025-12-12 | Template externalization |
-| 5.4     | 2025-12-13 | Clarified P01 folder structure |
-| 5.5     | 2025-12-13 | Added P00 Templates section |
-| 5.6     | 2025-12-13 | Added P10 Requirements protocol |
-| 5.7     | 2025-01-13 | Eliminated legacy 0000 sequence from master document naming |
-| 5.8     | 2025-01-13 | Clarified P00 §1.1.10 document naming conventions |
-| 5.9     | 2025-01-13 | Added section symbol (§) notation throughout |
-| 6.0     | 2025-01-28 | Added Tactical Domain 2.1.0 integration Phase 1 |
-| 6.1     | 2025-01-28 | Added Tactical Domain 2.1.0 integration Phase 2 |
-| 6.2     | 2025-01-28 | Added Tactical Domain 2.1.0 integration Phase 3 |
-| 6.3     | 2025-02-13 | Enhanced Knowledge Base with behavioral standards |
-| 6.4     | 2025-02-13 | Phase 2 refactoring: Model-agnostic terminology |
-| 6.5     | 2025-02-18 | Implementation profile pattern |
-| 6.6     | 2026-02-18 | Corrected path references; Added P01 §1.2.8 Implementation Profile Setup |
-| 6.7     | 2026-02-18 | Section renumbering corrections |
-| 6.8     | 2026-02-18 | P01 §1.2.2 .gitignore explicit entries |
-| 6.9     | 2026-02-18 | P01 §1.2.2 .gitignore extended Tactical Domain section |
-| 7.0     | 2026-02-18 | Added bin/ directory; AEL Integration Scripts directive |
-| 7.1     | 2026-02-25 | Added Goose recipe integration to P01 §1.2.4 |
-| 7.2     | 2026-03-04 | Restructured repository: meta/ → framework/, src/ → skel/ |
-| 7.3     | 2026-03-04 | Renamed ai/implementation-profiles/ → ai/profiles/ |
-| 7.4     | 2026-03-11 | Replaced Goose AEL with Python AEL orchestrator |
-| 7.5     | 2026-03-11 | Narrowed scope to Apple Silicon + MLX |
-| 7.6     | 2026-03-11 | Integrated AEL into workflow |
-| 7.7     | 2026-03-12 | Added name registry |
+| 1.6     | 2025-11-06 | Replaced flowchart with revised version incorporating human review checkpoints, iterative cycles, and complete workflow loops |
+| 1.7     | 2025-11-06 | Enhanced T04 Prompt template with output format controls to constrain Tactical Domain responses to code-only with minimal integration instructions |
+| 1.8     | 2025-11-11 | Added P01 initialization square to Framework Execution Flowchart |
+| 1.9     | 2025-11-11 | Added .gitignore specification to P01.2.2 |
+| 2.0     | 2025-11-11 | Added pyproject.toml skeleton to P01.2.2 |
+| 2.1     | 2025-11-12 | Specified GitHub Desktop as tagging mechanism in P00 1.1.11 Configuration Management |
+| 2.2     | 2025-11-12 | Added P00 1.1.13 Tactical Domain Configuration and Appendix A: Tactical Domain Preset Specifications |
+| 2.3     | 2025-11-13 | Added tests/ subfolder to src/ directory structure in P01.2.4 |
+| 2.4     | 2025-11-13 | Enhanced P06 Test with sections 1.7.1a (test script creation), 1.7.5-1.7.9 (test organization, isolation, mocking, regression testing, lifecycle management) |
+| 2.5     | 2025-11-13 | Added audit/ subfolder to workspace directory structure in P01.2.4 |
+| 2.6     | 2025-11-13 | Added P08 Audit protocol establishing periodic compliance verification, audit deliverable requirements, and remediation workflow |
+| 2.7     | 2025-11-13 | Added audit document class to P00 1.1.10 naming convention and updated P08 1.9.5 to use sequence numbering format |
+| 2.8     | 2025-11-13 | Added P00 §1.1.3 Framework Application clarifying that Strategic Domain/2 separation applies to development workflow, not runtime architecture of generated applications. Renumbered subsequent P00 subsections §1.1.4-§1.1.13 |
+| 2.9     | 2025-11-14 | Added P01 §1.2.5 traceability matrix skeleton directive and P05 §1.6.4 traceability matrix structure specification. Renumbered P01 §1.2.4 to §1.2.6 |
+| 3.0     | 2025-11-14 | Replaced MCP communication with filesystem communication for Strategic Domain↔Tactical Domain (P00 1.1.7-1.1.8-1.1.9-1.1.11); removed LM Studio references; simplified T04 template; updated flowchart; deleted Appendix A |
+| 3.1     | 2025-11-14 | Added P09 Prompt protocol; separated prompt management from trace; created workspace/prompt/ folder; updated P00 §1.1.10 document class list; updated P08 §1.9.3 audit scope to P00-P09 |
+| 3.2     | 2025-11-16 | Removed prompt iteration numbering (P09 §1.10.2, §1.10.5); GitHub version control replaces iteration-based versioning |
+| 3.3     | 2025-11-19 | Enhanced P00 Control (§1.1.7) and Communication (§1.1.8) with strategic/tactical clarification and MCP filesystem awareness; Added semantic versioning standard to P01 Versioning (§1.1.13); Added workspace/ai/ directory to P01 folder structure (§1.2.6) and .gitignore (§1.2.2); Added visual documentation requirements to P02 (§1.3.10) for embedded Mermaid diagrams; Enhanced T01 Design template with visual_documentation section; Enhanced T03 Issue template with prerequisites, reproducibility_conditions, prevention, and verification_enhanced sections |
+| 3.4     | 2025-11-20 | Restructured instruction document directives: moved P00 §1.1.11 to P09 §1.10.6; deleted embedded markdown template; converted to point-by-point directive structure; renumbered P00 §1.1.12-§1.1.13 to §1.1.11-§1.1.12 |
+| 3.5     | 2025-11-20 | Enhanced P00 §1.1.11 Configuration Management with configuration audit procedure directives; added config-audit template and process requirements; established baseline verification workflow |
+| 3.6     | 2025-11-21 | Enforced one-to-one issue-change coupling: replaced P03 §1.4.1-§1.4.2 requiring exclusive issue-to-change relationships; added P04 §1.5.7 Issue-Change Coupling with bidirectional linkage verification |
+| 3.7     | 2025-11-26 | Restructured P02 Design into three-tier hierarchy: Tier 1 System Architecture (§1.3.1-§1.3.2), Tier 2 Domain Decomposition (§1.3.3-§1.3.4), Tier 3 Component Decomposition (§1.3.5-§1.3.6); added human review gates after each tier; added Design Hierarchy Naming Convention (§1.3.7), Cross-Linking Requirements (§1.3.8); updated P00 §1.1.8 to specify Tier 3 component designs in T04 prompts; added tier naming convention to P00 §1.1.10 |
+| 3.8     | 2025-11-28 | Implemented iteration-based document coupling with lifecycle management: Added iteration field and coupled_docs section to all templates (T02-T06); Enhanced P00 §1.1.10 with iteration tracking and git commit requirements; Created P00 §1.1.13 Document Lifecycle Management defining active/closed states, closure criteria, archival procedures; Added closed/ subfolders to P01 §1.2.6; Enhanced P03 §1.4.2, P04 §1.5.7, P06 §1.7.12-§1.7.13, P09 §1.10.2 with iteration synchronization and coupling requirements; Created T06 Result template and schema |
+| 3.9     | 2025-11-28 | Added Python virtual environment and distribution build support: Added venv/, dist/ directories to P01 §1.2.6 folder structure; Added Python build artifacts to P01 §1.2.2 .gitignore (venv/, .venv/, *.pyc, __pycache__/, .pytest_cache/, dist/, build/, *.egg-info/); Created P01 §1.2.7 Virtual Environment Setup with consolidated setup script; Renamed P01 §1.2.2 to §1.2.8 Python documents containing pyproject.toml; Created P06 §1.7.14 Distribution Creation with human-executed directives for build artifact management and distribution creation after tests pass |
+| 4.0     | 2025-11-28 | Integrated traceability matrix updates into workflow flowchart: Added P05 matrix update nodes after design approval (Trace1), code generation completion (Trace2), test execution (Trace3), and change implementation (Trace4); ensures bidirectional traceability maintained throughout development lifecycle |
+| 4.1     | 2025-11-28 | Added P08 §1.9.9 Audit Closure with closure criteria, process, archival procedures, and reopening constraints; added workspace/audit/closed/ to P01 §1.2.6 folder structure; added audit closure criteria to P00 §1.1.14.3 and audit closed subfolder to P00 §1.1.14.5  |
+| 4.2     | 2025-11-30 | Enhanced P06 Test with progressive validation strategy (§1.7.15), test type selection criteria (§1.7.16), platform execution specifications (§1.7.17); updated workflow flowchart to incorporate progressive validation phases and platform-specific testing requirements |
+| 4.3     | 2025-12-03 | Added workspace/proposal/ directory: Added proposal document class to P00 §1.1.10; added workspace/proposal/ and workspace/proposal/closed/ to P01 §1.2.6 folder structure; added proposal directories to P01 §1.2.2 .gitignore |
+| 4.4     | 2025-12-03 | Added P00 §1.1.14 Logging Standards: environment-based log level control, flat file format, rotation policy, test/production mode separation |
+| 4.5     | 2025-12-04 | Simplified human handoff mechanism: Replaced P00 §1.1.8 and P00 §1.1.9 instruction document creation with conversational command delivery; replaced P09 §1.10.3 Instruction Documents with Human Handoff providing ready-to-execute commands directly in conversation; removed P09 §1.10.5 Instruction Document Creation (now covered by §1.10.3); eliminates redundant prompt-NNNN-instructions.md files while maintaining domain separation |
+| 4.6     | 2025-12-04 | Added P00 §1.1.15 Knowledge Base: Both domains must consult workspace/knowledge/ when creating documents or code; established institutional knowledge capture; added knowledge/ to P01 §1.2.6 folder structure; enhanced T04 Prompt context with knowledge_references field |
+| 4.7     | 2025-12-10 | Enhanced P09 §1.10.3 Human Handoff: Replaced single command format with structured approach providing governance, design, and prompt locations to Tactical Domain; changed execution from terminal command to paste-into-Tactical Domain workflow |
+| 4.8     | 2025-12-11 | Enhanced P06 §1.7.3 Test Script Creation: clarified pytest generation as automatic precursor to test execution; added workflow sequence T05→pytest→execute; inserted D1_Generate_Tests node in flowchart between D1_Test_Doc and D1_Execute |
+| 4.9     | 2025-12-11 | Test directory relocation: Moved tests/ from src/tests/ to project root; updated P01 §1.2.6 folder structure; updated P06 §1.7.3, §1.7.7, §1.7.11 path references; resolves Python import conflicts and aligns with pytest ecosystem standards |
+| 5.0     | 2025-12-11 | Added explicit document closure node to workflow flowchart: Inserted D1_Close node between H7 ence and completion; ensures archival procedure execution visible in workflow; aligns flowchart with P00 §1.1.14.4 archival directives |
+| 5.1     | 2025-12-12 | Removed platform-specific assumptions from P06 §1.7.17 Test Execution Platforms: Replaced hardcoded references to Raspberry Pi, MacOS, nmcli, systemd, sockets with generic development/target deployment platform terminology; added Platform specification guidance directing platform details to project design documents; eliminates inappropriate context bleed across projects with different deployment targets |
+| 5.2     | 2025-12-12 | Enhanced T01 Design template with explicit platform specifications: Added development_environment (platform, python_version, toolchain) and target_platform (type, os, architecture, constraints) sections; updated T01 schema with corresponding validation rules; provides structured platform documentation aligned with P06 1.7.17 test execution requirements |
+| 5.3     | 2025-12-12 | Template externalization: Split T01-T06 templates into separate files in /templates/ directory; implemented UUID-based document coupling replacing NNNN sequence numbering (8-character hex format: ^[0-9a-f]{8}$); updated all protocol sections and schemas with UUID patterns; maintains backward compatibility through GitHub history |
+| 5.4     | 2025-12-13 | Clarified P01 1.2.6 Project folder structure: Added note that structure applies to projects using the framework, not to LLM-Governance-and-Orchestration repository itself which contains only ai/, doc/, and templates/ directories |
+| 5.5     | 2025-12-13 | Added P00 §1.1.17 Templates: Explicit template location specification (ai/templates/); Updated protocol sections P02 §1.3.1/§1.3.3/§1.3.5, P03 §1.4.1, P04 §1.5.1/§1.5.4, P06 §1.7.2, P09 §1.10.2 with template read directives; Replaced internal markdown anchor references with explicit filesystem paths |
+| 5.6     | 2025-12-13 | Added P10 Requirements protocol: Systematic requirements capture before design (§1.11.1-§1.11.6); Created T07 Requirements template in ai/templates/; Added workspace/requirements/ and workspace/requirements/closed/ to P01.§1.2.6 folder structure; Updated workflow flowchart with requirements elicitation phase (Start → D1_Elicit → H_Req → D1_Baseline → D1_Design); Requirements baseline precedes master design creation; No iteration numbering, git history tracks changes |
+| 5.7     | 2025-01-13 | Eliminated legacy 0000 sequence from master document naming: Changed from \<class\>-0000-master_\<name\>.md to \<class\>-\<name\>-master.md; Updated P00 §1.1.10, P01 §1.2.5, P02 §1.3.1/§1.3.7, P05 §1.6.4, P10 §1.11.2/§1.11.5; Suffix pattern enables clearer alphabetical sorting while maintaining master designation |
+| 5.8     | 2025-01-13 | Clarified P00 §1.1.10 document naming conventions: Explicitly separated master document naming (no UUID) from all other documents (UUID required); Added concrete examples for both patterns; Removes ambiguity about UUID assignment criteria |
+| 5.9     | 2025-01-13 | Added section symbol (§) notation throughout governance document: Replaced all section number references with § prefix for formal technical documentation aesthetics and improved reference precision; Updated all protocol sections (P00-P10), subsections, and version history references |
+| 6.0     | 2025-01-28 | Added Tactical Domain 2.1.0 integration Phase 1: Skills Management (P00 §1.1.18→17), Context Optimization (P00 §1.1.19→18), .claude/ directory structure (P01 §1.2.6), CLAUDE.md requirement (P09 §1.10.3 with verification and UUID format correction), .gitignore additions (P01 §1.2.2) |
+| 6.1     | 2025-01-28 | Added Tactical Domain 2.1.0 integration Phase 2: Checkpoint Strategy (P03 §1.4.8 with automatic rewind capability), Validation Hooks (P06 §1.7.15 PreToolUse/PostToolUse integration), Hook-Based Auditing (P07 §1.8.7 automated audit trail capture); Renumbered P03 subsections §1.4.9-§1.4.11 |
+| 6.2     | 2025-01-28 | Added Tactical Domain 2.1.0 integration Phase 3: Wildcard Permissions (P09 §1.10.4 batch operation support), Automated Audits (P07 §1.8.3 Stop hook compliance checking), Exploration Phase (P02 §1.3.8 lightweight prototyping workflow); Renumbered P02 subsections §1.3.9-§1.3.15; Renumbered P09 §1.10.5 |
+| 6.3     | 2025-02-13 | Enhanced P00 §1.1.15 Knowledge Base with behavioral standards specification: workspace/knowledge/behavioral-standards.yaml provides machine-readable behavioral constraints for autonomous execution contexts; T04 template v1.2 adds behavioral_standards section (source, enforcement_level); Example files in doc/examples/ (YAML, JSON Schema, validation script) |
+| 6.4     | 2025-02-13 | Phase 2 refactoring: Model-agnostic terminology (Strategic/Tactical Domain), Ralph Loop Integration (§1.1.11), model implementation options (§1.1.4), multi-model orchestration support (§1.1.8), section renumbering (§1.1.12-§1.1.19), removed duplicate Logging Standards |
+| 6.5     | 2025-02-18 | Implementation profile pattern: Replaced Claude-specific references with abstract equivalents — .claude/skills/ → <skills_dir>/, CLAUDE.md → tactical context file, .claude/ → <tactical_config>/; renamed §1.1.11 to AEL; removed duplicate §1.1.4 Tactical Domain line; .gitignore Tactical Domain section replaced with profile reference; P01 §1.2.6 folder structure uses abstract placeholders; P06 §1.7.15 and P07 §1.8.7 hook paths abstracted; P09 §1.10.3 context file references abstracted; implementation profiles created in ai/implementation-profiles/ |
+| 6.6     | 2026-02-18 | Corrected path references doc/implementation-profiles/ → ai/implementation-profiles/ throughout; Added P01 §1.2.8 Implementation Profile Setup: profile selection, Claude profile (Claude Code install, CLAUDE.md, .claude/ structure), OLLama profile (OLLama install, model pull, Goose install, provider config, context file), AEL setup common to both profiles |
+| 6.7     | 2026-02-18 | Section renumbering corrections: P01 §1.2.8↔1.2.9 (Python documents) and §1.2.9↔1.2.8 (Implementation Profile Setup) to restore sequential order; P00 §1.1.18→17 (Templates), §1.1.19→18 (Skills Management), §1.1.20→19 (Context Optimization) to close gap at §1.1.17 |
+| 6.8     | 2026-02-18 | P01 §1.2.2 .gitignore: replaced profile-specific placeholder comment with explicit entries for both profiles (CLAUDE.local.md, .claude/settings.json, .goosehints.local, .goose/ralph/); removed redundant .gitignore instruction from P01 §1.2.8 |
+| 6.9     | 2026-02-18 | P01 §1.2.2 .gitignore: extended Tactical Domain section with .claude/commands/ and .goose/recipes/ to cover all known non-shared subdirectories for both profiles |
+| 7.0     | 2026-02-18 | Added `bin/` directory to P01 §1.2.6 project folder structure; added Integration Scripts directive to P00 §1.1.11 AEL: project-scoped scripts reside in `<project>/bin/`, global installation not required |
+| 7.1     | 2026-02-25 | Added Goose recipe integration to P01 §1.2.4: copy `ai/goose/recipes/` from framework to project, configure `ralph-loop.sh` with project-absolute recipe path; updated P01 §1.2.8 AEL setup to reference project-scoped recipes, removing `~/.config/goose/recipes/` install instruction |
+| 7.2     | 2026-03-04 | Restructured repository: meta/ → framework/, src/ → skel/; Revised P01 §1.2.4: replaced manual ai/ copy with copy-from-skel/ workflow; skel/ is the deployable project skeleton maintained in the framework repository |
+| 7.3     | 2026-03-04 | Renamed ai/implementation-profiles/ → ai/profiles/; renamed profile-claude-desktop.md → claude-desktop.md, profile-claude.md → claude.md, profile-ollama.md → ollama.md; updated all references in P00 §1.1.18, §1.1.19, P01 §1.2.8, P09 §1.10.3 |
+| 7.4     | 2026-03-11 | Replaced Goose AEL with Python AEL orchestrator: removed ai/goose/, added ai/ael/ (orchestrator.py, mcp_client.py, parser.py, recipes); updated §1.1.11 state dir (.goose/ralph/ → .ael/ralph/), §1.2.2 .gitignore, §1.2.4 recipe path note, §1.2.8 AEL setup |
+| 7.5     | 2026-03-11 | Narrowed scope to Apple Silicon + MLX: removed OLLama profile setup from §1.2.8; removed Goose/OLLama from §1.1.4 implementation options; deprecated docs/setup-goose.md, docs/setup-ollama-lmstudio.md, ai/profiles/ollama.md to deprecated/ |
+| 7.6     | 2026-03-11 | Integrated AEL into workflow: replaced Tactical Domain black-box subgraph with AEL Ralph Loop + SHIP/BLOCKED decision; updated §1.1.8 command format; updated §1.1.11 Loop Exit traceability (SHIP→T06, BLOCKED→T03); updated §1.10.3 Human Handoff command format |
+| 7.7     | 2026-03-12 | Added name registry: design-\<project\>-name_registry-master.md as incremental canonical element naming contract; P02 §1.3.16 registry structure; P02 §1.3.1/§1.3.3/§1.3.5 registry directives per tier; P02 §1.3.7 registry naming convention; P00 §1.1.10 registry master notation; P08 §1.9.3 naming consistency audit scope; P09 §1.10.2 element_registry prompt directive |
 | 7.8     | 2026-03-14 | Added enhancement and requirement_change paths to P03 §1.4.1: creates T03 issue with type `enhancement` or `requirement_change` before T02 change document; resolves omission where T03 type enum had no accommodation for non-defect change requests |
+| 7.9     | 2026-03-18 | Added P03 §1.4.12 Trivial Change Exemption: defines trivial and surgical change criteria; when all five criteria satisfied and human approval obtained, Strategic Domain may implement directly without T03, T02, T04, or AEL; git history is sole audit record |
+| 8.0     | 2026-03-18 | Added P09 §1.10.2 tactical_brief directive: Strategic Domain populates concise AEL task payload (~200-400 tokens) in T04 prompt; orchestrator uses brief in preference to full document |
+| 8.1     | 2026-03-20 | Added context budget: AEL orchestrator resolves context window from model config.json on disk; warn/abort thresholds enforced per phase iteration; context-budget.md written to state directory at startup for Strategic Domain; P09 §1.10.2 directive: Strategic Domain reads context-budget.md before authoring tactical_brief |
+| 8.2     | 2026-03-20 | Added entry point verification directive to P04 §1.5.1 and P09 §1.10.2: Strategic Domain reads project entry point configuration (pyproject.toml [project.scripts] or equivalent) and confirms target file is in deployment path before specifying any file_path in T03 issue or T04 prompt; resolves issue c3e5b7d9 |
+| 8.3     | 2026-03-24 | Added tactical_brief verification directive to P09 §1.10.2: Strategic Domain must verify tactical_brief is non-empty before issuing AEL command; T04 template v1.6 removes governance-only fields and fixes placeholder |
+| 8.4     | 2026-03-25 | Added tactical_brief format constraint to P09 §1.10.2: tactical_brief must be authored in a ```yaml block with tactical_brief as root key; per-section prompts must not use ```text for §8.0; plain text blocks are invisible to orchestrator extract_tactical_brief function |
+| 8.5     | 2026-03-25 | Orchestrator improvements from AEL log analysis: (1) extract_tactical_brief adds section-header fallback (Pass 2) recovering brief from plain fenced block under ## N.N Tactical Brief heading; fallback emits WARNING not DEBUG; (2) main_async pre-initialises rc=1 and logs `AEL end rc=N` in finally block to distinguish clean vs unclean termination; P09 §1.10.2: added directives clarifying max_iterations (outer cycles) vs phase_max_iterations (inner tool-call iterations) and AEL end log semantics |
+| 8.6     | 2026-03-26 | Added P06 §1.7.18 Test Constraint Summary: quick-reference constraint table consolidated from testing-standards.md |
+| 8.7     | 2026-03-26 | Removed behavioral standards directives from P00 §1.1.16: behavioral-standards.yaml, schema, and validator deprecated — no operational function in orchestrator; content duplicates governance protocols |
+| 8.8     | 2026-03-29 | Extracted §2.0 Workflow flowchart to workflow.md; replaced §2.0 body with link; updated ToC entry and Prime Directive cross-reference |
+| 8.9     | 2026-04-28 | Added ael-mcp integration: P00 §1.1.11 Claude Desktop Interface directive; P09 §1.10.3 Option A/B AEL execution (human executes or Strategic Domain launches via ael-mcp); P01 §1.2.8 ael-mcp setup steps for Claude Desktop profile |
+| 9.0     | 2026-04-30 | Added claude-omlx as Tactical Domain implementation option: §1.1.4 implementation options; §1.2.8 claude-omlx profile setup steps; fixed claude.md reference path (deprecated/ → profiles/) |
+| 9.1     | 2026-06-14 | Consolidated framework footprint under ai/: relocated workspace/ → ai/workspace/ across P00–P10 path references; loop state .ael/ralph/ → ai/state/ralph/ (§1.1.11); updated §1.2.2 .gitignore and §1.2.6 folder structure for ai/ layout; added ai/state/ and ai/dashboard-alerts.md; documented fork isolation mode; CLAUDE.md retained at project root (Claude Code profile) |
+| 9.2     | 2026-06-16 | Updated P01 §1.2.4: replaced skel/ copy workflow with bin/propagate.sh; framework is now a single unified ai/ directory |
+| 9.3     | 2026-06-16 | §1.1.17: T01-T06 → T01-T07; added T07-requirements.md to file list; §1.1.16: knowledge/ made optional; §1.2.6: knowledge/ marked optional; §1.3.8: removed mandatory knowledge/ directive |
+| 9.4     | 2026-06-16 | P08 §1.9: merged duplicate "Audit Closure" sections — former §1.9.7 (short form) folded into former §1.9.9 (subsectioned form); renumbered §1.9.8 Audit Trail → §1.9.7, merged Audit Closure §1.9.9 → §1.9.8 (subsections §1.9.8.1–.4); updated cross-references in ai/doc/guide-audit-loop.md and docs/guide-audit-loop.md |
+| 9.5     | 2026-06-17 | Simplified Tactical Domain configuration: removed <tactical_config>/<skills_dir>/commands placeholders from §1.2.6; added ai/context.md (AEL profile) and .claude/ block (Claude Code profiles only) to §1.2.6; scoped §1.1.18 Skills Management to Claude Code profiles; updated §1.1.19 context file paths per profile |
+| 9.6     | 2026-06-17 | Added ai/context.md template; ralph-work.yaml v1.3.0 reads project_root/ai/context.md at task start; §1.1.19 notes AEL auto-load behaviour |
+| 9.7     | 2026-06-17 | Renamed ai/workspace/admin/ → ai/workspace/report/ in §1.2.2 .gitignore template and §1.2.6 folder structure; added report/closed/ to §1.2.6 and §1.1.14.5 |
+| 9.8     | 2026-06-25 | Added P03 §1.4.1 exception: initial implementation from approved design does not require issue or change documents; forward path is design → T04 → execution → review; corrective loop triggered only by AEL BLOCKED or test failure |
 
 ---
 [Return to Table of Contents](<#table of contents>)
 
 ---
 
-Copyright (c) 2025 William Watson. This work is licensed under the MIT License.
+Copyright (c) 2026 William Watson. MIT License.
