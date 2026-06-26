@@ -49,6 +49,7 @@ Orchestrate system operation, coordinate polling cycles, and manage alerting. Se
 **Owns:**
 - Application entry point and CLI
 - Polling loop control
+- Shared telemetry state (producer side) and HTTP server thread lifecycle
 - Alert threshold evaluation and notification dispatch
 - Configuration management
 - Graceful shutdown handling
@@ -66,6 +67,7 @@ Orchestrate system operation, coordinate polling cycles, and manage alerting. Se
 | Polling orchestration | Execute timed polling cycles |
 | Alert management | Evaluate thresholds, dispatch notifications |
 | Lifecycle | Handle startup, shutdown, signal handling |
+| Server coordination | Own shared telemetry state; start/stop the HTTP server thread; sequence shutdown (planned) |
 
 ### Terminology
 
@@ -133,6 +135,7 @@ flowchart TB
 | Signal handling | ✓ Implemented | Graceful KeyboardInterrupt |
 | Configuration | ○ Planned | YAML config file support |
 | Alerting | ○ Planned | Threshold monitoring |
+| HTTP server coordination | ○ Planned | Own shared state, start/stop server thread, sequence shutdown |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -150,16 +153,24 @@ Controller/Coordinator pattern with dependency injection.
 flowchart TD
     subgraph "Application Domain"
         MAIN[main]
+        STATE[StateHolder]
         ALERT[AlertManager]
         NOTIFY[NotificationDispatcher]
     end
     
+    SERVER[TelemetryServer<br/>Presentation domain]
+    
     MAIN --> ALERT
     ALERT --> NOTIFY
+    MAIN -->|write| STATE
+    MAIN -->|start/stop| SERVER
+    SERVER -->|read| STATE
     
     style MAIN fill:#90EE90
+    style STATE fill:#FFE4B5
     style ALERT fill:#FFE4B5
     style NOTIFY fill:#FFE4B5
+    style SERVER fill:#FFE4B5
 ```
 
 ### Technology Stack
@@ -201,6 +212,7 @@ src/
 | Component | File | Status | Purpose |
 |-----------|------|--------|---------|
 | main | main.py | Implemented | Entry point |
+| StateHolder | presentation/server.py | Planned | Shared telemetry snapshot (instance owned by Application) |
 | AlertManager | application/alerting.py | Planned | Threshold monitoring |
 | NotificationDispatcher | application/notifications.py | Planned | Alert delivery |
 
@@ -225,6 +237,9 @@ src/
 | --unit-id | int | 1 | Modbus unit ID |
 | --interval | int | 5 | Polling interval (seconds) |
 | --debug | flag | false | Enable debug logging |
+| --serve | flag | false | Enable HTTP telemetry server |
+| --http-port | int | 8080 | HTTP server port |
+| --allow | str (repeatable) | RFC 1918 + link-local | Permitted source IP ranges |
 
 **State Machine:**
 
@@ -240,6 +255,24 @@ stateDiagram-v2
     Polling --> Shutdown: KeyboardInterrupt
     Shutdown --> [*]: Cleanup complete
 ```
+
+---
+
+### Server Coordination (Planned)
+
+**Purpose:** Own the shared telemetry state and coordinate the HTTP server thread lifecycle.
+
+The Application domain instantiates a `StateHolder` (defined in the Presentation server module) and passes it to both sides: the poll loop writes each telemetry snapshot to it; `TelemetryServer` reads from it. The server has read-only access and never touches the inverter.
+
+**Concurrency:** One producer (poll loop), N consumers (HTTP handler threads), one lock guarding the snapshot. The server runs on its own thread; a server failure must not stop polling.
+
+**Shutdown sequence (ordered):**
+1. Receive shutdown signal (KeyboardInterrupt / SIGTERM).
+2. Stop the poll loop.
+3. Call `TelemetryServer.stop()` (`httpd.shutdown()` from the main thread, then `server_close()`).
+4. Join the server thread with a timeout.
+
+Ordered shutdown prevents hung processes and orphaned sockets on restart. Server detail: [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>).
 
 ---
 
@@ -426,8 +459,9 @@ logging:
 
 | Requirement | Implementation |
 |-------------|----------------|
-| Graceful shutdown | Signal handler for SIGINT, SIGTERM |
+| Graceful shutdown | Signal handler for SIGINT, SIGTERM; ordered stop of poll loop then HTTP server |
 | Connection recovery | Automatic reconnect with backoff |
+| Server isolation | HTTP server runs on a separate thread; failure does not stop polling (planned) |
 | Alert persistence | State survives restart (planned) |
 
 ### Configuration
@@ -512,6 +546,7 @@ alerts:
 | 1.1 | 2025-12-30 | Added Tier 3 component document reference |
 | 1.2 | 2025-12-30 | Added AlertManager and InverterPool component document references |
 | 1.3 | 2026-01-08 | Removed multi-inverter coordination. Removed InverterPool and PollingCoordinator components. Updated NFR targets for single-inverter deployment. |
+| 1.4 | 2026-06-26 | Added HTTP server coordination: shared-state (StateHolder) ownership, server thread lifecycle, and ordered shutdown sequencing. Added Server Coordination subsection, CLI flags (--serve, --http-port, --allow), and StateHolder to component summary. Cross-references TelemetryServer (design-9b7e2c4a). |
 
 ---
 

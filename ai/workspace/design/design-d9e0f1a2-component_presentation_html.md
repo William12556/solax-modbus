@@ -5,7 +5,7 @@ Created: 2025 December 30
 **Document Type:** Tier 3 Component Design  
 **Document ID:** design-d9e0f1a2-component_presentation_html  
 **Parent:** [design-af5c3d4e-domain_presentation.md](<design-af5c3d4e-domain_presentation.md>)  
-**Status:** Planned  
+**Status:** Superseded  
 
 ---
 
@@ -31,7 +31,8 @@ component_info:
   domain: "Presentation"
   version: "1.0"
   date: "2025-12-30"
-  status: "Planned"
+  status: "Superseded"
+  superseded_by: "design-9b7e2c4a-component_presentation_server.md"
   source_file: "src/presentation/html_renderer.py"
 ```
 
@@ -40,6 +41,8 @@ component_info:
 ---
 
 ## Purpose
+
+> **Superseded.** This static-file HTML rendering approach is replaced by live HTTP serving. See [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>). Retained for trace history.
 
 Generate self-contained HTML pages displaying inverter telemetry. Supports auto-refresh for live monitoring dashboards.
 
@@ -365,6 +368,7 @@ def render_multi_inverter(
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-12-30 | Initial component design for planned HTML renderer |
+| 1.1 | 2026-06-26 | Marked Superseded. Static-file HTML rendering replaced by live HTTP serving (TelemetryServer, design-9b7e2c4a). Retained for trace history. |
 
 ---
 

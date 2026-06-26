@@ -52,12 +52,12 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 - Modbus TCP emulator for development testing
 - Future: Time-series data storage (InfluxDB)
 - Future: Monitoring and alerting
+- Future: HTTP server for live telemetry (single inverter, read-only)
 
 ### Out of Scope
 
 - Hardware selection and procurement
 - Physical network infrastructure
-- Web-based user interface
 - Cloud integration
 - Battery Management System direct interface
 
@@ -125,6 +125,7 @@ flowchart LR
 | Emulator | ✓ Implemented | Test server with dynamic state simulation |
 | Data persistence | ○ Planned | InfluxDB time-series storage |
 | Alerting | ○ Planned | Threshold monitoring and notifications |
+| HTTP telemetry server | ○ Planned | Live telemetry over HTTP, read-only |
 
 
 [Return to Table of Contents](<#table of contents>)
@@ -642,7 +643,8 @@ logging:
 | TimeSeriesStore | Data | [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>) | Active |
 | DataBuffer | Data | [design-c8d9e0f1-component_data_buffer.md](<design-c8d9e0f1-component_data_buffer.md>) | Active |
 | InverterDisplay | Presentation | [design-d3c4d5e6-component_presentation_console.md](<design-d3c4d5e6-component_presentation_console.md>) | Active |
-| HTMLRenderer | Presentation | [design-d9e0f1a2-component_presentation_html.md](<design-d9e0f1a2-component_presentation_html.md>) | Active |
+| HTMLRenderer | Presentation | [design-d9e0f1a2-component_presentation_html.md](<design-d9e0f1a2-component_presentation_html.md>) | Superseded |
+| TelemetryServer | Presentation | [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>) | Planned |
 | main | Application | [design-e4d5e6f7-component_application_main.md](<design-e4d5e6f7-component_application_main.md>) | Active |
 | AlertManager | Application | [design-e0f1a2b3-component_application_alerting.md](<design-e0f1a2b3-component_application_alerting.md>) | Active |
 | NotificationDispatcher | Application | design-XXXX-component_application_notifications.md | Planned |
@@ -683,6 +685,7 @@ logging:
 | 1.6 | 2026-01-09 | Updated file paths for Python package structure. Changed src/solax_poll.py to src/solax_modbus/main.py and src/emulator/ to src/solax_modbus/emulator/. Added package initialization file. |
 | 1.7 | 2026-03-14 | Added macOS as supported target platform. Replaced single target_platform block with target_platforms list. Updated development_environment platform field. Change: change-b4e7f1a9. |
 | 1.8 | 2026-06-25 | Removed macOS from target_platforms (reverses 1.7); deployment target is Raspberry Pi / Debian only. Retained macOS in development_environment. |
+| 1.9 | 2026-06-26 | Brought web UI in-scope. Added HTTP telemetry server to In Scope and Primary Functions. Added TelemetryServer (design-9b7e2c4a) to Tier 3 components; marked HTMLRenderer (design-d9e0f1a2) Superseded. |
 
 ---
 
