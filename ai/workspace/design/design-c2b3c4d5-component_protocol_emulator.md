@@ -33,7 +33,7 @@ component_info:
   date: "2025-12-30"
   status: "Implemented"
   source_file: "src/solax_modbus/emulator/solax_emulator.py"
-  platforms: "macOS, Linux"
+  platforms: "Linux"
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -268,12 +268,12 @@ def run_emulator():
 
 ### Platform Support
 
-The emulator is implemented in pure Python with no OS-specific dependencies. It runs on macOS and Linux. Port 502 is a privileged port on both platforms; `sudo` is required unless an alternative port is used via `--port`.
+The emulator is implemented in pure Python with no OS-specific dependencies. It is scoped to Linux (Raspberry Pi / Debian) as the supported runtime. Port 502 is a privileged port; `sudo` is required unless an alternative port is used via `--port`.
 
 ### Command Line
 
 ```bash
-# macOS or Linux — sudo required for port 502
+# Linux — sudo required for port 502
 sudo python src/solax_modbus/emulator/solax_emulator.py
 
 # Use a non-privileged port to avoid sudo
@@ -347,6 +347,7 @@ python -m solax_modbus.main 127.0.0.1 --port 5020
 | 1.0 | 2025-12-30 | Initial component design documenting implemented emulator |
 | 1.1 | 2026-03-13 | Corrected class diagram (relationships, accurate attributes/methods); corrected run_emulator() interface; corrected source path; added Known Limitations section (MP-001, MP-002, MP-003) |
 | 1.2 | 2026-03-24 | Corrected platform scope: emulator runs on macOS and Linux (not Pi only). Updated Component Information, added Platform Support section, updated Usage commands to include sudo and non-privileged port alternative. |
+| 1.3 | 2026-06-25 | Scoped emulator runtime to Linux only (reverses macOS scope from 1.2). Updated Component Information platforms field, Platform Support section, and Command Line comment. |
 
 ---
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Solax-Modbus Install Script
-# Supports: Linux (Debian/Raspberry Pi), macOS
+# Supports: Linux (Debian/Raspberry Pi)
 #
 # Usage:
 #   ./install.sh                              # fetch latest release from GitHub
@@ -8,9 +8,6 @@
 #   ./install.sh <path-to-wheel>              # install from local wheel file
 #
 # Linux:  installs to /opt/solax-monitor/, symlink in /usr/local/bin/
-# macOS:  installs to ~/.local/opt/solax-monitor/, PATH added to shell profile
-#
-# Change: change-b4e7f1a9-macos-platform-support
 
 set -e  # Exit on error
 
@@ -22,11 +19,9 @@ case "$OS" in
     Linux*)
         INSTALL_DIR="/opt/solax-monitor"
         ;;
-    Darwin*)
-        INSTALL_DIR="$HOME/.local/opt/solax-monitor"
-        ;;
     *)
         echo "ERROR: Unsupported operating system: $OS"
+        echo "This installer supports Linux (Debian/Raspberry Pi) only."
         exit 1
         ;;
 esac
@@ -107,12 +102,7 @@ echo "==> Wheel: $WHEEL_PATH"
 # ---------------------------------------------------------------------------
 if ! command -v python3 &>/dev/null; then
     echo "ERROR: python3 not found in PATH"
-    if [ "$OS" = "Darwin" ]; then
-        echo "Install Python 3 via Homebrew:  brew install python3"
-        echo "Or via Xcode Command Line Tools: xcode-select --install"
-    else
-        echo "Install Python 3:  sudo apt-get install python3 python3-venv"
-    fi
+    echo "Install Python 3:  sudo apt-get install python3 python3-venv"
     exit 1
 fi
 
@@ -121,15 +111,9 @@ fi
 # ---------------------------------------------------------------------------
 if [ ! -d "$VENV_DIR" ]; then
     echo "==> Creating virtual environment at $VENV_DIR"
-    if [ "$OS" = "Linux" ]; then
-        # Linux: /opt requires elevated privileges
-        sudo mkdir -p "$INSTALL_DIR"
-        sudo python3 -m venv "$VENV_DIR"
-    else
-        # macOS: user-owned path, no sudo required
-        mkdir -p "$INSTALL_DIR"
-        python3 -m venv "$VENV_DIR"
-    fi
+    # /opt requires elevated privileges
+    sudo mkdir -p "$INSTALL_DIR"
+    sudo python3 -m venv "$VENV_DIR"
 fi
 
 # ---------------------------------------------------------------------------
@@ -157,38 +141,17 @@ echo "✓ Installation successful: version $INSTALLED"
 echo ""
 
 # ---------------------------------------------------------------------------
-# PATH configuration: platform-specific
+# PATH configuration
 # ---------------------------------------------------------------------------
-if [ "$OS" = "Linux" ]; then
-    # Linux: symlink into /usr/local/bin (already in PATH on Debian/Raspberry Pi)
-    SYMLINK="/usr/local/bin/solax-monitor"
-    TARGET="$VENV_DIR/bin/solax-monitor"
+# Symlink into /usr/local/bin (already in PATH on Debian/Raspberry Pi)
+SYMLINK="/usr/local/bin/solax-monitor"
+TARGET="$VENV_DIR/bin/solax-monitor"
 
-    if [ -L "$SYMLINK" ] && [ "$(readlink "$SYMLINK")" = "$TARGET" ]; then
-        echo "==> Symlink already correct: $SYMLINK"
-    else
-        echo "==> Configuring symlink: $SYMLINK -> $TARGET"
-        sudo ln -sf "$TARGET" "$SYMLINK"
-    fi
-
+if [ -L "$SYMLINK" ] && [ "$(readlink "$SYMLINK")" = "$TARGET" ]; then
+    echo "==> Symlink already correct: $SYMLINK"
 else
-    # macOS: append venv bin to shell profile if not already present
-    if [ "$SHELL" = "/bin/zsh" ]; then
-        SHELL_PROFILE="$HOME/.zshrc"
-    else
-        SHELL_PROFILE="$HOME/.bash_profile"
-    fi
-
-    PATH_LINE="export PATH=\"$VENV_DIR/bin:\$PATH\""
-
-    if grep -qF "$VENV_DIR/bin" "$SHELL_PROFILE" 2>/dev/null; then
-        echo "==> PATH already configured in $SHELL_PROFILE"
-    else
-        echo "$PATH_LINE" >> "$SHELL_PROFILE"
-        echo "==> Added $VENV_DIR/bin to PATH in $SHELL_PROFILE"
-        echo ""
-        echo "NOTE: Open a new terminal for the PATH change to take effect."
-    fi
+    echo "==> Configuring symlink: $SYMLINK -> $TARGET"
+    sudo ln -sf "$TARGET" "$SYMLINK"
 fi
 
 # ---------------------------------------------------------------------------
@@ -198,14 +161,7 @@ echo ""
 echo "Run monitor with:"
 echo "  solax-monitor <inverter-ip> [options]"
 echo ""
-
-if [ "$OS" = "Linux" ]; then
-    echo "To register as a systemd service, create a unit file manually."
-else
-    echo "Note: Automatic launch on login is not configured."
-    echo "      Start the monitor manually when required."
-fi
-
+echo "To register as a systemd service, create a unit file manually."
 echo ""
 echo "Options:"
 echo "  --port PORT         Modbus TCP port (default: 502)"

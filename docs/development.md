@@ -9,7 +9,6 @@ Created: 2026 June 25
 [1.0 Build and Release](<#1.0 build and release>)
 [2.0 Developer Installation](<#2.0 developer installation>)
 [2.1 Raspberry Pi](<#2.1 raspberry pi>)
-[2.2 macOS](<#2.2 macos>)
 [3.0 Local Development](<#3.0 local development>)
 [3.1 Tests](<#3.1 tests>)
 [3.2 Emulator](<#3.2 emulator>)
@@ -66,16 +65,6 @@ chmod +x /tmp/install.sh && /tmp/install.sh /tmp/solax_modbus-*.whl
 
 [Return to Table of Contents](<#table of contents>)
 
-### 2.2 macOS
-
-After running `build.sh` locally:
-
-```bash
-chmod +x install.sh && ./install.sh dist/solax_modbus-*.whl
-```
-
-[Return to Table of Contents](<#table of contents>)
-
 ---
 
 ## 3.0 Local Development
@@ -93,7 +82,7 @@ pytest --cov=src --cov-report=html
 
 ### 3.2 Emulator
 
-The emulator runs on macOS and Linux. Port 502 requires elevated privileges on both platforms; use `--port` to specify an unprivileged port instead.
+The emulator runs on Linux. Port 502 requires elevated privileges; use `--port` to specify an unprivileged port instead.
 
 ```bash
 # Terminal 1: Start emulator on an unprivileged port
@@ -103,7 +92,7 @@ python -m solax_modbus.emulator.solax_emulator --port 5020
 solax-monitor 127.0.0.1 --port 5020
 ```
 
-To use the default port 502, `sudo` is required on both macOS and Linux:
+To use the default port 502, `sudo` is required:
 
 ```bash
 sudo python -m solax_modbus.emulator.solax_emulator
@@ -132,6 +121,7 @@ See [Development Testing Guide](development-testing-guide.md) for Raspberry Pi e
 | Version | Date | Description |
 |---|---|---|
 | 1.0 | 2026-06-25 | Initial document — developer content extracted from README |
+| 1.1 | 2026-06-25 | Removed §2.2 macOS developer-install (install.sh is Linux-only); scoped emulator to Linux in §3.2. macOS retained for build (§1.0) and local development (§3.0). |
 
 ---
 

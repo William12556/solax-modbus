@@ -6,7 +6,6 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 
 - [Features](<#features>)
 - [Install — Raspberry Pi Linux](<#install--raspberry-pi-linux>)
-- [Install — Apple macOS](<#install--apple-macos>)
 - [Configure Service](<#configure-service>)
 - [Verify](<#verify>)
 - [Updates](<#updates>)
@@ -37,27 +36,6 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 ## Install — Raspberry Pi Linux
 
 Installs to `/opt/solax-monitor/`. A symlink is created at `/usr/local/bin/solax-monitor` so the command is available without a full path. The symlink is verified on each install and corrected if stale.
-
-```bash
-curl -fsSL https://github.com/William12556/solax-modbus/releases/latest/download/install.sh -o install.sh
-chmod +x install.sh && ./install.sh
-```
-
-To install a specific version:
-
-```bash
-./install.sh 0.1.5
-```
-
-[Return to Table of Contents](<#table-of-contents>)
-
----
-
-## Install — Apple macOS
-
-Installs to `~/.local/opt/solax-monitor/`. No `sudo` required. Manual start only — no service registration.
-
-The installer adds `~/.local/opt/solax-monitor/venv/bin` to `PATH` in your shell profile (`~/.zshrc` or `~/.bash_profile`). Open a new terminal after installation for the change to take effect.
 
 ```bash
 curl -fsSL https://github.com/William12556/solax-modbus/releases/latest/download/install.sh -o install.sh
@@ -161,7 +139,6 @@ Raspberry Pi ──Modbus TCP (port 502)──> Solax X3 Hybrid Inverter
 | Platform | Requirement |
 |---|---|
 | Raspberry Pi 4 | Debian 12 (Bookworm), 100MB disk, network to inverter |
-| macOS | Python 3.9+, Git |
 
 [Return to Table of Contents](<#table-of-contents>)
 
@@ -173,7 +150,6 @@ Raspberry Pi ──Modbus TCP (port 502)──> Solax X3 Hybrid Inverter
 - Single-inverter monitoring (read-only)
 - Validated with Solax X3 Hybrid 6.0-D
 - Debian 12 deployment on Raspberry Pi 4
-- macOS manual execution
 - Scripted build and installation workflow
 
 **Important Notice:**
@@ -198,6 +174,7 @@ MIT License — see [LICENSE](<LICENSE>) file.
 | 1.2 | 2026-03-24 | Corrected emulator platform constraint: emulator runs on macOS and Linux (not Pi only); sudo required on both for port 502 |
 | 1.3 | 2026-03-24 | Updated PATH configuration: Linux symlink to /usr/local/bin/; macOS PATH added to shell profile; updated emulator development commands |
 | 1.4 | 2026-06-25 | Separated user and developer content: moved Publish, Development, and developer install/update paths to docs/development.md; simplified Architecture and Project Status; added development.md to Documentation |
+| 1.5 | 2026-06-25 | Removed macOS as installation target: deleted Apple macOS install section and TOC entry, macOS system-requirements row, and macOS manual-execution status line. Deployment target is Raspberry Pi / Linux only. |
 
 ---
 

@@ -536,7 +536,6 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
     - "Configuration via human-readable YAML"
     - "Automated dependency installation via pyproject.toml"
     - "Linux: systemd service for automatic startup"
-    - "macOS: manual start only; no service registration performed"
     - "Health check endpoint for monitoring tools"
   target_metric: "Time-to-production <30 minutes"
   source: "Deployment efficiency requirements"
@@ -617,18 +616,15 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   description: "System SHALL operate on all supported target platforms"
   acceptance_criteria:
     - "Linux target: Debian 12 (Bookworm) on ARM64 (Raspberry Pi 4)"
-    - "macOS target: any supported macOS release, x86_64 and ARM64 (Apple Silicon)"
     - "Development platform: macOS (primary), Linux"
     - "Cross-platform compatibility via standard Python"
-    - "install.sh detects OS and applies platform-appropriate install path and service configuration"
+    - "install.sh installs to /opt/solax-monitor with a symlink in /usr/local/bin"
   constraints:
     - "No platform-specific extensions without abstraction"
     - "Linux deployment via systemd service"
-    - "macOS deployment: manual start only; no service registration"
-    - "macOS install path: ~/.local/opt/solax-monitor"
     - "Linux install path: /opt/solax-monitor"
-  source: "Deployment platform decision; change-b4e7f1a9"
-  rationale: "macOS support enables use of development platform as production monitoring host"
+  source: "Deployment platform decision; change-b4e7f1a9 (added macOS); reversed 2026-06-25 (Linux-only deployment)"
+  rationale: "Deployment target is Raspberry Pi / Debian Linux; macOS is retained as development platform only"
   dependencies: []
 ```
 
@@ -863,6 +859,7 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | 1.0 | 2026-01-08 | Initial requirements document reverse-engineered from design documents and deprecated SDS |
 | 1.1 | 2026-01-08 | Removed FR-017 Multi-Inverter Coordination. Moved multi-inverter to out-of-scope. Updated NFR-002 for single-inverter (256MB). Replaced NFR-008 Scalability with Storage Efficiency. Updated AR-008 Extensibility. Removed traceability entries. |
 | 1.2 | 2026-03-14 | AR-003: added macOS as supported target platform (x86_64 and ARM64). NFR-009: added macOS manual-start acceptance criterion; systemd criterion scoped to Linux only. Change: change-b4e7f1a9. |
+| 1.3 | 2026-06-25 | Removed macOS as deployment target (reverses 1.2). AR-003: dropped macOS target, macOS constraints, and OS-detection criterion; retained macOS as development platform. NFR-009: dropped macOS manual-start criterion. |
 
 ---
 
