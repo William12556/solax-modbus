@@ -41,13 +41,13 @@ domain_info:
 
 ### Purpose
 
-Render telemetry data for human consumption. Provides formatted output through console display and planned HTML interface.
+Render telemetry data for human consumption. Provides formatted output through console display and a planned HTTP server for live telemetry access.
 
 ### Boundaries
 
 **Owns:**
 - Console output formatting
-- HTML page generation (planned)
+- Live telemetry serving over HTTP (planned)
 - Display layout and sections
 - Unit formatting and labels
 
@@ -61,7 +61,7 @@ Render telemetry data for human consumption. Provides formatted output through c
 | Responsibility | Description |
 |----------------|-------------|
 | Console display | Format and print telemetry to terminal |
-| HTML generation | Render data as static HTML page (planned) |
+| HTTP serving | Serve live telemetry over HTTP as JSON and static dashboard (planned) |
 | Value formatting | Apply units, precision, directional indicators |
 | Section organization | Group related metrics logically |
 
@@ -81,7 +81,7 @@ Render telemetry data for human consumption. Provides formatted output through c
 
 ### Description
 
-The Presentation domain transforms raw telemetry dictionaries into formatted human-readable output. Current implementation provides console display; future extension adds HTML rendering for local web access.
+The Presentation domain transforms raw telemetry dictionaries into formatted human-readable output. Current implementation provides console display; planned extension adds an embedded HTTP server for live telemetry access over the local network.
 
 ### Context Diagram
 
@@ -93,21 +93,21 @@ flowchart LR
     
     subgraph "Presentation Domain"
         CONSOLE[InverterDisplay]
-        HTML[HTMLRenderer]
+        SERVER[TelemetryServer]
     end
     
     subgraph "Output"
         TERM[Terminal]
-        FILE[HTML File]
+        BROWSER[Browser / HTTP Client]
     end
     
     APP -->|telemetry dict| CONSOLE
-    APP -->|telemetry dict| HTML
+    APP -->|shared state| SERVER
     CONSOLE -->|formatted text| TERM
-    HTML -->|static page| FILE
+    SERVER -->|JSON / static HTML| BROWSER
     
     style CONSOLE fill:#90EE90
-    style HTML fill:#FFE4B5
+    style SERVER fill:#FFE4B5
 ```
 
 **Legend:**
@@ -121,7 +121,7 @@ flowchart LR
 | Console display | ✓ Implemented | Formatted terminal output |
 | Value formatting | ✓ Implemented | Units, precision, labels |
 | Section grouping | ✓ Implemented | Logical metric organization |
-| HTML rendering | ○ Planned | Static web page generation |
+| HTTP telemetry serving | ○ Planned | Live telemetry over HTTP (JSON + static dashboard) |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -139,15 +139,15 @@ View layer with formatter utilities.
 flowchart TD
     subgraph "Presentation Domain"
         CONSOLE[InverterDisplay]
-        HTML[HTMLRenderer]
+        SERVER[TelemetryServer]
         FMT[Formatters]
     end
     
     CONSOLE --> FMT
-    HTML --> FMT
+    SERVER --> FMT
     
     style CONSOLE fill:#90EE90
-    style HTML fill:#FFE4B5
+    style SERVER fill:#FFE4B5
     style FMT fill:#90EE90
 ```
 
@@ -160,7 +160,7 @@ technology_stack:
     implemented:
       - "Standard library (print, string formatting)"
     planned:
-      - "jinja2 (HTML templating)"
+      - "Standard library (http.server, json, ipaddress)"
 ```
 
 ### Directory Structure
@@ -171,10 +171,10 @@ src/
 ├── presentation/           # (planned refactor)
 │   ├── __init__.py
 │   ├── console.py          # InverterDisplay
-│   ├── html.py             # HTMLRenderer
+│   ├── server.py           # TelemetryServer
 │   ├── formatters.py       # Shared formatters
 │   └── templates/
-│       └── dashboard.html
+│       └── dashboard.html  # static client asset
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -188,7 +188,7 @@ src/
 | Component | File | Status | Purpose |
 |-----------|------|--------|---------|
 | InverterDisplay | main.py | Implemented | Console output |
-| HTMLRenderer | presentation/html.py | Planned | Web page generation |
+| TelemetryServer | presentation/server.py | Planned | Live HTTP telemetry serving |
 | Formatters | presentation/formatters.py | Partial | Value formatting |
 
 ### InverterDisplay
@@ -259,38 +259,19 @@ INVERTER
 
 ---
 
-### HTMLRenderer (Planned)
+### TelemetryServer (Planned)
 
-**Tier 3 Document:** [design-XXXX-component_presentation_html.md](planned)
+**Tier 3 Document:** [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>)
 
-**Purpose:** Generate static HTML dashboard page.
+**Purpose:** Serve live single-inverter telemetry over HTTP to LAN clients.
 
 **Key Responsibilities:**
-- Render telemetry to HTML template
-- Generate self-contained single-file output
-- Support periodic refresh via meta tag
-- Provide minimal CSS styling
+- Serve current telemetry as JSON from shared state
+- Serve a static HTML dashboard that fetches the JSON endpoint
+- Restrict access by source-IP allowlist (defense-in-depth)
+- Run as a background server thread with read-only access to inverter state
 
-**Template Structure:**
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Solax Inverter Dashboard</title>
-    <meta http-equiv="refresh" content="5">
-    <style>/* inline CSS */</style>
-</head>
-<body>
-    <h1>Inverter Telemetry</h1>
-    <section id="grid">...</section>
-    <section id="pv">...</section>
-    <section id="battery">...</section>
-    <section id="energy">...</section>
-    <footer>Last updated: {{ timestamp }}</footer>
-</body>
-</html>
-```
+Routes, concurrency model, and security detail are specified in the Tier 3 component document.
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -307,8 +288,8 @@ class PresentationInterface:
     def display_console(self, data: Dict[str, Any]) -> None:
         """Render telemetry to console."""
         
-    def render_html(self, data: Dict[str, Any], output_path: str) -> bool:
-        """Render telemetry to HTML file (planned)."""
+    def serve(self) -> None:
+        """Serve live telemetry over HTTP from shared state (planned)."""
 ```
 
 ### Internal Interfaces
@@ -389,7 +370,8 @@ logging:
 | Component | Document | Status |
 |-----------|----------|--------|
 | InverterDisplay | [design-d3c4d5e6-component_presentation_console.md](<design-d3c4d5e6-component_presentation_console.md>) | Active |
-| HTMLRenderer | [design-d9e0f1a2-component_presentation_html.md](<design-d9e0f1a2-component_presentation_html.md>) | Active |
+| HTMLRenderer | [design-d9e0f1a2-component_presentation_html.md](<design-d9e0f1a2-component_presentation_html.md>) | Superseded |
+| TelemetryServer | [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>) | Planned |
 
 ### Sibling Domain Documents
 
@@ -404,7 +386,7 @@ logging:
 | Component | File |
 |-----------|------|
 | InverterDisplay | src/solax_modbus/main.py |
-| HTMLRenderer | src/presentation/html.py (planned) |
+| TelemetryServer | src/solax_modbus/presentation/server.py (planned) |
 | Formatters | src/presentation/formatters.py (planned) |
 
 [Return to Table of Contents](<#table of contents>)
@@ -418,6 +400,7 @@ logging:
 | 1.0 | 2025-12-30 | Initial domain design |
 | 1.1 | 2025-12-30 | Added Tier 3 component document reference |
 | 1.2 | 2025-12-30 | Added HTMLRenderer component document reference |
+| 1.3 | 2026-06-26 | Replaced static HTMLRenderer model with TelemetryServer (live HTTP serving). Updated purpose, boundaries, responsibilities, diagrams, technology stack (stdlib, dropped jinja2), component summary and interface. Marked HTMLRenderer (design-d9e0f1a2) Superseded; added TelemetryServer (design-9b7e2c4a). |
 
 ---
 

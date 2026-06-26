@@ -55,12 +55,12 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 - Threshold-based alerting
 - Configuration write operations
 - Development emulator
+- Embedded HTTP server for live telemetry (single inverter, read-only)
 
 **Out of Scope:**
 - Multi-inverter fleet coordination
 - Hardware procurement
 - Network infrastructure
-- Web-based UI (console interface only)
 - Cloud integration
 - Direct BMS interface
 
@@ -375,6 +375,26 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   dependencies: []
 ```
 
+### FR-018: HTTP Telemetry Server
+
+```yaml
+- id: "1a2b3c4d"
+  type: "functional"
+  description: "System SHALL optionally serve live single-inverter telemetry over HTTP to LAN clients"
+  acceptance_criteria:
+    - "Server activated via opt-in command-line flag; default behaviour unchanged"
+    - "Server reads most recent polled telemetry from shared state; does not poll inverter directly"
+    - "JSON endpoint returns current telemetry"
+    - "Static HTML dashboard served to browser clients"
+    - "Bind address all-interfaces; port configurable, non-privileged default"
+    - "Requests from non-permitted source IP ranges rejected (HTTP 403)"
+    - "Permitted source ranges configurable; default RFC 1918 plus link-local (169.254.0.0/16)"
+    - "IPv4 only"
+  source: "Headless deployment monitoring requirements"
+  rationale: "Headless devices require remote access to live telemetry without a local console"
+  dependencies: ["a1b2c3d4", "a7b8c9d0"]
+```
+
 [Return to Table of Contents](<#table of contents>)
 
 ---
@@ -482,6 +502,8 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
     - "Modbus traffic isolated to dedicated VLAN or VPN"
     - "Firewall rules restrict access to required ports only"
     - "No direct internet exposure of Modbus endpoints"
+    - "HTTP telemetry server governed by the same network isolation as Modbus; no direct internet exposure"
+    - "HTTP telemetry server enforces a source-IP allowlist as a secondary control (defense-in-depth, not authentication)"
     - "TLS 1.3 for API endpoints (future)"
   target_metric: "Zero unauthorized network access"
   source: "Industrial security best practices"
@@ -536,7 +558,6 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
     - "Configuration via human-readable YAML"
     - "Automated dependency installation via pyproject.toml"
     - "Linux: systemd service for automatic startup"
-    - "macOS: manual start only; no service registration performed"
     - "Health check endpoint for monitoring tools"
   target_metric: "Time-to-production <30 minutes"
   source: "Deployment efficiency requirements"
@@ -617,18 +638,15 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   description: "System SHALL operate on all supported target platforms"
   acceptance_criteria:
     - "Linux target: Debian 12 (Bookworm) on ARM64 (Raspberry Pi 4)"
-    - "macOS target: any supported macOS release, x86_64 and ARM64 (Apple Silicon)"
     - "Development platform: macOS (primary), Linux"
     - "Cross-platform compatibility via standard Python"
-    - "install.sh detects OS and applies platform-appropriate install path and service configuration"
+    - "install.sh installs to /opt/solax-monitor with a symlink in /usr/local/bin"
   constraints:
     - "No platform-specific extensions without abstraction"
     - "Linux deployment via systemd service"
-    - "macOS deployment: manual start only; no service registration"
-    - "macOS install path: ~/.local/opt/solax-monitor"
     - "Linux install path: /opt/solax-monitor"
-  source: "Deployment platform decision; change-b4e7f1a9"
-  rationale: "macOS support enables use of development platform as production monitoring host"
+  source: "Deployment platform decision; change-b4e7f1a9 (added macOS); reversed 2026-06-25 (Linux-only deployment)"
+  rationale: "Deployment target is Raspberry Pi / Debian Linux; macOS is retained as development platform only"
   dependencies: []
 ```
 
@@ -761,6 +779,8 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | c5d6e7f8 | design-f5e6f7a8-component_protocol_controller.md | InverterController |
 | d6e7f8a9 | design-f5e6f7a8-component_protocol_controller.md | Audit Logging |
 | f8a9b0c1 | design-c2b3c4d5-component_protocol_emulator.md | SolaxEmulator |
+| 1a2b3c4d | design-af5c3d4e-domain_presentation.md | Presentation Domain |
+| 1a2b3c4d | design-9b7e2c4a-component_presentation_server.md | TelemetryServer |
 
 ### Test References
 
@@ -779,6 +799,7 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | a7b8c9d0 | InverterDisplay | src/solax_modbus/main.py |
 | b8c9d0e1 | SolaxInverterClient | src/solax_modbus/main.py |
 | f8a9b0c1 | SolaxEmulator | src/solax_modbus/emulator/solax_emulator.py |
+| 1a2b3c4d | TelemetryServer | src/solax_modbus/presentation/server.py (planned) |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -846,6 +867,9 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | Feed-in | Export of excess solar generation to electrical grid |
 | Scaling Factor | Multiplier applied to raw register value to obtain engineering units |
 | Two's Complement | Binary representation method for signed integers |
+| RFC 1918 | IETF specification defining private IPv4 address ranges not routable on the public internet (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) |
+| Source-IP Allowlist | Access control admitting requests only from configured source address ranges; a network-address filter, not user authentication |
+| Link-local Address | IPv4 address in 169.254.0.0/16, valid only on a single network segment; used by the USB-gadget direct-connection path |
 | InfluxDB | Time-series database optimized for high-frequency data ingestion |
 | Retention Policy | Rules governing data aging and deletion in time-series database |
 | Downsampling | Aggregation of fine-grained data to coarser time resolution |
@@ -863,6 +887,8 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | 1.0 | 2026-01-08 | Initial requirements document reverse-engineered from design documents and deprecated SDS |
 | 1.1 | 2026-01-08 | Removed FR-017 Multi-Inverter Coordination. Moved multi-inverter to out-of-scope. Updated NFR-002 for single-inverter (256MB). Replaced NFR-008 Scalability with Storage Efficiency. Updated AR-008 Extensibility. Removed traceability entries. |
 | 1.2 | 2026-03-14 | AR-003: added macOS as supported target platform (x86_64 and ARM64). NFR-009: added macOS manual-start acceptance criterion; systemd criterion scoped to Linux only. Change: change-b4e7f1a9. |
+| 1.3 | 2026-06-25 | Removed macOS as deployment target (reverses 1.2). AR-003: dropped macOS target, macOS constraints, and OS-detection criterion; retained macOS as development platform. NFR-009: dropped macOS manual-start criterion. |
+| 1.4 | 2026-06-26 | Brought web UI in-scope (embedded HTTP telemetry server). Added FR-018 HTTP Telemetry Server. Amended NFR-006 with HTTP isolation and source-IP allowlist criteria. Added traceability rows and glossary terms (RFC 1918, source-IP allowlist, link-local). |
 
 ---
 

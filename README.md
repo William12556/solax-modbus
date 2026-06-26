@@ -1,19 +1,16 @@
-# Solax Modbus Monitoring System
+ # Solax Modbus Monitoring System
 
 Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modbus TCP protocol.
 
 ## Table of Contents
 
 - [Features](<#features>)
-- [Publish](<#publish>)
 - [Install — Raspberry Pi Linux](<#install--raspberry-pi-linux>)
-- [Install — Apple macOS](<#install--apple-macos>)
 - [Configure Service](<#configure-service>)
 - [Verify](<#verify>)
 - [Updates](<#updates>)
 - [Documentation](<#documentation>)
 - [Architecture](<#architecture>)
-- [Development](<#development>)
 - [Project Status](<#project-status>)
 - [License](<#license>)
 
@@ -36,42 +33,10 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 
 ---
 
-## Publish
-
-Performed on macOS. Produces a GitHub release containing the wheel and `install.sh`.
-
-**Prerequisites:**
-- Python 3.9+
-- `pip install build`
-- `gh` CLI: `brew install gh`, then `gh auth login`
-
-**Build:**
-
-```bash
-cd /path/to/solax-modbus
-chmod +x build.sh
-./build.sh
-```
-
-**Publish release:**
-
-```bash
-chmod +x release.sh
-./release.sh
-```
-
-`release.sh` invokes `build.sh`, tags the release from `pyproject.toml` version, and uploads the wheel and `install.sh` to GitHub.
-
-[Return to Table of Contents](<#table-of-contents>)
-
----
-
 ## Install — Raspberry Pi Linux
 
 Installs to `/opt/solax-monitor/`. A symlink is created at `/usr/local/bin/solax-monitor` so the command is available without a full path. The symlink is verified on each install and corrected if stale.
 
-### Primary — GitHub release
-
 ```bash
 curl -fsSL https://github.com/William12556/solax-modbus/releases/latest/download/install.sh -o install.sh
 chmod +x install.sh && ./install.sh
@@ -81,49 +46,6 @@ To install a specific version:
 
 ```bash
 ./install.sh 0.1.5
-```
-
-### Developer — SCP from Mac
-
-For development or pre-release testing. Build on Mac first, then transfer and install:
-
-```bash
-# Mac
-scp dist/solax_modbus-*.whl install.sh pi@<hostname>:/tmp/
-
-# Pi
-chmod +x /tmp/install.sh && /tmp/install.sh /tmp/solax_modbus-*.whl
-```
-
-[Return to Table of Contents](<#table-of-contents>)
-
----
-
-## Install — Apple macOS
-
-Installs to `~/.local/opt/solax-monitor/`. No `sudo` required. Manual start only — no service registration.
-
-The installer adds `~/.local/opt/solax-monitor/venv/bin` to `PATH` in your shell profile (`~/.zshrc` or `~/.bash_profile`). Open a new terminal after installation for the change to take effect.
-
-### Primary — GitHub release
-
-```bash
-curl -fsSL https://github.com/William12556/solax-modbus/releases/latest/download/install.sh -o install.sh
-chmod +x install.sh && ./install.sh
-```
-
-To install a specific version:
-
-```bash
-./install.sh 0.1.5
-```
-
-### Developer — local wheel
-
-After running `build.sh` locally:
-
-```bash
-chmod +x install.sh && ./install.sh dist/solax_modbus-*.whl
 ```
 
 [Return to Table of Contents](<#table-of-contents>)
@@ -177,27 +99,16 @@ sudo journalctl -u solax-monitor -f
 
 ## Updates
 
-Increment `version` in `pyproject.toml`, then repeat the same workflow used for initial installation.
-
-**Publish and deploy via GitHub release:**
+Re-run the installer to update to the latest release:
 
 ```bash
-# Mac
-./release.sh
-
-# Pi or macOS
 ./install.sh
 ```
 
-**Developer SCP (Pi only):**
+To update to a specific version:
 
 ```bash
-# Mac
-./build.sh
-scp dist/solax_modbus-*.whl install.sh pi@<hostname>:/tmp/
-
-# Pi
-/tmp/install.sh /tmp/solax_modbus-*.whl
+./install.sh 0.1.5
 ```
 
 [Return to Table of Contents](<#table-of-contents>)
@@ -207,8 +118,9 @@ scp dist/solax_modbus-*.whl install.sh pi@<hostname>:/tmp/
 ## Documentation
 
 - [Deployment Guide](docs/deployment-guide.md) — Comprehensive installation and configuration
-- [Design Documents](workspace/design/) — System architecture and component specifications
-- [Test Documentation](workspace/test/) — Test plans and results
+- [Development Guide](docs/development.md) — Build, release, and developer workflows
+- [Design Documents](ai/workspace/design/) — System architecture and component specifications
+- [Test Documentation](ai/workspace/test/) — Test plans and results
 
 [Return to Table of Contents](<#table-of-contents>)
 
@@ -222,50 +134,11 @@ Raspberry Pi ──Modbus TCP (port 502)──> Solax X3 Hybrid Inverter
      └──> Console Display (journalctl logs)
 ```
 
-**Components:**
-- `SolaxInverterClient`: Modbus TCP communication with exponential backoff
-- `InverterDisplay`: Formatted telemetry output with power flow visualization
-- `SolaxEmulator`: Offline development emulator
-
 **System Requirements:**
 
 | Platform | Requirement |
 |---|---|
 | Raspberry Pi 4 | Debian 12 (Bookworm), 100MB disk, network to inverter |
-| macOS | Python 3.9+, Git |
-
-[Return to Table of Contents](<#table-of-contents>)
-
----
-
-## Development
-
-**Run tests:**
-
-```bash
-cd /path/to/solax-modbus
-source venv/bin/activate
-pytest
-pytest --cov=src --cov-report=html
-```
-
-**Development with emulator:**
-
-The emulator runs on macOS and Linux. Port 502 requires elevated privileges on both platforms; use `--port` to specify an unprivileged port instead.
-
-```bash
-# Terminal 1: Start emulator on an unprivileged port
-python -m solax_modbus.emulator.solax_emulator --port 5020
-
-# Terminal 2: Connect monitor to emulator port
-solax-monitor 127.0.0.1 --port 5020
-```
-
-To use the default port 502, `sudo` is required on both macOS and Linux:
-
-```bash
-sudo python -m solax_modbus.emulator.solax_emulator
-```
 
 [Return to Table of Contents](<#table-of-contents>)
 
@@ -277,11 +150,7 @@ sudo python -m solax_modbus.emulator.solax_emulator
 - Single-inverter monitoring (read-only)
 - Validated with Solax X3 Hybrid 6.0-D
 - Debian 12 deployment on Raspberry Pi 4
-- macOS manual execution
 - Scripted build and installation workflow
-
-**Development Focus:**
-This project serves as a practical implementation of LLM Orchestration Framework governance, AI-assisted embedded systems development, and systematic documentation and traceability practices.
 
 **Important Notice:**
 Experimental software in active development. Read-only operation ensures safe monitoring without inverter control risks. Fitness for production use not guaranteed.
@@ -304,6 +173,8 @@ MIT License — see [LICENSE](<LICENSE>) file.
 | 1.1 | 2026-03-24 | Restructured installation: added Publish section; separated Raspberry Pi Linux and Apple macOS install sections; added developer SCP path for each platform |
 | 1.2 | 2026-03-24 | Corrected emulator platform constraint: emulator runs on macOS and Linux (not Pi only); sudo required on both for port 502 |
 | 1.3 | 2026-03-24 | Updated PATH configuration: Linux symlink to /usr/local/bin/; macOS PATH added to shell profile; updated emulator development commands |
+| 1.4 | 2026-06-25 | Separated user and developer content: moved Publish, Development, and developer install/update paths to docs/development.md; simplified Architecture and Project Status; added development.md to Documentation |
+| 1.5 | 2026-06-25 | Removed macOS as installation target: deleted Apple macOS install section and TOC entry, macOS system-requirements row, and macOS manual-execution status line. Deployment target is Raspberry Pi / Linux only. |
 
 ---
 

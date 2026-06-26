@@ -58,12 +58,12 @@ test_info:
 source:
   test_target: "src/solax_modbus/main.py — SolaxInverterClient, InverterDisplay, main()"
   design_refs:
-    - "workspace/design/design-c1a2b3d4-component_protocol_client.md"
-    - "workspace/design/design-d3c4d5e6-component_presentation_console.md"
-    - "workspace/design/design-e4d5e6f7-component_application_main.md"
-    - "workspace/design/design-solax-modbus-master.md"
+    - "ai/workspace/design/design-c1a2b3d4-component_protocol_client.md"
+    - "ai/workspace/design/design-d3c4d5e6-component_presentation_console.md"
+    - "ai/workspace/design/design-e4d5e6f7-component_application_main.md"
+    - "ai/workspace/design/design-solax-modbus-master.md"
   change_refs:
-    - "workspace/prompt/closed/prompt-46d32423-pymodbus_api_fix.md"
+    - "ai/workspace/prompt/closed/prompt-46d32423-pymodbus_api_fix.md"
   requirement_refs: []
 ```
 

@@ -25,6 +25,7 @@ Canonical name registry for the `solax-modbus` project. Authoritative reference 
 **Status Legend:**
 - `implemented` — element exists in source code
 - `planned` — element defined in design, not yet implemented
+- `superseded` — element replaced by a newer design; retained for history
 
 [Return to Table of Contents](<#table-of-contents>)
 
@@ -132,11 +133,31 @@ classDiagram
         +render(data, output_path) bool
     }
 
+    class StateHolder {
+        +get() dict
+        +set(data) None
+    }
+
+    class TelemetryServer {
+        +str bind_host
+        +int port
+        +list allowed_networks
+        +start() None
+        +stop() None
+    }
+
+    class TelemetryRequestHandler {
+        +do_GET() None
+    }
+
     DataValidator --> ValidationResult
     DataValidator --> Measurement
     TimeSeriesStore --> Measurement
     TimeSeriesStore --> DataBuffer
     AlertManager --> NotificationDispatcher
+    TelemetryServer --> StateHolder
+    TelemetryServer --> TelemetryRequestHandler
+    TelemetryRequestHandler --> StateHolder
 ```
 
 [Return to Table of Contents](<#table-of-contents>)
@@ -199,6 +220,10 @@ modules:
   - name: "solax_modbus.presentation.html"
     path: "src/solax_modbus/presentation/html.py"
     package: "solax_modbus"
+    status: superseded
+  - name: "solax_modbus.presentation.server"
+    path: "src/solax_modbus/presentation/server.py"
+    package: "solax_modbus"
     status: planned
 
 classes:
@@ -251,6 +276,18 @@ classes:
   - name: "HTMLRenderer"
     module: "solax_modbus.presentation.html"
     base_classes: []
+    status: superseded
+  - name: "StateHolder"
+    module: "solax_modbus.presentation.server"
+    base_classes: []
+    status: planned
+  - name: "TelemetryServer"
+    module: "solax_modbus.presentation.server"
+    base_classes: []
+    status: planned
+  - name: "TelemetryRequestHandler"
+    module: "solax_modbus.presentation.server"
+    base_classes: ["BaseHTTPRequestHandler"]
     status: planned
 
 functions:
@@ -375,6 +412,34 @@ functions:
     class: null
     signature: "run_emulator() -> None"
     status: implemented
+  # ── solax_modbus.presentation.server :: StateHolder ──────────
+  - name: "get"
+    module: "solax_modbus.presentation.server"
+    class: "StateHolder"
+    signature: "get(self) -> Dict[str, Any]"
+    status: planned
+  - name: "set"
+    module: "solax_modbus.presentation.server"
+    class: "StateHolder"
+    signature: "set(self, data: Dict[str, Any]) -> None"
+    status: planned
+  # ── solax_modbus.presentation.server :: TelemetryServer ──────
+  - name: "start"
+    module: "solax_modbus.presentation.server"
+    class: "TelemetryServer"
+    signature: "start(self) -> None"
+    status: planned
+  - name: "stop"
+    module: "solax_modbus.presentation.server"
+    class: "TelemetryServer"
+    signature: "stop(self) -> None"
+    status: planned
+  # ── solax_modbus.presentation.server :: TelemetryRequestHandler ──
+  - name: "do_GET"
+    module: "solax_modbus.presentation.server"
+    class: "TelemetryRequestHandler"
+    signature: "do_GET(self) -> None"
+    status: planned
 
 constants:
   # ── solax_modbus (__init__.py) ────────────────────────────────
@@ -467,6 +532,11 @@ constants:
     module: "solax_modbus.emulator.solax_emulator"
     type: "int"
     status: implemented
+  # ── solax_modbus.presentation.server (module-level) ──────────
+  - name: "DEFAULT_ALLOWED_NETWORKS"
+    module: "solax_modbus.presentation.server"
+    type: "list"
+    status: planned
 ```
 
 [Return to Table of Contents](<#table-of-contents>)
@@ -489,6 +559,7 @@ constants:
 | 3 | [design-c8d9e0f1-component_data_buffer.md](<design-c8d9e0f1-component_data_buffer.md>) | Data |
 | 3 | [design-d3c4d5e6-component_presentation_console.md](<design-d3c4d5e6-component_presentation_console.md>) | Presentation |
 | 3 | [design-d9e0f1a2-component_presentation_html.md](<design-d9e0f1a2-component_presentation_html.md>) | Presentation |
+| 3 | [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>) | Presentation |
 | 3 | [design-e4d5e6f7-component_application_main.md](<design-e4d5e6f7-component_application_main.md>) | Application |
 | 3 | [design-e0f1a2b3-component_application_alerting.md](<design-e0f1a2b3-component_application_alerting.md>) | Application |
 
@@ -501,6 +572,7 @@ constants:
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-03-13 | Initial creation. Retrospective population from source code and all design tiers. Covers 4 implemented classes, 22 functions, 20 constants, and 8 planned classes. |
+| 1.1 | 2026-06-26 | Registered TelemetryServer, TelemetryRequestHandler, StateHolder (module solax_modbus.presentation.server) and constant DEFAULT_ALLOWED_NETWORKS for the HTTP telemetry server. Marked HTMLRenderer and module solax_modbus.presentation.html superseded. Added design-9b7e2c4a cross-reference and superseded status legend. |
 
 ---
 

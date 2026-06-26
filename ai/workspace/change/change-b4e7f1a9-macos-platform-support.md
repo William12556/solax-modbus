@@ -16,10 +16,10 @@ change_info:
 
 source:
   type: "enhancement"
-  reference: "workspace/issues/issue-b4e7f1a9-macos-platform-support.md"
+  reference: "ai/workspace/issues/issue-b4e7f1a9-macos-platform-support.md"
   description: >
     Extend deployment target to include macOS as a fully supported production
-    platform. Approved proposal: workspace/proposal/proposal-b4e7f1a9-macos-platform-support.md
+    platform. Approved proposal: ai/workspace/proposal/proposal-b4e7f1a9-macos-platform-support.md
 
 scope:
   summary: >
@@ -31,11 +31,11 @@ scope:
       file_path: "install.sh"
       change_type: "modify"
   affected_designs:
-    - design_ref: "workspace/design/design-solax-modbus-master.md"
+    - design_ref: "ai/workspace/design/design-solax-modbus-master.md"
       sections:
         - "Target Platform"
         - "Development Environment"
-    - design_ref: "workspace/requirements/requirements-solax-modbus-master.md"
+    - design_ref: "ai/workspace/requirements/requirements-solax-modbus-master.md"
       sections:
         - "AR-003"
         - "NFR-009"
@@ -149,12 +149,12 @@ verification:
 
 traceability:
   design_updates:
-    - design_ref: "workspace/design/design-solax-modbus-master.md"
+    - design_ref: "ai/workspace/design/design-solax-modbus-master.md"
       sections_updated:
         - "Target Platform"
         - "Development Environment"
       update_date: "2026-03-14"
-    - design_ref: "workspace/requirements/requirements-solax-modbus-master.md"
+    - design_ref: "ai/workspace/requirements/requirements-solax-modbus-master.md"
       sections_updated:
         - "AR-003"
         - "NFR-009"
@@ -164,7 +164,7 @@ traceability:
     - issue_ref: "issue-b4e7f1a9"
       relationship: "source"
 
-notes: "Approved proposal: workspace/proposal/proposal-b4e7f1a9-macos-platform-support.md"
+notes: "Approved proposal: ai/workspace/proposal/proposal-b4e7f1a9-macos-platform-support.md"
 
 version_history:
   - version: "1.0"

@@ -124,7 +124,7 @@ Note: the script executes without prior inspection.
 ---
 
 `install.sh` (all options):
-- Creates virtual environment at `/opt/solax-monitor/venv/` (Linux) or `~/.local/opt/solax-monitor/venv/` (macOS)
+- Creates virtual environment at `/opt/solax-monitor/venv/`
 - Installs the wheel
 - Verifies installed version
 
@@ -483,6 +483,7 @@ sudo journalctl -u solax-monitor | grep "Grid\|PV\|Battery"
 | 1.1 | 2026-01-09 | Added scripted deployment workflow |
 | 2.0 | 2026-01-21 | Simplified to script-based workflow only, removed redundant manual procedures |
 | 2.1 | 2026-03-19 | Added GitHub release workflow; three install modes (GitHub download, SCP, pipe-to-bash); release.sh; manual systemd registration |
+| 2.2 | 2026-06-25 | Removed macOS install path from install.sh description; deployment target is Raspberry Pi / Linux only. macOS retained as build/development machine. |
 
 ---
 

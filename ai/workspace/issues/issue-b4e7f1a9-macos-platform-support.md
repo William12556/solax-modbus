@@ -21,14 +21,14 @@ source:
   description: >
     Human-requested scope extension. macOS to be added as a fully supported
     production deployment target alongside Debian 12 / Raspberry Pi 4.
-    Approved proposal: workspace/proposal/proposal-b4e7f1a9-macos-platform-support.md
+    Approved proposal: ai/workspace/proposal/proposal-b4e7f1a9-macos-platform-support.md
 
 affected_scope:
   components:
     - name: "install.sh"
       file_path: "install.sh"
   designs:
-    - design_ref: "workspace/design/design-solax-modbus-master.md"
+    - design_ref: "ai/workspace/design/design-solax-modbus-master.md"
   version: "0.1.0"
 
 reproduction:
@@ -107,12 +107,12 @@ verification_enhanced:
 
 traceability:
   design_refs:
-    - "workspace/design/design-solax-modbus-master.md"
+    - "ai/workspace/design/design-solax-modbus-master.md"
   change_refs:
     - "change-b4e7f1a9"
   test_refs: []
 
-notes: "Approved proposal: workspace/proposal/proposal-b4e7f1a9-macos-platform-support.md"
+notes: "Approved proposal: ai/workspace/proposal/proposal-b4e7f1a9-macos-platform-support.md"
 
 loop_context:
   was_loop_execution: false
