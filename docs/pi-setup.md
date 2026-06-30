@@ -115,8 +115,12 @@ Append to `/etc/modules`:
 
 ```
 dwc2
-g_ether
+g_cdc
 ```
+
+`g_cdc` presents the CDC-ECM interface, which macOS supports natively. Do not use `g_ether` — it presents as RNDIS, which macOS does not support, and ARP resolution fails.
+
+**Warning:** Check that `/boot/firmware/cmdline.txt` does not contain a `modules-load=` parameter referencing `g_ether`. If present, remove `g_ether` from that parameter. Having both `g_cdc` and `g_ether` loaded simultaneously causes a conflict.
 
 **3. Reboot**
 
@@ -150,7 +154,7 @@ This profile persists across reboots. `usb0` activates automatically when a USB 
 
 Connect a data-capable micro-USB cable to the Pi `USB` (OTG) port. A charge-only cable will not work — the cable must carry data lines.
 
-macOS detects the Pi as a USB Ethernet device. A new network interface appears in System Settings → Network, with a self-assigned link-local address (`169.254.x.x`).
+macOS detects the Pi as a **CDC Composite Gadget** and creates a new network interface in System Settings → Network with a self-assigned link-local address (`169.254.x.x`).
 
 SSH to the Pi by IP address:
 
@@ -194,6 +198,7 @@ ssh admin@169.254.x.x
 | Version | Date | Description |
 |---|---|---|
 | 0.1 | 2026-06-24 | Initial draft — hardware, OS, boot configuration, OTG development access for Debian 12 Bookworm |
+| 0.2 | 2026-06-24 | §5.2: replaced g_ether with g_cdc; added cmdline.txt conflict warning; §5.3: updated macOS device description to CDC Composite Gadget |
 
 ---
 
