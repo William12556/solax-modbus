@@ -329,6 +329,9 @@ class TestMainExecution:
         mock_args.unit_id = 1
         mock_args.interval = 5
         mock_args.debug = False
+        mock_args.serve = False
+        mock_args.http_port = 8080
+        mock_args.allow = None
         mock_parse_args.return_value = mock_args
         
         # Setup client mock

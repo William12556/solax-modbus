@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solax Inverter Telemetry</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            color: #4fc3f7;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+        #timestamp {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        #status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: #888;
+        }
+        #status-indicator.ok { background: #4caf50; }
+        #status-indicator.error { background: #f44336; }
+        .card {
+            background: #252540;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 0.9rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-title .icon {
+            font-size: 1.2rem;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+        .metric:last-child {
+            border-bottom: none;
+        }
+        .metric-label {
+            color: #aaa;
+        }
+        .metric-value {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+        .metric-value.positive { color: #4caf50; }
+        .metric-value.negative { color: #ff9800; }
+        .metric-value.highlight { color: #4fc3f7; }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .phase {
+            text-align: center;
+            padding: 8px;
+            background: #1a1a2e;
+            border-radius: 4px;
+        }
+        .phase-label {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        .phase-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .run-mode {
+            font-size: 1.4rem;
+            font-weight: 600;
+            text-align: center;
+            padding: 12px;
+        }
+        .run-mode.normal { color: #4caf50; }
+        .run-mode.warning { color: #ff9800; }
+        .run-mode.fault { color: #f44336; }
+        .pv-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 1fr 1fr;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+        .pv-row:last-child {
+            border-bottom: none;
+        }
+        .pv-label {
+            color: #aaa;
+        }
+        .pv-cell {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+        .error-message {
+            text-align: center;
+            color: #f44336;
+            padding: 40px;
+        }
+        footer {
+            text-align: center;
+            color: #555;
+            font-size: 0.8rem;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Solax Inverter Telemetry</h1>
+            <div>
+                <span id="status-indicator"></span>
+                <span id="timestamp">Loading...</span>
+            </div>
+        </header>
+
+        <div id="content">
+            <div class="card">
+                <div class="card-title"><span class="icon">&#9889;</span> System Status</div>
+                <div id="run-mode" class="run-mode">--</div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">&#127760;</span> Grid (Three-Phase)</div>
+                <div class="grid-3">
+                    <div class="phase">
+                        <div class="phase-label">R Phase</div>
+                        <div class="phase-value" id="grid-r">--</div>
+                    </div>
+                    <div class="phase">
+                        <div class="phase-label">S Phase</div>
+                        <div class="phase-value" id="grid-s">--</div>
+                    </div>
+                    <div class="phase">
+                        <div class="phase-label">T Phase</div>
+                        <div class="phase-value" id="grid-t">--</div>
+                    </div>
+                </div>
+                <div class="metric" style="margin-top: 12px;">
+                    <span class="metric-label">Total Grid Power</span>
+                    <span class="metric-value" id="grid-total">--</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Frequency</span>
+                    <span class="metric-value" id="grid-freq">--</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">&#9728;</span> Solar PV</div>
+                <div class="pv-row" style="color: #888; font-size: 0.85rem;">
+                    <div></div>
+                    <div class="pv-cell">Voltage</div>
+                    <div class="pv-cell">Current</div>
+                    <div class="pv-cell">Power</div>
+                </div>
+                <div class="pv-row">
+                    <div class="pv-label">PV1</div>
+                    <div class="pv-cell" id="pv1-v">--</div>
+                    <div class="pv-cell" id="pv1-i">--</div>
+                    <div class="pv-cell" id="pv1-p">--</div>
+                </div>
+                <div class="pv-row">
+                    <div class="pv-label">PV2</div>
+                    <div class="pv-cell" id="pv2-v">--</div>
+                    <div class="pv-cell" id="pv2-i">--</div>
+                    <div class="pv-cell" id="pv2-p">--</div>
+                </div>
+                <div class="metric" style="margin-top: 8px;">
+                    <span class="metric-label">Total Solar</span>
+                    <span class="metric-value highlight" id="pv-total">--</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">&#128267;</span> Battery</div>
+                <div class="metric">
+                    <span class="metric-label">State of Charge</span>
+                    <span class="metric-value highlight" id="battery-soc">--</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Voltage</span>
+                    <span class="metric-value" id="battery-voltage">--</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Current</span>
+                    <span class="metric-value" id="battery-current">--</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Power</span>
+                    <span class="metric-value" id="battery-power">--</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Temperature</span>
+                    <span class="metric-value" id="battery-temp">--</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">&#8596;</span> Power Flow</div>
+                <div class="metric">
+                    <span class="metric-label">Grid Feed-in</span>
+                    <span class="metric-value" id="feed-in">--</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">&#128200;</span> Energy</div>
+                <div class="metric">
+                    <span class="metric-label">Today</span>
+                    <span class="metric-value highlight" id="energy-today">--</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total</span>
+                    <span class="metric-value" id="energy-total">--</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title"><span class="icon">&#128295;</span> Inverter</div>
+                <div class="metric">
+                    <span class="metric-label">Temperature</span>
+                    <span class="metric-value" id="inverter-temp">--</span>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            Solax X3 Hybrid 6.0-D Modbus Monitor
+        </footer>
+    </div>
+
+    <script>
+        const REFRESH_INTERVAL = 5000;
+
+        function formatValue(value, unit, decimals = 1) {
+            if (value === undefined || value === null) return '--';
+            return value.toFixed(decimals) + ' ' + unit;
+        }
+
+        function updateUI(data) {
+            const indicator = document.getElementById('status-indicator');
+            const timestamp = document.getElementById('timestamp');
+
+            if (!data || Object.keys(data).length === 0) {
+                indicator.className = '';
+                timestamp.textContent = 'No data available';
+                return;
+            }
+
+            indicator.className = 'ok';
+            timestamp.textContent = data.timestamp || '--';
+
+            // Run mode
+            const runMode = document.getElementById('run-mode');
+            runMode.textContent = data.run_mode || '--';
+            runMode.className = 'run-mode';
+            if (data.run_mode === 'Normal') runMode.classList.add('normal');
+            else if (data.run_mode === 'Fault' || data.run_mode === 'Permanent Fault') runMode.classList.add('fault');
+            else runMode.classList.add('warning');
+
+            // Grid
+            document.getElementById('grid-r').textContent = formatValue(data.grid_power_r, 'W', 0);
+            document.getElementById('grid-s').textContent = formatValue(data.grid_power_s, 'W', 0);
+            document.getElementById('grid-t').textContent = formatValue(data.grid_power_t, 'W', 0);
+            const gridTotal = (data.grid_power_r || 0) + (data.grid_power_s || 0) + (data.grid_power_t || 0);
+            document.getElementById('grid-total').textContent = formatValue(gridTotal, 'W', 0);
+            document.getElementById('grid-freq').textContent = formatValue(data.grid_frequency_r, 'Hz', 2);
+
+            // PV
+            document.getElementById('pv1-v').textContent = formatValue(data.pv1_voltage, 'V');
+            document.getElementById('pv1-i').textContent = formatValue(data.pv1_current, 'A');
+            document.getElementById('pv1-p').textContent = formatValue(data.pv1_power, 'W', 0);
+            document.getElementById('pv2-v').textContent = formatValue(data.pv2_voltage, 'V');
+            document.getElementById('pv2-i').textContent = formatValue(data.pv2_current, 'A');
+            document.getElementById('pv2-p').textContent = formatValue(data.pv2_power, 'W', 0);
+            const pvTotal = (data.pv1_power || 0) + (data.pv2_power || 0);
+            document.getElementById('pv-total').textContent = formatValue(pvTotal, 'W', 0);
+
+            // Battery
+            document.getElementById('battery-soc').textContent = data.battery_soc !== undefined ? data.battery_soc + '%' : '--';
+            document.getElementById('battery-voltage').textContent = formatValue(data.battery_voltage, 'V');
+            const batCurrent = data.battery_current;
+            const batCurrentEl = document.getElementById('battery-current');
+            if (batCurrent !== undefined) {
+                const direction = batCurrent > 0 ? ' (charging)' : batCurrent < 0 ? ' (discharging)' : '';
+                batCurrentEl.textContent = formatValue(Math.abs(batCurrent), 'A') + direction;
+                batCurrentEl.className = 'metric-value ' + (batCurrent > 0 ? 'positive' : batCurrent < 0 ? 'negative' : '');
+            } else {
+                batCurrentEl.textContent = '--';
+            }
+            const batPower = data.battery_power;
+            const batPowerEl = document.getElementById('battery-power');
+            if (batPower !== undefined) {
+                batPowerEl.textContent = formatValue(Math.abs(batPower), 'W', 0);
+                batPowerEl.className = 'metric-value ' + (batPower > 0 ? 'positive' : batPower < 0 ? 'negative' : '');
+            } else {
+                batPowerEl.textContent = '--';
+            }
+            document.getElementById('battery-temp').textContent = data.battery_temperature !== undefined ? data.battery_temperature + ' C' : '--';
+
+            // Feed-in
+            const feedIn = data.feed_in_power;
+            const feedInEl = document.getElementById('feed-in');
+            if (feedIn !== undefined) {
+                const direction = feedIn > 0 ? ' (exporting)' : feedIn < 0 ? ' (importing)' : '';
+                feedInEl.textContent = formatValue(Math.abs(feedIn), 'W', 0) + direction;
+                feedInEl.className = 'metric-value ' + (feedIn > 0 ? 'positive' : feedIn < 0 ? 'negative' : '');
+            } else {
+                feedInEl.textContent = '--';
+            }
+
+            // Energy
+            document.getElementById('energy-today').textContent = formatValue(data.energy_today, 'kWh');
+            document.getElementById('energy-total').textContent = formatValue(data.energy_total, 'kWh');
+
+            // Inverter
+            document.getElementById('inverter-temp').textContent = data.inverter_temperature !== undefined ? data.inverter_temperature + ' C' : '--';
+        }
+
+        async function fetchTelemetry() {
+            const indicator = document.getElementById('status-indicator');
+            try {
+                const response = await fetch('/api/telemetry');
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                const data = await response.json();
+                updateUI(data);
+            } catch (err) {
+                indicator.className = 'error';
+                console.error('Fetch error:', err);
+            }
+        }
+
+        // Initial fetch and periodic refresh
+        fetchTelemetry();
+        setInterval(fetchTelemetry, REFRESH_INTERVAL);
+    </script>
+</body>
+</html>
