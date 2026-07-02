@@ -7,6 +7,20 @@
 #   ./install.sh <version>                    # fetch specific version from GitHub
 #   ./install.sh <path-to-wheel>              # install from local wheel file
 #
+# Optional flags (for automatic systemd service registration):
+#   --ip IP               Inverter IP address (triggers systemd service creation)
+#   --port PORT           Modbus TCP port (passed to solax-monitor --port)
+#   --unit-id ID          Modbus unit ID (passed to solax-monitor --unit-id)
+#   --interval SECONDS    Polling interval (passed to solax-monitor --interval)
+#   --serve               Enable HTTP server (passed to solax-monitor --serve)
+#   --http-port PORT      HTTP server port (passed to solax-monitor --http-port)
+#   --allow CIDR          Allowed CIDR for HTTP (repeatable, passed as --allow)
+#
+# Examples:
+#   ./install.sh --ip 192.168.1.100
+#   ./install.sh 1.0.0 --ip 192.168.1.100 --serve --http-port 8080
+#   ./install.sh --ip 192.168.1.100 --allow 10.0.0.0/24 --allow 192.168.1.0/24
+#
 # Linux:  installs to /opt/solax-monitor/, symlink in /usr/local/bin/
 
 set -e  # Exit on error
@@ -35,14 +49,14 @@ GITHUB_API="https://api.github.com/repos/${GITHUB_REPO}/releases"
 # ---------------------------------------------------------------------------
 WHEEL_PATH=""
 
-if [ -z "$1" ] || [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    # No argument or version string: download from GitHub releases
+if [ -z "$1" ] || [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ "$1" == --* ]]; then
+    # No argument, version string, or flag: download from GitHub releases
     if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
         echo "ERROR: curl or wget required for GitHub download"
         exit 1
     fi
 
-    if [ -z "$1" ]; then
+    if [ -z "$1" ] || [[ "$1" == --* ]]; then
         echo "==> Fetching latest release from GitHub..."
         RELEASE_URL="${GITHUB_API}/latest"
     else
@@ -96,6 +110,60 @@ echo "==> Installing solax-modbus version $VERSION"
 echo "==> Platform: $OS"
 echo "==> Install directory: $INSTALL_DIR"
 echo "==> Wheel: $WHEEL_PATH"
+
+# ---------------------------------------------------------------------------
+# Parse service flags (--ip, --port, --unit-id, --interval, --serve, etc.)
+# ---------------------------------------------------------------------------
+IP=""
+MODBUS_PORT_ARG=""
+UNIT_ID_ARG=""
+INTERVAL_ARG=""
+SERVE_FLAG=""
+HTTP_PORT_ARG=""
+ALLOW_ARGS=()
+
+# Shift off the positional argument if one was provided (not a flag)
+if [ -n "$1" ] && [[ "$1" != --* ]]; then
+    shift
+fi
+
+# Parse remaining arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --ip)
+            IP="$2"
+            shift 2
+            ;;
+        --port)
+            MODBUS_PORT_ARG="$2"
+            shift 2
+            ;;
+        --unit-id)
+            UNIT_ID_ARG="$2"
+            shift 2
+            ;;
+        --interval)
+            INTERVAL_ARG="$2"
+            shift 2
+            ;;
+        --serve)
+            SERVE_FLAG="1"
+            shift
+            ;;
+        --http-port)
+            HTTP_PORT_ARG="$2"
+            shift 2
+            ;;
+        --allow)
+            ALLOW_ARGS+=("$2")
+            shift 2
+            ;;
+        *)
+            echo "ERROR: Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
 
 # ---------------------------------------------------------------------------
 # python3 availability check
@@ -155,16 +223,82 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Post-install instructions
+# Systemd service registration (if --ip was provided)
 # ---------------------------------------------------------------------------
-echo ""
-echo "Run monitor with:"
-echo "  solax-monitor <inverter-ip> [options]"
-echo ""
-echo "To register as a systemd service, create a unit file manually."
-echo ""
-echo "Options:"
-echo "  --port PORT         Modbus TCP port (default: 502)"
-echo "  --unit-id ID        Modbus unit ID (default: 1)"
-echo "  --interval SECONDS  Polling interval (default: 5)"
-echo "  --debug             Enable debug logging"
+if [ -n "$IP" ]; then
+    echo "==> Generating systemd service unit..."
+
+    # Build ExecStart command
+    EXEC_START="$VENV_DIR/bin/solax-monitor \"$IP\""
+
+    if [ -n "$MODBUS_PORT_ARG" ]; then
+        EXEC_START="$EXEC_START --port $MODBUS_PORT_ARG"
+    fi
+
+    if [ -n "$UNIT_ID_ARG" ]; then
+        EXEC_START="$EXEC_START --unit-id $UNIT_ID_ARG"
+    fi
+
+    if [ -n "$INTERVAL_ARG" ]; then
+        EXEC_START="$EXEC_START --interval $INTERVAL_ARG"
+    fi
+
+    if [ -n "$SERVE_FLAG" ]; then
+        EXEC_START="$EXEC_START --serve"
+    fi
+
+    if [ -n "$HTTP_PORT_ARG" ]; then
+        EXEC_START="$EXEC_START --http-port $HTTP_PORT_ARG"
+    fi
+
+    for CIDR in "${ALLOW_ARGS[@]}"; do
+        EXEC_START="$EXEC_START --allow $CIDR"
+    done
+
+    # Write systemd unit file
+    sudo tee /etc/systemd/system/solax-monitor.service > /dev/null <<EOF
+[Unit]
+Description=Solax Modbus Monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=$EXEC_START
+User=root
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    echo "==> Reloading systemd daemon..."
+    sudo systemctl daemon-reload
+
+    echo "==> Enabling and starting solax-monitor service..."
+    sudo systemctl enable --now solax-monitor
+
+    echo ""
+    echo "✓ Systemd service installed and started"
+    echo ""
+    echo "Service status:"
+    echo "  systemctl status solax-monitor"
+    echo ""
+    echo "View logs:"
+    echo "  journalctl -u solax-monitor -f"
+else
+    # ---------------------------------------------------------------------------
+    # Post-install instructions (no systemd)
+    # ---------------------------------------------------------------------------
+    echo ""
+    echo "Run monitor with:"
+    echo "  solax-monitor <inverter-ip> [options]"
+    echo ""
+    echo "To register as a systemd service, re-run install.sh with --ip:"
+    echo "  ./install.sh --ip <inverter-ip> [--serve] [--http-port PORT]"
+    echo ""
+    echo "Options:"
+    echo "  --port PORT         Modbus TCP port (default: 502)"
+    echo "  --unit-id ID        Modbus unit ID (default: 1)"
+    echo "  --interval SECONDS  Polling interval (default: 5)"
+    echo "  --debug             Enable debug logging"
+fi
