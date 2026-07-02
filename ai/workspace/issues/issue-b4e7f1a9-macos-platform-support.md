@@ -7,13 +7,13 @@ issue_info:
   title: "macOS Full Platform Support"
   date: "2026-03-14"
   reporter: "William Watson"
-  status: "open"
+  status: "closed"
   severity: "medium"
   type: "requirement_change"
-  iteration: 1
+  iteration: 2
   coupled_docs:
     change_ref: "change-b4e7f1a9"
-    change_iteration: 1
+    change_iteration: 2
 
 source:
   origin: "requirement_change"
@@ -35,23 +35,23 @@ reproduction:
   prerequisites: "Deploy application on macOS"
   steps:
     - "Run install.sh on macOS"
-    - "Script assumes /opt/solax-monitor/ (Linux path)"
-    - "Script registers systemd service (not available on macOS)"
+    - "Script rejects unsupported OS (Linux-only)"
   frequency: "always"
   reproducibility_conditions: "Any macOS host"
   preconditions: ""
   test_data: ""
-  error_output: "install.sh fails on macOS due to Linux-specific paths and systemd dependency"
+  error_output: "install.sh exits with 'Unsupported operating system' on macOS"
 
 behavior:
   expected: >
-    install.sh installs package to ~/.local/opt/solax-monitor/ on macOS.
-    No service registration performed on macOS (manual start only).
-    Requirements and design documents reflect macOS as a supported target.
+    Original expectation (iteration 1): install.sh installs to
+    ~/.local/opt/solax-monitor/ on macOS, no service registration performed.
   actual: >
-    install.sh targets /opt/solax-monitor/ and registers a systemd service.
-    Neither is valid on macOS. Requirements and design documents list only
-    Debian 12 / Raspberry Pi 4 as the target platform.
+    Iteration 2 correction: install.sh is Linux-only and contains no
+    systemd registration code of any kind (confirmed by direct source
+    inspection 2026-07-02). Iteration 1 of this document incorrectly
+    described systemd registration as already existing prior to this
+    change; that was false. No macOS branch was ever added.
   impact: "Application cannot be deployed on macOS without manual script modification."
   workaround: "Manually create venv at preferred path and run monitor directly."
 
@@ -69,41 +69,45 @@ analysis:
     install.sh and requirements/design documents do not accommodate macOS paths
     or the absence of systemd.
   technical_notes: >
-    Python application code is fully cross-platform; no source changes required.
-    Changes confined to: install.sh (OS detection, macOS path, skip service
-    registration), AR-003 (add macOS target), NFR-009 (manual start note),
-    master design target_platform block.
-  related_issues: []
+    Python application code is fully cross-platform; no source changes required
+    for macOS support itself. This remains true, but macOS support is no longer
+    pursued (see resolution).
+  related_issues:
+    - issue_ref: "issue-f2a8c471"
+      relationship: "related"
 
 resolution:
   assigned_to: "William Watson"
   target_date: ""
   approach: >
-    Implement per approved proposal b4e7f1a9. See change document
-    change-b4e7f1a9-macos-platform-support.md for full technical detail.
+    Rejected. Human decision (2026-07-02): macOS platform support will not be
+    pursued. install.sh remains Linux-only. Separate concern raised during
+    this review — automatic systemd service registration on Linux — is
+    tracked independently under issue-f2a8c471 / change-f2a8c471, since it is
+    unrelated to macOS and does not depend on this issue's resolution.
   change_ref: "change-b4e7f1a9"
-  resolved_date: ""
-  resolved_by: ""
-  fix_description: ""
+  resolved_date: "2026-07-02"
+  resolved_by: "William Watson"
+  fix_description: "No implementation. Scope rejected; issue closed without code change."
 
 verification:
   verified_date: ""
   verified_by: ""
   test_results: ""
-  closure_notes: ""
+  closure_notes: >
+    Closed as rejected. No macOS-specific code exists or will be added.
+    install.sh continues to target Linux (Debian/Raspberry Pi) only.
 
 prevention:
   preventive_measures: "Evaluate platform scope during initial requirements capture."
-  process_improvements: ""
+  process_improvements: >
+    Change documents must be verified against actual source state before
+    being marked implemented; iteration 1 of the coupled change document
+    was marked implemented without corresponding code ever being written.
 
 verification_enhanced:
-  verification_steps:
-    - "Run install.sh on macOS; confirm venv created at ~/.local/opt/solax-monitor/"
-    - "Confirm no systemd or launchd operations attempted"
-    - "Run solax-monitor manually on macOS; confirm normal operation"
-    - "Verify AR-003 and NFR-009 updated in requirements document"
-    - "Verify master design target_platform block updated"
-  verification_results: ""
+  verification_steps: []
+  verification_results: "Not applicable — rejected, no implementation performed."
 
 traceability:
   design_refs:
@@ -112,7 +116,7 @@ traceability:
     - "change-b4e7f1a9"
   test_refs: []
 
-notes: "Approved proposal: ai/workspace/proposal/proposal-b4e7f1a9-macos-platform-support.md"
+notes: "Superseded proposal: ai/workspace/proposal/proposal-b4e7f1a9-macos-platform-support.md. macOS support rejected 2026-07-02."
 
 loop_context:
   was_loop_execution: false
@@ -126,6 +130,13 @@ version_history:
     author: "William Watson"
     changes:
       - "Initial issue document"
+  - version: "2.0"
+    date: "2026-07-02"
+    author: "William Watson"
+    changes:
+      - "Corrected reproduction/actual behavior: no systemd registration ever existed in source, contrary to iteration 1 text"
+      - "Status changed to closed; resolution: macOS support rejected, will not be pursued"
+      - "Cross-referenced new issue-f2a8c471 for the unrelated systemd automation concern"
 
 metadata:
   copyright: "Copyright (c) 2025 William Watson. This work is licensed under the MIT License."

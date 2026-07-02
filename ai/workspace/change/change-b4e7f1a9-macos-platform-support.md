@@ -7,12 +7,12 @@ change_info:
   title: "macOS Full Platform Support"
   date: "2026-03-14"
   author: "William Watson"
-  status: "implemented"
+  status: "rejected"
   priority: "medium"
-  iteration: 1
+  iteration: 2
   coupled_docs:
     issue_ref: "issue-b4e7f1a9"
-    issue_iteration: 1
+    issue_iteration: 2
 
 source:
   type: "enhancement"
@@ -23,79 +23,47 @@ source:
 
 scope:
   summary: >
-    Add macOS support to install.sh via OS detection and platform-appropriate
-    install path. Update requirements (AR-003, NFR-009) and master design
-    (target_platform block). No Python source code changes required.
-  affected_components:
-    - name: "install.sh"
-      file_path: "install.sh"
-      change_type: "modify"
-  affected_designs:
-    - design_ref: "ai/workspace/design/design-solax-modbus-master.md"
-      sections:
-        - "Target Platform"
-        - "Development Environment"
-    - design_ref: "ai/workspace/requirements/requirements-solax-modbus-master.md"
-      sections:
-        - "AR-003"
-        - "NFR-009"
+    Rejected 2026-07-02. macOS is not pursued as a deployment target.
+    install.sh remains Linux-only. No code changes made under this document.
+  affected_components: []
+  affected_designs: []
   out_of_scope:
-    - "Python source code (main.py, solax_emulator.py)"
-    - "build.sh (already platform-agnostic)"
-    - "macOS automatic launch (launchd)"
+    - "macOS install path handling"
+    - "macOS service/launchd registration"
     - "Windows support"
 
 rational:
   problem_statement: >
-    install.sh targeted Linux-only paths (/opt/solax-monitor/) and registered
-    a systemd service. Neither is valid on macOS. The application Python code
-    is fully cross-platform but deployment was blocked on macOS.
+    Iteration 1 stated install.sh "hardcoded /opt/solax-monitor/ and registered
+    a systemd service" as current behavior, and described the macOS change as
+    already implemented. Direct source inspection (2026-07-02) found neither
+    claim true: install.sh performs no systemd operations of any kind, on any
+    platform, and no macOS branch was ever added. The iteration 1 status field
+    ("implemented") was incorrect.
   proposed_solution: >
-    Added OS detection to install.sh. On macOS: use ~/.local/opt/solax-monitor/,
-    skip service registration, print manual run instructions. Updated
-    requirements and design documents to reflect macOS as a supported target.
+    Reject macOS support. Correct the false "implemented" status. Close the
+    coupled issue. Do not implement any macOS-specific logic in install.sh.
   alternatives_considered:
-    - option: "Separate install-macos.sh script"
-      reason_rejected: "Duplication of logic; single script with OS detection is simpler to maintain"
-    - option: "Homebrew formula"
-      reason_rejected: "Out of scope; adds complexity beyond stated requirement"
-  benefits:
-    - "macOS workstations and Mac mini usable as production monitoring hosts"
-    - "Development and production platform unified; reduced deployment friction"
-    - "No-sudo installation on macOS"
-  risks:
-    - risk: "python3 not in PATH on fresh macOS"
-      mitigation: "install.sh validates python3 availability with actionable error"
-    - risk: "~/.local/opt/ directory absent"
-      mitigation: "install.sh creates with mkdir -p"
+    - option: "Retrofit this document to cover Linux systemd automation instead"
+      reason_rejected: >
+        This document's identity and full history concern macOS support
+        specifically. Repurposing it for an unrelated Linux-only feature would
+        misrepresent its provenance. See change-f2a8c471 instead.
+  benefits: []
+  risks: []
 
 technical_details:
   current_behavior: >
-    install.sh hardcoded /opt/solax-monitor/ and registered a systemd service.
-    Failed on macOS at both path creation and service registration.
+    install.sh is Linux-only (rejects all other OS via uname -s check).
+    Performs no systemd registration; symlinks the binary into
+    /usr/local/bin/ and prints manual instructions for service creation.
+    This has been true throughout; iteration 1's description of pre-existing
+    systemd registration was inaccurate.
   proposed_behavior: >
-    install.sh detects OS via `uname -s`. On Linux: existing behaviour
-    unchanged. On macOS: installs venv to ~/.local/opt/solax-monitor/,
-    skips service registration, prints manual run command.
-  implementation_approach: >
-    1. OS detection block at top of install.sh via uname -s.
-    2. INSTALL_DIR and VENV_DIR set based on detected OS.
-    3. First-time venv creation uses sudo on Linux, no sudo on macOS.
-    4. systemd block replaced with Linux-only conditional.
-    5. macOS completion message with manual run instructions added.
-    6. python3 availability check added for both platforms.
-    7. AR-003 updated in requirements document.
-    8. NFR-009 updated in requirements document.
-    9. target_platforms block updated in master design.
-  code_changes:
-    - component: "install.sh"
-      file: "install.sh"
-      change_summary: >
-        OS detection; platform-specific INSTALL_DIR/VENV_DIR; conditional
-        venv creation (sudo Linux / no-sudo macOS); conditional systemd
-        registration; python3 validation; macOS completion output.
-      functions_affected: []
-      classes_affected: []
+    No change. install.sh remains Linux-only. This document is closed without
+    implementation.
+  implementation_approach: "None — rejected."
+  code_changes: []
   data_changes: []
   interface_changes: []
 
@@ -105,66 +73,39 @@ dependencies:
   required_changes: []
 
 testing_requirements:
-  test_approach: "Manual execution of install.sh on macOS and Linux hosts"
-  test_cases:
-    - scenario: "Run install.sh on macOS with valid wheel"
-      expected_result: "venv created at ~/.local/opt/solax-monitor/; no systemd operations; run command printed"
-    - scenario: "Run install.sh on Linux with valid wheel"
-      expected_result: "Existing behaviour unchanged; venv at /opt/solax-monitor/; systemd service registered"
-    - scenario: "Run install.sh on macOS without python3 in PATH"
-      expected_result: "Actionable error message; non-zero exit"
-    - scenario: "Run solax-monitor manually on macOS after install"
-      expected_result: "Monitor connects and displays telemetry normally"
-  regression_scope:
-    - "Linux install path and systemd registration unchanged"
-    - "Monitor functional behaviour unchanged on both platforms"
-  validation_criteria:
-    - "install.sh exits 0 on macOS with valid wheel"
-    - "venv present at ~/.local/opt/solax-monitor/ after macOS install"
-    - "No systemd commands executed on macOS"
-    - "AR-003 lists macOS as supported target"
-    - "NFR-009 notes manual start on macOS"
+  test_approach: "Not applicable — no implementation."
+  test_cases: []
+  regression_scope: []
+  validation_criteria: []
 
 implementation:
   effort_estimate: ""
-  implementation_steps:
-    - step: "Modify install.sh"
-      owner: "Strategic Domain"
-    - step: "Update AR-003 in requirements-solax-modbus-master.md"
-      owner: "Strategic Domain"
-    - step: "Update NFR-009 in requirements-solax-modbus-master.md"
-      owner: "Strategic Domain"
-    - step: "Update target_platforms block in design-solax-modbus-master.md"
-      owner: "Strategic Domain"
-  rollback_procedure: "Restore install.sh from git history"
-  deployment_notes: "No deployment impact on existing Linux installations"
+  implementation_steps: []
+  rollback_procedure: "Not applicable — no code changed under this document."
+  deployment_notes: "None."
 
 verification:
-  implemented_date: "2026-03-14"
-  implemented_by: "Strategic Domain"
-  verification_date: ""
-  verified_by: ""
-  test_results: "Pending manual verification on macOS and Linux hosts"
-  issues_found: []
+  implemented_date: ""
+  implemented_by: ""
+  verification_date: "2026-07-02"
+  verified_by: "William Watson"
+  test_results: "Not applicable — rejected."
+  issues_found:
+    - issue_ref: "issue-b4e7f1a9"
 
 traceability:
-  design_updates:
-    - design_ref: "ai/workspace/design/design-solax-modbus-master.md"
-      sections_updated:
-        - "Target Platform"
-        - "Development Environment"
-      update_date: "2026-03-14"
-    - design_ref: "ai/workspace/requirements/requirements-solax-modbus-master.md"
-      sections_updated:
-        - "AR-003"
-        - "NFR-009"
-      update_date: "2026-03-14"
-  related_changes: []
+  design_updates: []
+  related_changes:
+    - change_ref: "change-f2a8c471"
+      relationship: "related, unrelated concern raised during same review"
   related_issues:
     - issue_ref: "issue-b4e7f1a9"
       relationship: "source"
 
-notes: "Approved proposal: ai/workspace/proposal/proposal-b4e7f1a9-macos-platform-support.md"
+notes: >
+  Superseded proposal: ai/workspace/proposal/proposal-b4e7f1a9-macos-platform-support.md.
+  The separate, unrelated request for automatic Linux systemd service
+  registration is tracked under change-f2a8c471.
 
 version_history:
   - version: "1.0"
@@ -180,6 +121,14 @@ version_history:
       - "implementation_steps owner updated to Strategic Domain"
       - "verification.implemented_date and implemented_by populated"
       - "traceability.design_updates update_date populated"
+  - version: "2.0"
+    date: "2026-07-02"
+    author: "William Watson"
+    changes:
+      - "Corrected false 'implemented' status to 'rejected'"
+      - "Corrected technical_details.current_behavior to match actual source (no systemd code, no macOS branch)"
+      - "Cleared code_changes, affected_components, and testing sections — no implementation performed"
+      - "Cross-referenced change-f2a8c471 for the unrelated systemd automation work"
 
 metadata:
   copyright: "Copyright (c) 2025 William Watson. This work is licensed under the MIT License."

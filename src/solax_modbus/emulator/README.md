@@ -13,7 +13,7 @@ Self-contained Modbus TCP server emulating a Solax X3 Hybrid 6.0-D inverter for 
 - **Holding Registers** (configuration - read/write)
 - **Dynamic Simulation**: PV power varies by time of day, battery SOC changes
 - **Realistic Values**: Grid voltage, PV generation, battery charge/discharge
-- **Simple Configuration**: Hardcoded constants at file start
+- **Runtime Configuration**: --host/--port/--unit-id CLI flags; simulation parameters remain hardcoded constants at file start
 
 ## Requirements
 
@@ -29,12 +29,13 @@ pip install pymodbus
 sudo python3 solax_emulator.py
 ```
 
-**Note**: Port 502 requires root/admin privileges. To use unprivileged port:
+**Note**: Port 502 requires root/admin privileges. To use an unprivileged port instead of editing the file:
 
-```python
-# Edit solax_emulator.py
-MODBUS_PORT = 5020  # Change from 502
+```bash
+python3 solax_emulator.py --port 5020
 ```
+
+`--host` and `--unit-id` are also available; see `python3 solax_emulator.py --help`.
 
 ### Test Connection
 
@@ -59,12 +60,12 @@ client.close()
 
 ## Configuration
 
-Edit constants at the beginning of `solax_emulator.py`:
+Network settings (`--host`, `--port`, `--unit-id`) are CLI flags — see Usage above.
+
+Simulation and specification parameters remain hardcoded constants at the
+beginning of `solax_emulator.py` (edit the file to change these):
 
 ```python
-# Network
-MODBUS_PORT = 502
-
 # Specifications
 PV1_MAX_POWER = 3300  # Watts
 BATTERY_CAPACITY = 10000  # Watt-hours
@@ -129,7 +130,7 @@ Night    → Battery may discharge if needed
 ## Troubleshooting
 
 **Permission denied (port 502)**:
-- Run with `sudo` or change `MODBUS_PORT` to >1024
+- Run with `sudo`, or use `--port` with a value >1024
 
 **Connection refused**:
 - Check firewall: `sudo ufw allow 502/tcp`

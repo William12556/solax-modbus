@@ -29,7 +29,7 @@ Created: 2025 December 30
 component_info:
   name: "SolaxEmulator"
   domain: "Protocol"
-  version: "1.0"
+  version: "1.4"
   date: "2025-12-30"
   status: "Implemented"
   source_file: "src/solax_modbus/emulator/solax_emulator.py"
@@ -246,15 +246,14 @@ The emulator serves the same registers as the physical inverter:
 ### Starting the Server
 
 ```python
-def run_emulator():
+def run_emulator(host: str, port: int, unit_id: int):
     """
     Start the emulator server.
-    
-    Network configuration via module-level constants:
-        MODBUS_HOST = '0.0.0.0'
-        MODBUS_PORT = 502
-        MODBUS_UNIT_ID = 1
-    
+
+    host/port/unit_id are supplied via CLI flags (--host, --port,
+    --unit-id), defaulting to module-level constants MODBUS_HOST
+    ('0.0.0.0'), MODBUS_PORT (502), MODBUS_UNIT_ID (1) when omitted.
+
     Starts state_update_loop in a daemon thread, then blocks
     on StartTcpServer until Ctrl+C.
     """
@@ -333,7 +332,7 @@ python -m solax_modbus.main 127.0.0.1 --port 5020
 | ID | Limitation |
 |----|------------|
 | MP-001 | Emulator register addresses do not match client `REGISTER_MAPPINGS`. Client reads grid data from 0x006A; emulator populates 0x0000–0x0008. Integration testing against the emulator produces incorrect values. Resolution deferred. |
-| MP-002 | `run_emulator()` does not accept runtime host/port arguments. Network configuration requires editing module constants. |
+| MP-002 | ~~`run_emulator()` does not accept runtime host/port arguments.~~ Resolved: `--host`/`--port`/`--unit-id` CLI flags accepted; module constants are defaults only. Documentation corrected 2026-07-02. |
 | MP-003 | Register array is 128 entries (0x00–0x7F) only. Registers above 0x7F are not served. |
 
 [Return to Table of Contents](<#table of contents>)
@@ -348,6 +347,7 @@ python -m solax_modbus.main 127.0.0.1 --port 5020
 | 1.1 | 2026-03-13 | Corrected class diagram (relationships, accurate attributes/methods); corrected run_emulator() interface; corrected source path; added Known Limitations section (MP-001, MP-002, MP-003) |
 | 1.2 | 2026-03-24 | Corrected platform scope: emulator runs on macOS and Linux (not Pi only). Updated Component Information, added Platform Support section, updated Usage commands to include sudo and non-privileged port alternative. |
 | 1.3 | 2026-06-25 | Scoped emulator runtime to Linux only (reverses macOS scope from 1.2). Updated Component Information platforms field, Platform Support section, and Command Line comment. |
+| 1.4 | 2026-07-02 | Corrected stale "Starting the Server" docstring (claimed module-constants-only configuration; source already accepts --host/--port/--unit-id). Marked MP-002 resolved. No source change; documentation was out of date relative to source. |
 
 ---
 
