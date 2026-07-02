@@ -4,19 +4,20 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 
 ## Table of Contents
 
-- [Features](<#features>)
-- [Install — Raspberry Pi Linux](<#install--raspberry-pi-linux>)
-- [Configure Service](<#configure-service>)
-- [Verify](<#verify>)
-- [Updates](<#updates>)
-- [Documentation](<#documentation>)
-- [Architecture](<#architecture>)
-- [Project Status](<#project-status>)
-- [License](<#license>)
+- [1.0 Features](<#1.0-features>)
+- [2.0 Install — Raspberry Pi Linux](<#2.0-install--raspberry-pi-linux>)
+- [3.0 Configure Service](<#3.0-configure-service>)
+- [4.0 Verify](<#4.0-verify>)
+- [5.0 Web UI](<#5.0-web-ui>)
+- [6.0 Updates](<#6.0-updates>)
+- [7.0 Documentation](<#7.0-documentation>)
+- [8.0 Architecture](<#8.0-architecture>)
+- [9.0 Project Status](<#9.0-project-status>)
+- [10.0 License](<#10.0-license>)
 
 ---
 
-## Features
+## 1.0 Features
 
 - Direct Modbus TCP communication (offline operation, no cloud dependencies)
 - Read-only monitoring (safe, non-intrusive)
@@ -33,7 +34,7 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 
 ---
 
-## Install — Raspberry Pi Linux
+## 2.0 Install — Raspberry Pi Linux
 
 Installs to `/opt/solax-monitor/`. A symlink is created at `/usr/local/bin/solax-monitor` so the command is available without a full path. The symlink is verified on each install and corrected if stale.
 
@@ -52,7 +53,7 @@ To install a specific version:
 
 ---
 
-## Configure Service
+## 3.0 Configure Service
 
 Raspberry Pi only. After installation, register `solax-monitor` as a systemd service:
 
@@ -86,7 +87,7 @@ Replace `<INVERTER-IP>` with the inverter's IP address.
 
 ---
 
-## Verify
+## 4.0 Verify
 
 ```bash
 sudo systemctl status solax-monitor
@@ -97,7 +98,38 @@ sudo journalctl -u solax-monitor -f
 
 ---
 
-## Updates
+## 5.0 Web UI
+
+Optional HTTP interface providing live telemetry in a browser, alongside the console display.
+
+**Enable:**
+
+```bash
+solax-monitor <INVERTER-IP> --serve
+```
+
+**Optional flags:**
+
+| Flag | Purpose | Default |
+|---|---|---|
+| `--http-port <N>` | HTTP server port | 8080 |
+| `--allow <CIDR>` | Restrict access to a network (repeatable) | RFC 1918 private ranges + link-local |
+
+**Access:**
+
+```
+http://<pi-host-or-ip>:8080/
+```
+
+Dashboard refreshes automatically every 5 seconds. Raw telemetry is available at `/api/telemetry` (JSON).
+
+Source-IP filtering restricts by network address; it is not authentication. Keep the port off the public internet.
+
+[Return to Table of Contents](<#table-of-contents>)
+
+---
+
+## 6.0 Updates
 
 Re-run the installer to update to the latest release:
 
@@ -115,7 +147,7 @@ To update to a specific version:
 
 ---
 
-## Documentation
+## 7.0 Documentation
 
 - [Deployment Guide](docs/deployment-guide.md) — Comprehensive installation and configuration
 - [Development Guide](docs/development.md) — Build, release, and developer workflows
@@ -126,7 +158,7 @@ To update to a specific version:
 
 ---
 
-## Architecture
+## 8.0 Architecture
 
 ```
 Raspberry Pi ──Modbus TCP (port 502)──> Solax X3 Hybrid Inverter
@@ -144,7 +176,7 @@ Raspberry Pi ──Modbus TCP (port 502)──> Solax X3 Hybrid Inverter
 
 ---
 
-## Project Status
+## 9.0 Project Status
 
 **Current Implementation:**
 - Single-inverter monitoring (read-only)
@@ -159,7 +191,7 @@ Experimental software in active development. Read-only operation ensures safe mo
 
 ---
 
-## License
+## 10.0 License
 
 MIT License — see [LICENSE](<LICENSE>) file.
 
@@ -175,6 +207,7 @@ MIT License — see [LICENSE](<LICENSE>) file.
 | 1.3 | 2026-03-24 | Updated PATH configuration: Linux symlink to /usr/local/bin/; macOS PATH added to shell profile; updated emulator development commands |
 | 1.4 | 2026-06-25 | Separated user and developer content: moved Publish, Development, and developer install/update paths to docs/development.md; simplified Architecture and Project Status; added development.md to Documentation |
 | 1.5 | 2026-06-25 | Removed macOS as installation target: deleted Apple macOS install section and TOC entry, macOS system-requirements row, and macOS manual-execution status line. Deployment target is Raspberry Pi / Linux only. |
+| 1.6 | 2026-07-02 | Added section numbering (1.0–10.0) to all headings and TOC. Added Web UI section (5.0): --serve, --http-port, --allow usage. |
 
 ---
 
