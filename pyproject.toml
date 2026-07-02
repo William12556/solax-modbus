@@ -1,6 +1,6 @@
 [project]
 name = "solax-modbus"
-version = "0.1.7"
+version = "0.1.9"
 description = "Modbus TCP monitoring system for Solax X3 Hybrid solar inverters"
 authors = [{name = "William Watson"}]
 license = {text = "MIT"}
@@ -25,6 +25,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+solax_modbus = ["presentation/templates/*.html"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -34,7 +34,7 @@ Created: 2026 June 26
 component_info:
   name: "TelemetryServer"
   domain: "Presentation"
-  version: "1.0"
+  version: "1.1"
   date: "2026-06-26"
   status: "Planned"
   source_file: "src/solax_modbus/presentation/server.py"
@@ -80,6 +80,12 @@ Serve live single-inverter telemetry over HTTP to local-network clients. The ser
 src/solax_modbus/presentation/server.py (planned)
 src/solax_modbus/presentation/templates/dashboard.html (planned)
 ```
+
+`dashboard.html` is non-Python package data. It must be declared under
+`[tool.setuptools.package-data]` in `pyproject.toml`, or it is silently
+omitted from the built wheel and `_serve_dashboard()` fails at runtime
+with "Dashboard template not found" on any wheel-installed deployment
+(source-checkout runs are unaffected). Declared 2026-07-02.
 
 ### Dependencies
 
@@ -408,6 +414,7 @@ Parameters are supplied by the Application domain via command-line flags.
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-06-26 | Initial component design for the embedded HTTP telemetry server (TelemetryServer). |
+| 1.1 | 2026-07-02 | Noted packaging requirement for dashboard.html (package-data declaration); root cause of a wheel-install runtime defect. No design/interface change. |
 
 ---
 
