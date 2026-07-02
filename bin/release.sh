@@ -27,8 +27,8 @@ fi
 # ---------------------------------------------------------------------------
 # Build
 # ---------------------------------------------------------------------------
-chmod +x build.sh
-./build.sh
+chmod +x bin/build.sh
+bin/build.sh
 
 VERSION=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
 WHEEL="dist/solax_modbus-${VERSION}-py3-none-any.whl"
@@ -47,7 +47,7 @@ echo "==> Creating GitHub release $TAG..."
 
 gh release create "$TAG" \
     "$WHEEL" \
-    "install.sh" \
+    "bin/install.sh" \
     --title "v${VERSION}" \
     --notes "Release v${VERSION}"
 
