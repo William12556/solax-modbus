@@ -149,8 +149,7 @@ To update to a specific version:
 
 ## 7.0 Documentation
 
-- [Deployment Guide](docs/deployment-guide.md) — Comprehensive installation and configuration
-- [Development Guide](docs/development.md) — Build, release, and developer workflows
+- [Guide](docs/guide.md) — Comprehensive installation, configuration, and development
 - [Design Documents](ai/workspace/design/) — System architecture and component specifications
 - [Test Documentation](ai/workspace/test/) — Test plans and results
 
