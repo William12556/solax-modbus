@@ -7,25 +7,30 @@ Created: 2026 July 02
 - [1. Overview](<#1-overview>)
 - [2. Prerequisites](<#2-prerequisites>)
 - [3. Build and Release](<#3-build-and-release>)
-- [4. Installation](<#4-installation>)
-  - [4.1 Development Deployment](<#41-development-deployment>)
-  - [4.2 General Deployment](<#42-general-deployment>)
-  - [4.3 Service Configuration](<#43-service-configuration>)
-- [5. Local Development](<#5-local-development>)
-  - [5.1 Tests](<#51-tests>)
-  - [5.2 Emulator](<#52-emulator>)
-- [6. Testing](<#6-testing>)
-  - [6.1 Emulator Testing Workflow](<#61-emulator-testing-workflow>)
-  - [6.2 Hardware Validation](<#62-hardware-validation>)
-  - [6.3 Validation Checklist](<#63-validation-checklist>)
-- [7. Service Operations](<#7-service-operations>)
-- [8. Updates](<#8-updates>)
-- [9. Uninstallation](<#9-uninstallation>)
-- [10. Architecture](<#10-architecture>)
-- [11. Project Status](<#11-project-status>)
-- [12. Components](<#12-components>)
-- [13. Troubleshooting](<#13-troubleshooting>)
-- [14. Version History](<#14-version-history>)
+- [4. Raspberry Pi Setup](<#4-raspberry-pi-setup>)
+  - [4.1 Hardware](<#41-hardware>)
+  - [4.2 Operating System](<#42-operating-system>)
+  - [4.3 Boot Configuration](<#43-boot-configuration>)
+  - [4.4 Development Access (USB OTG)](<#44-development-access-usb-otg>)
+- [5. Installation](<#5-installation>)
+  - [5.1 Development Deployment](<#51-development-deployment>)
+  - [5.2 General Deployment](<#52-general-deployment>)
+  - [5.3 Service Configuration](<#53-service-configuration>)
+- [6. Local Development](<#6-local-development>)
+  - [6.1 Tests](<#61-tests>)
+  - [6.2 Emulator](<#62-emulator>)
+- [7. Testing](<#7-testing>)
+  - [7.1 Emulator Testing Workflow](<#71-emulator-testing-workflow>)
+  - [7.2 Hardware Validation](<#72-hardware-validation>)
+  - [7.3 Validation Checklist](<#73-validation-checklist>)
+- [8. Service Operations](<#8-service-operations>)
+- [9. Updates](<#9-updates>)
+- [10. Uninstallation](<#10-uninstallation>)
+- [11. Architecture](<#11-architecture>)
+- [12. Project Status](<#12-project-status>)
+- [13. Components](<#13-components>)
+- [14. Troubleshooting](<#14-troubleshooting>)
+- [15. Version History](<#15-version-history>)
 
 [Return to Table of Contents](<#table-of-contents>)
 
@@ -89,11 +94,143 @@ chmod +x build.sh install.sh release.sh
 
 [Return to Table of Contents](<#table-of-contents>)
 
-## 4. Installation
+## 4. Raspberry Pi Setup
+
+### 4.1 Hardware
+
+| Component | Specification |
+|---|---|
+| SBC | Raspberry Pi Zero 2W |
+| Role | Headless Modbus TCP client |
+
+[Return to Table of Contents](<#table-of-contents>)
+
+### 4.2 Operating System
+
+Debian GNU/Linux 13 (trixie), 64-bit.
+
+Use Raspberry Pi Imager to write the image to a microSD card. Select: *Raspberry Pi OS (other)* → *Raspberry Pi OS Lite (64-bit)* — verify the image reports trixie before writing.
+
+**Imager settings to configure before writing:**
+
+- Hostname: `solax-modbus`
+- Enable SSH: yes
+- Username / password: as required
+- Wi-Fi credentials: as required
+
+The boot configuration directory is `/boot/firmware/`.
+
+[Return to Table of Contents](<#table-of-contents>)
+
+### 4.3 Boot Configuration
+
+`/boot/firmware/config.txt` — append the following to enable USB OTG device mode.
+
+```ini
+# USB OTG — development access
+dtoverlay=dwc2
+```
+
+Note: do not add `otg_mode=1` under `[cm4]`. That setting enables host mode and disables device mode, and is only applicable to Compute Module 4 hardware.
+
+[Return to Table of Contents](<#table-of-contents>)
+
+### 4.4 Development Access (USB OTG)
+
+For development use only. Not required for normal solax-modbus operation.
+
+The Pi Zero 2W USB OTG port provides a virtual Ethernet connection to a development laptop. This is the recommended method for SSH access when the Pi is deployed at the inverter location, where no network infrastructure may be available.
+
+**Hardware**
+
+| Connection | Port |
+|---|---|
+| Power supply | `PWR IN` (left micro-USB) |
+| Laptop | `USB` (right micro-USB, OTG) |
+
+Both ports may be used simultaneously. The `PWR IN` port is power only. The `USB` port carries data and may also supply power from the laptop.
+
+**Pi Configuration**
+
+One-time setup. Requires SSH access to the Pi before in-field deployment.
+
+1. Enable the DWC2 overlay — see [4.3 Boot Configuration](<#43-boot-configuration>).
+
+2. Load USB gadget modules. Append to `/etc/modules`:
+
+   ```
+   dwc2
+   g_cdc
+   ```
+
+   `g_cdc` presents the CDC-ECM interface, which macOS supports natively. Do not use `g_ether` — it presents as RNDIS, which macOS does not support, and ARP resolution fails.
+
+   Warning: check that `/boot/firmware/cmdline.txt` does not contain a `modules-load=` parameter referencing `g_ether`. If present, remove `g_ether` from that parameter. Having both `g_cdc` and `g_ether` loaded simultaneously causes a conflict.
+
+3. Reboot:
+
+   ```bash
+   sudo reboot
+   ```
+
+4. Create a NetworkManager connection profile. Bookworm and trixie use NetworkManager; `usb0` requires an explicit connection profile to obtain a link-local IPv4 address.
+
+   ```bash
+   nmcli connection add type ethernet ifname usb0 con-name usb0 \
+     ipv4.method link-local \
+     ipv6.method ignore
+   ```
+
+5. Bring up the interface:
+
+   ```bash
+   nmcli connection up usb0
+   ```
+
+   This profile persists across reboots. `usb0` activates automatically when a USB host is connected.
+
+**Laptop Connection**
+
+Connect a data-capable micro-USB cable to the Pi `USB` (OTG) port. A charge-only cable will not work — the cable must carry data lines.
+
+macOS detects the Pi as a CDC Composite Gadget and creates a new network interface in System Settings → Network with a self-assigned link-local address (`169.254.x.x`).
+
+SSH to the Pi by IP address:
+
+```bash
+# Obtain Pi IP from: ip -brief a (on Pi)
+ssh admin@169.254.x.x
+```
+
+Or by hostname if avahi-daemon is running:
+
+```bash
+ssh admin@solax-modbus.local
+```
+
+Internet access: the laptop's WiFi connection is unaffected. macOS routes internet traffic over WiFi and Pi traffic over the USB interface independently.
+
+**Verification**
+
+```bash
+# On Pi — confirm usb0 is up with a link-local address
+ip -brief a
+
+# Expected:
+# usb0   UP   169.254.x.x/16   fe80::...
+
+# On Mac — confirm reachability
+ping -c 3 169.254.x.x
+ssh admin@169.254.x.x
+```
+
+[Return to Table of Contents](<#table-of-contents>)
+
+## 5. Installation
 
 Two workflows are provided.
 
-### 4.1 Development Deployment
+### 5.1 Development Deployment
 
 For use during development and testing. The wheel is built locally and transferred directly to the Pi via SCP. No GitHub release is created.
 
@@ -107,7 +244,7 @@ ssh pi@<hostname>
 chmod +x /tmp/install.sh && /tmp/install.sh /tmp/solax_modbus-*.whl
 ```
 
-### 4.2 General Deployment
+### 5.2 General Deployment
 
 For publishing a release to GitHub and installing from it.
 
@@ -139,11 +276,11 @@ curl -fsSL https://github.com/William12556/solax-modbus/releases/latest/download
 
 Note: the script executes without prior inspection.
 
-`install.sh` (all options): creates a virtual environment at `/opt/solax-monitor/venv/`, installs the wheel, and verifies the installed version. Pass `--ip <INVERTER-IP>` to also register and start the systemd service; see [4.3 Service Configuration](<#43-service-configuration>) and `install.sh --help` for all service flags.
+`install.sh` (all options): creates a virtual environment at `/opt/solax-monitor/venv/`, installs the wheel, and verifies the installed version. Pass `--ip <INVERTER-IP>` to also register and start the systemd service; see [5.3 Service Configuration](<#53-service-configuration>) and `install.sh --help` for all service flags.
 
-### 4.3 Service Configuration
+### 5.3 Service Configuration
 
-`install.sh --ip <INVERTER-IP>` registers the systemd service automatically (see [4.2 General Deployment](<#42-general-deployment>)). The procedure below is for manual registration, or to modify an existing unit file.
+`install.sh --ip <INVERTER-IP>` registers the systemd service automatically (see [5.2 General Deployment](<#52-general-deployment>)). The procedure below is for manual registration, or to modify an existing unit file.
 
 ```bash
 sudo tee /etc/systemd/system/solax-monitor.service << 'EOF'
@@ -191,9 +328,9 @@ Expected: service active, Modbus connection established, telemetry display activ
 
 [Return to Table of Contents](<#table-of-contents>)
 
-## 5. Local Development
+## 6. Local Development
 
-### 5.1 Tests
+### 6.1 Tests
 
 ```bash
 cd /Users/<user_name>/Documents/GitHub/solax-modbus
@@ -211,7 +348,7 @@ pytest --cov=src --cov-report=html
 deactivate
 ```
 
-### 5.2 Emulator
+### 6.2 Emulator
 
 The emulator is pure Python with no OS-specific dependencies; it runs on macOS or Linux. Port 502 requires elevated privileges on both platforms; use `--port` to specify an unprivileged port instead.
 
@@ -238,13 +375,13 @@ sudo python -m solax_modbus.emulator.solax_emulator
 
 [Return to Table of Contents](<#table-of-contents>)
 
-## 6. Testing
+## 7. Testing
 
-### 6.1 Emulator Testing Workflow
+### 7.1 Emulator Testing Workflow
 
 **Basic:**
 
-1. Start the emulator (see [5.2 Emulator](<#52-emulator>)).
+1. Start the emulator (see [6.2 Emulator](<#62-emulator>)).
 2. Run the monitor against it in a separate session:
    ```bash
    solax-monitor 127.0.0.1 --port 5020 --interval 5
@@ -263,7 +400,7 @@ Observe: battery charging during simulated midday, discharging during simulated 
 
 Note: PV generation is calculated from system time; testing outside 06:00–18:00 local time produces zero PV output.
 
-### 6.2 Hardware Validation
+### 7.2 Hardware Validation
 
 **CLI test:**
 
@@ -311,7 +448,7 @@ sudo systemctl status solax-monitor
 
 Expected: service starts automatically.
 
-### 6.3 Validation Checklist
+### 7.3 Validation Checklist
 
 - [ ] Package installs without errors
 - [ ] Service active and running
@@ -324,9 +461,9 @@ Expected: service starts automatically.
 
 [Return to Table of Contents](<#table-of-contents>)
 
-## 7. Service Operations
+## 8. Service Operations
 
-### 7.1 Control
+### 8.1 Control
 
 ```bash
 # Status
@@ -342,7 +479,7 @@ sudo systemctl enable solax-monitor
 sudo systemctl disable solax-monitor
 ```
 
-### 7.2 Logs
+### 8.2 Logs
 
 ```bash
 # Real-time
@@ -363,7 +500,7 @@ ssh pi@<hostname> 'sudo journalctl -u solax-monitor -f'
 ssh pi@<hostname> 'sudo journalctl -u solax-monitor -f' | tee solax-monitor.log
 ```
 
-### 7.3 Configuration
+### 8.3 Configuration
 
 Files:
 - Service: `/etc/systemd/system/solax-monitor.service`
@@ -372,9 +509,9 @@ Files:
 
 [Return to Table of Contents](<#table-of-contents>)
 
-## 8. Updates
+## 9. Updates
 
-Increment `version` in `pyproject.toml`, then follow the same workflow used for initial installation (see [4. Installation](<#4-installation>)).
+Increment `version` in `pyproject.toml`, then follow the same workflow used for initial installation (see [5. Installation](<#5-installation>)).
 
 ```bash
 # Development deployment (Mac)
@@ -401,7 +538,7 @@ Expected: service restarts and telemetry resumes.
 
 [Return to Table of Contents](<#table-of-contents>)
 
-## 9. Uninstallation
+## 10. Uninstallation
 
 ```bash
 # Stop and disable service
@@ -426,7 +563,7 @@ python3 -c "import solax_modbus"     # ModuleNotFoundError
 
 [Return to Table of Contents](<#table-of-contents>)
 
-## 10. Architecture
+## 11. Architecture
 
 ```
 Raspberry Pi ──Modbus TCP (port 502)──> Solax X3 Hybrid Inverter
@@ -443,7 +580,7 @@ Raspberry Pi ──Modbus TCP (port 502)──> Solax X3 Hybrid Inverter
 
 [Return to Table of Contents](<#table-of-contents>)
 
-## 11. Project Status
+## 12. Project Status
 
 **Current Implementation:**
 - Single-inverter monitoring (read-only)
@@ -456,7 +593,7 @@ Experimental software in active development. Read-only operation ensures safe mo
 
 [Return to Table of Contents](<#table-of-contents>)
 
-## 12. Components
+## 13. Components
 
 | Component | Description |
 |---|---|
@@ -466,9 +603,9 @@ Experimental software in active development. Read-only operation ensures safe mo
 
 [Return to Table of Contents](<#table-of-contents>)
 
-## 13. Troubleshooting
+## 14. Troubleshooting
 
-### 13.1 Build Script Failures
+### 14.1 Build Script Failures
 
 **Python version:**
 ```bash
@@ -485,16 +622,16 @@ python3 -m pip install build
 chmod +x build.sh
 ```
 
-### 13.2 Install Script Failures
+### 14.2 Install Script Failures
 
-**Virtual environment missing:** indicates first-time installation. Follow [4. Installation](<#4-installation>).
+**Virtual environment missing:** indicates first-time installation. Follow [5. Installation](<#5-installation>).
 
 **Version mismatch:** the script verifies installed version matches the wheel. If mismatch occurs:
 ```bash
 sudo /opt/solax-monitor/venv/bin/pip install --force-reinstall /tmp/solax_modbus-*.whl
 ```
 
-### 13.3 Service Won't Start
+### 14.3 Service Won't Start
 
 ```bash
 sudo systemctl status solax-monitor
@@ -503,7 +640,7 @@ sudo journalctl -u solax-monitor -n 50
 
 Common causes: Python < 3.9 (`python3 --version`); package not installed (`/opt/solax-monitor/venv/bin/pip list | grep solax-modbus`); invalid inverter IP in service file; network issues (`ping <INVERTER-IP>`); port blocked (`nc -zv <INVERTER-IP> 502`).
 
-### 13.4 Connection Failures
+### 14.4 Connection Failures
 
 ```bash
 ping <INVERTER-IP>
@@ -513,7 +650,7 @@ sudo iptables -L  # Check firewall
 
 Common causes: inverter powered off or rebooting; WiFi dongle not configured; wrong subnet; firewall blocking port 502; incorrect IP in service configuration.
 
-### 13.5 Data Display Issues
+### 14.5 Data Display Issues
 
 ```bash
 sudo journalctl -u solax-monitor | grep -i "error\|exception"
@@ -521,7 +658,7 @@ sudo journalctl -u solax-monitor | grep -i "error\|exception"
 
 Common causes: register read failures (verify inverter model compatibility); scaling errors (check register mappings); type conversion errors (signed/unsigned handling).
 
-### 13.6 Log Analysis
+### 14.6 Log Analysis
 
 ```bash
 sudo journalctl -u solax-monitor | grep -i "error\|exception\|traceback"
@@ -529,7 +666,7 @@ sudo journalctl -u solax-monitor | grep "connect"
 sudo journalctl -u solax-monitor | grep "Grid\|PV\|Battery"
 ```
 
-### 13.7 Emulator Issues
+### 14.7 Emulator Issues
 
 **Port already in use:**
 ```bash
@@ -546,7 +683,7 @@ Or run the emulator on an unprivileged port instead: `--port 5020`.
 
 [Return to Table of Contents](<#table-of-contents>)
 
-## 14. Version History
+## 15. Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
@@ -554,6 +691,7 @@ Or run the emulator on an unprivileged port instead: `--port 5020`.
 | 1.1 | 2026-07-03 | Added §10 Architecture and §11 Project Status, migrated from README.md §8.0 and §9.0; corrected stale Debian 12 reference to Debian 13; renumbered Components/Troubleshooting/Version History to §12–§14. |
 | 1.2 | 2026-07-03 | Noted install.sh --ip auto-registration in §4.2 and §4.3; clarified §4.3 manual procedure applies when --ip is not used. |
 | 1.3 | 2026-07-03 | Corrected all internal anchor links (TOC and cross-references) to match GitHub's anchor generation rule: periods and spaces in numbered headings stripped/hyphenated (e.g. §4.1 → #41-development-deployment). Section numbering retained. |
+| 1.4 | 2026-07-03 | Merged docs/pi-setup.md into new §4 Raspberry Pi Setup (Hardware, Operating System, Boot Configuration, Development Access/USB OTG); renumbered §4–14 to §5–15 accordingly. Corrected pi-setup.md's stale Debian 12 (Bookworm) reference to Debian 13 (trixie) during merge. Converted pi-setup.md's Obsidian-style anchors to GitHub-hyphenated anchors for consistency with this document. Source document moved to docs/closed/. |
 
 ---
 
