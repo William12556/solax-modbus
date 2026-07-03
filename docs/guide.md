@@ -4,36 +4,36 @@ Created: 2026 July 02
 
 ## Table of Contents
 
-- [1. Overview](<#1 overview>)
-- [2. Prerequisites](<#2 prerequisites>)
-- [3. Build and Release](<#3 build and release>)
-- [4. Installation](<#4 installation>)
-  - [4.1 Development Deployment](<#4.1 development deployment>)
-  - [4.2 General Deployment](<#4.2 general deployment>)
-  - [4.3 Service Configuration](<#4.3 service configuration>)
-- [5. Local Development](<#5 local development>)
-  - [5.1 Tests](<#5.1 tests>)
-  - [5.2 Emulator](<#5.2 emulator>)
-- [6. Testing](<#6 testing>)
-  - [6.1 Emulator Testing Workflow](<#6.1 emulator testing workflow>)
-  - [6.2 Hardware Validation](<#6.2 hardware validation>)
-  - [6.3 Validation Checklist](<#6.3 validation checklist>)
-- [7. Service Operations](<#7 service operations>)
-- [8. Updates](<#8 updates>)
-- [9. Uninstallation](<#9 uninstallation>)
-- [10. Architecture](<#10 architecture>)
-- [11. Project Status](<#11 project status>)
-- [12. Components](<#12 components>)
-- [13. Troubleshooting](<#13 troubleshooting>)
-- [14. Version History](<#14 version history>)
+- [1. Overview](<#1-overview>)
+- [2. Prerequisites](<#2-prerequisites>)
+- [3. Build and Release](<#3-build-and-release>)
+- [4. Installation](<#4-installation>)
+  - [4.1 Development Deployment](<#41-development-deployment>)
+  - [4.2 General Deployment](<#42-general-deployment>)
+  - [4.3 Service Configuration](<#43-service-configuration>)
+- [5. Local Development](<#5-local-development>)
+  - [5.1 Tests](<#51-tests>)
+  - [5.2 Emulator](<#52-emulator>)
+- [6. Testing](<#6-testing>)
+  - [6.1 Emulator Testing Workflow](<#61-emulator-testing-workflow>)
+  - [6.2 Hardware Validation](<#62-hardware-validation>)
+  - [6.3 Validation Checklist](<#63-validation-checklist>)
+- [7. Service Operations](<#7-service-operations>)
+- [8. Updates](<#8-updates>)
+- [9. Uninstallation](<#9-uninstallation>)
+- [10. Architecture](<#10-architecture>)
+- [11. Project Status](<#11-project-status>)
+- [12. Components](<#12-components>)
+- [13. Troubleshooting](<#13-troubleshooting>)
+- [14. Version History](<#14-version-history>)
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 1. Overview
 
 solax-modbus is a read-only Modbus TCP monitor for Solax X3 Hybrid 6.0-D inverters. Development and builds occur on macOS; production deployment targets Raspberry Pi / Debian. An included emulator permits development and testing without physical inverter hardware.
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 2. Prerequisites
 
@@ -62,7 +62,7 @@ python3 --version  # 3.9+
 ping <INVERTER-IP>
 ```
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 3. Build and Release
 
@@ -87,7 +87,7 @@ chmod +x build.sh install.sh release.sh
 
 `release.sh` invokes `build.sh`, tags the release from the `pyproject.toml` version, and uploads the wheel and `install.sh` to GitHub as release assets.
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 4. Installation
 
@@ -139,11 +139,11 @@ curl -fsSL https://github.com/William12556/solax-modbus/releases/latest/download
 
 Note: the script executes without prior inspection.
 
-`install.sh` (all options): creates a virtual environment at `/opt/solax-monitor/venv/`, installs the wheel, and verifies the installed version. Pass `--ip <INVERTER-IP>` to also register and start the systemd service; see [4.3 Service Configuration](<#4.3 service configuration>) and `install.sh --help` for all service flags.
+`install.sh` (all options): creates a virtual environment at `/opt/solax-monitor/venv/`, installs the wheel, and verifies the installed version. Pass `--ip <INVERTER-IP>` to also register and start the systemd service; see [4.3 Service Configuration](<#43-service-configuration>) and `install.sh --help` for all service flags.
 
 ### 4.3 Service Configuration
 
-`install.sh --ip <INVERTER-IP>` registers the systemd service automatically (see [4.2 General Deployment](<#4.2 general deployment>)). The procedure below is for manual registration, or to modify an existing unit file.
+`install.sh --ip <INVERTER-IP>` registers the systemd service automatically (see [4.2 General Deployment](<#42-general-deployment>)). The procedure below is for manual registration, or to modify an existing unit file.
 
 ```bash
 sudo tee /etc/systemd/system/solax-monitor.service << 'EOF'
@@ -189,7 +189,7 @@ sudo journalctl -u solax-monitor -f
 
 Expected: service active, Modbus connection established, telemetry display active.
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 5. Local Development
 
@@ -236,7 +236,7 @@ sudo python -m solax_modbus.emulator.solax_emulator
 - *Grid:* 230V per phase nominal, 50Hz, simplified export/import model; feed-in calculated from PV surplus.
 - *Update cycle:* state recalculated every 1.0 seconds (PV power, battery SOC, temperature, register values).
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 6. Testing
 
@@ -244,7 +244,7 @@ sudo python -m solax_modbus.emulator.solax_emulator
 
 **Basic:**
 
-1. Start the emulator (see [5.2 Emulator](<#5.2 emulator>)).
+1. Start the emulator (see [5.2 Emulator](<#52-emulator>)).
 2. Run the monitor against it in a separate session:
    ```bash
    solax-monitor 127.0.0.1 --port 5020 --interval 5
@@ -322,7 +322,7 @@ Expected: service starts automatically.
 - [ ] Service restart maintains operation
 - [ ] Boot auto-start functions
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 7. Service Operations
 
@@ -370,11 +370,11 @@ Files:
 - Installation: `/opt/solax-monitor/`
 - Virtual environment: `/opt/solax-monitor/venv/`
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 8. Updates
 
-Increment `version` in `pyproject.toml`, then follow the same workflow used for initial installation (see [4. Installation](<#4 installation>)).
+Increment `version` in `pyproject.toml`, then follow the same workflow used for initial installation (see [4. Installation](<#4-installation>)).
 
 ```bash
 # Development deployment (Mac)
@@ -399,7 +399,7 @@ sudo journalctl -u solax-monitor -f
 
 Expected: service restarts and telemetry resumes.
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 9. Uninstallation
 
@@ -424,7 +424,7 @@ ls /opt/solax-monitor/               # "No such file or directory"
 python3 -c "import solax_modbus"     # ModuleNotFoundError
 ```
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 10. Architecture
 
@@ -441,7 +441,7 @@ Raspberry Pi ──Modbus TCP (port 502)──> Solax X3 Hybrid Inverter
 |---|---|
 | Raspberry Pi 4 | Debian 13 (trixie), 100MB disk, network to inverter |
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 11. Project Status
 
@@ -454,7 +454,7 @@ Raspberry Pi ──Modbus TCP (port 502)──> Solax X3 Hybrid Inverter
 **Important Notice:**
 Experimental software in active development. Read-only operation ensures safe monitoring without inverter control risks. Fitness for production use not guaranteed.
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 12. Components
 
@@ -464,7 +464,7 @@ Experimental software in active development. Read-only operation ensures safe mo
 | `InverterDisplay` | Formatted telemetry output with power flow visualisation |
 | `SolaxEmulator` | Offline development emulator |
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 13. Troubleshooting
 
@@ -487,7 +487,7 @@ chmod +x build.sh
 
 ### 13.2 Install Script Failures
 
-**Virtual environment missing:** indicates first-time installation. Follow [4. Installation](<#4 installation>).
+**Virtual environment missing:** indicates first-time installation. Follow [4. Installation](<#4-installation>).
 
 **Version mismatch:** the script verifies installed version matches the wheel. If mismatch occurs:
 ```bash
@@ -544,7 +544,7 @@ Or run the emulator on an unprivileged port instead: `--port 5020`.
 
 **PV power always zero:** the emulator derives PV output from system time; run during 06:00–18:00 local time, or test other metrics outside that window.
 
-[Return to Table of Contents](<#table of contents>)
+[Return to Table of Contents](<#table-of-contents>)
 
 ## 14. Version History
 
@@ -553,6 +553,7 @@ Or run the emulator on an unprivileged port instead: `--port 5020`.
 | 1.0 | 2026-07-02 | Consolidated from deployment-guide.md, development.md, and development-testing-guide.md. Removed superseded manual-script emulator deployment procedure (development-testing-guide.md, pre-package emulator invocation); retained current package-based emulator workflow. Updated Raspberry Pi OS reference from Debian 12 to Debian 13 (trixie). Source documents moved to docs/closed/. |
 | 1.1 | 2026-07-03 | Added §10 Architecture and §11 Project Status, migrated from README.md §8.0 and §9.0; corrected stale Debian 12 reference to Debian 13; renumbered Components/Troubleshooting/Version History to §12–§14. |
 | 1.2 | 2026-07-03 | Noted install.sh --ip auto-registration in §4.2 and §4.3; clarified §4.3 manual procedure applies when --ip is not used. |
+| 1.3 | 2026-07-03 | Corrected all internal anchor links (TOC and cross-references) to match GitHub's anchor generation rule: periods and spaces in numbered headings stripped/hyphenated (e.g. §4.1 → #41-development-deployment). Section numbering retained. |
 
 ---
 
