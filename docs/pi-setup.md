@@ -38,7 +38,7 @@ Use Raspberry Pi Imager to write the image to a microSD card. Select: *Raspberry
 
 **Imager settings to configure before writing:**
 
-- Hostname: `solax`
+- Hostname: `solax-modbus`
 - Enable SSH: yes
 - Username / password: as required
 - Wi-Fi credentials: as required
@@ -166,7 +166,7 @@ ssh admin@169.254.x.x
 Or by hostname if avahi-daemon is running:
 
 ```bash
-ssh admin@solax.local
+ssh admin@solax-modbus.local
 ```
 
 **Internet access:** The laptop's WiFi connection is unaffected. macOS routes internet traffic over WiFi and Pi traffic over the USB interface independently.
@@ -199,6 +199,7 @@ ssh admin@169.254.x.x
 |---|---|---|
 | 0.1 | 2026-06-24 | Initial draft — hardware, OS, boot configuration, OTG development access for Debian 12 Bookworm |
 | 0.2 | 2026-06-24 | §5.2: replaced g_ether with g_cdc; added cmdline.txt conflict warning; §5.3: updated macOS device description to CDC Composite Gadget |
+| 0.3 | 2026-07-03 | Corrected hostname from `solax` to `solax-modbus` for consistency with project documentation (§2.0, §5.3) |
 
 ---
 
