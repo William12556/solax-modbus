@@ -45,7 +45,7 @@ solax-modbus is a read-only Modbus TCP monitor for Solax X3 Hybrid 6.0-D inverte
 **Development machine (macOS):**
 - Python 3.9+
 - Build module: `pip install build`
-- Project repository: `/Users/<user_name>/Documents/GitHub/solax-modbus`
+- Project repository: `~/Documents/GitHub/solax-modbus`
 - `gh` CLI for release publishing: `brew install gh`, then `gh auth login`
 
 **Raspberry Pi (production deployment):**
@@ -74,7 +74,7 @@ ping <INVERTER-IP>
 Performed on macOS. Produces a GitHub release containing the wheel and `install.sh`.
 
 ```bash
-cd /Users/<user_name>/Documents/GitHub/solax-modbus
+cd ~/Documents/GitHub/solax-modbus
 
 # One-time
 chmod +x build.sh install.sh release.sh
@@ -333,7 +333,7 @@ Expected: service active, Modbus connection established, telemetry display activ
 ### 6.1 Tests
 
 ```bash
-cd /Users/<user_name>/Documents/GitHub/solax-modbus
+cd ~/Documents/GitHub/solax-modbus
 
 # Setup (one-time)
 python3 -m venv venv
@@ -496,8 +496,8 @@ sudo journalctl -u solax-monitor --since "2026-01-09 10:00"
 **Remote monitoring from Mac:**
 
 ```bash
-ssh pi@<hostname> 'sudo journalctl -u solax-monitor -f'
-ssh pi@<hostname> 'sudo journalctl -u solax-monitor -f' | tee solax-monitor.log
+ssh pi@solax-modbus.local 'sudo journalctl -u solax-monitor -f'
+ssh pi@<solax-modbus.local 'sudo journalctl -u solax-monitor -f' | tee solax-monitor.log
 ```
 
 ### 8.3 Configuration

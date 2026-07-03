@@ -15,6 +15,7 @@
 #   --serve               Enable HTTP server (passed to solax-monitor --serve)
 #   --http-port PORT      HTTP server port (passed to solax-monitor --http-port)
 #   --allow CIDR          Allowed CIDR for HTTP (repeatable, passed as --allow)
+#   --help, -h            Show this help and exit
 #
 # Examples:
 #   ./install.sh --ip 192.168.1.100
@@ -24,6 +25,41 @@
 # Linux:  installs to /opt/solax-monitor/, symlink in /usr/local/bin/
 
 set -e  # Exit on error
+
+# ---------------------------------------------------------------------------
+# Help (checked first: no OS check, no network access, any platform)
+# ---------------------------------------------------------------------------
+for arg in "$@"; do
+    if [ "$arg" = "--help" ] || [ "$arg" = "-h" ]; then
+        cat <<'EOF'
+Solax-Modbus Install Script
+Supports: Linux (Debian/Raspberry Pi)
+
+Usage:
+  ./install.sh                              # fetch latest release from GitHub
+  ./install.sh <version>                    # fetch specific version from GitHub
+  ./install.sh <path-to-wheel>              # install from local wheel file
+
+Optional flags (for automatic systemd service registration):
+  --ip IP               Inverter IP address (triggers systemd service creation)
+  --port PORT           Modbus TCP port (passed to solax-monitor --port)
+  --unit-id ID          Modbus unit ID (passed to solax-monitor --unit-id)
+  --interval SECONDS    Polling interval (passed to solax-monitor --interval)
+  --serve               Enable HTTP server (passed to solax-monitor --serve)
+  --http-port PORT      HTTP server port (passed to solax-monitor --http-port)
+  --allow CIDR          Allowed CIDR for HTTP (repeatable, passed as --allow)
+  --help, -h            Show this help and exit
+
+Examples:
+  ./install.sh --ip 192.168.1.100
+  ./install.sh 1.0.0 --ip 192.168.1.100 --serve --http-port 8080
+  ./install.sh --ip 192.168.1.100 --allow 10.0.0.0/24 --allow 192.168.1.0/24
+
+Linux:  installs to /opt/solax-monitor/, symlink in /usr/local/bin/
+EOF
+        exit 0
+    fi
+done
 
 # ---------------------------------------------------------------------------
 # OS detection

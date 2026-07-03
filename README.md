@@ -110,7 +110,7 @@ solax-monitor <INVERTER-IP> --serve
 **Access:**
 
 ```
-http://<pi-host-or-ip>:8080/
+http://<pi-hostname-or-ip>:8080/
 ```
 
 Dashboard refreshes automatically every 5 seconds. Raw telemetry is available at `/api/telemetry` (JSON).
