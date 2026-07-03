@@ -4,17 +4,17 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 
 ## Table of Contents
 
-- [1.0 Features](<#1.0-features>)
-- [2.0 Install — Raspberry Pi Linux](<#2.0-install--raspberry-pi-linux>)
-- [3.0 Verify](<#3.0-verify>)
-- [4.0 Web UI](<#4.0-web-ui>)
-- [5.0 Updates](<#5.0-updates>)
-- [6.0 Documentation](<#6.0-documentation>)
-- [7.0 License](<#7.0-license>)
+- [Features](<#features>)
+- [Install — Raspberry Pi Linux](<#install--raspberry-pi-linux>)
+- [Verify](<#verify>)
+- [Web UI](<#web-ui>)
+- [Updates](<#updates>)
+- [Documentation](<#documentation>)
+- [License](<#license>)
 
 ---
 
-## 1.0 Features
+## Features
 
 - Direct Modbus TCP communication (offline operation, no cloud dependencies)
 - Read-only monitoring (safe, non-intrusive)
@@ -31,7 +31,7 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 
 ---
 
-## 2.0 Install — Raspberry Pi Linux
+## Install — Raspberry Pi Linux
 
 Installs to `/opt/solax-monitor/`. A symlink is created at `/usr/local/bin/solax-monitor` so the command is available without a full path. The symlink is verified on each install and corrected if stale.
 
@@ -59,7 +59,7 @@ To install and register `solax-monitor` as a systemd service in one step, pass `
 | `--port PORT` | Modbus TCP port (default: 502) |
 | `--unit-id ID` | Modbus unit ID (default: 1) |
 | `--interval SECONDS` | Polling interval (default: 5) |
-| `--serve` | Enable the Web UI (see [4.0 Web UI](<#4.0-web-ui>)) |
+| `--serve` | Enable the Web UI (see [Web UI](<#web-ui>)) |
 | `--http-port PORT` | Web UI port (default: 8080) |
 | `--allow CIDR` | Restrict Web UI access to a network (repeatable) |
 
@@ -69,13 +69,13 @@ Example:
 ./install.sh --ip 192.168.1.100 --serve --http-port 8080
 ```
 
-Without `--ip`, the service is not registered; run `solax-monitor <INVERTER-IP>` manually, or see [3.0 Verify](<#3.0-verify>) and the [Guide](docs/guide.md) to register the service afterward.
+Without `--ip`, the service is not registered; run `solax-monitor <INVERTER-IP>` manually, or see [Verify](<#verify>) and the [Guide](docs/guide.md) to register the service afterward.
 
 [Return to Table of Contents](<#table-of-contents>)
 
 ---
 
-## 3.0 Verify
+## Verify
 
 If installed with `--ip` (service registered):
 
@@ -90,7 +90,7 @@ If installed without `--ip`, run `solax-monitor <INVERTER-IP>` directly, or see 
 
 ---
 
-## 4.0 Web UI
+## Web UI
 
 Optional HTTP interface providing live telemetry in a browser, alongside the console display.
 
@@ -121,7 +121,7 @@ Source-IP filtering restricts by network address; it is not authentication. Keep
 
 ---
 
-## 5.0 Updates
+## Updates
 
 Re-run the installer to update to the latest release:
 
@@ -139,7 +139,7 @@ To update to a specific version:
 
 ---
 
-## 6.0 Documentation
+## Documentation
 
 This README covers installation and basic operation. For service configuration, build and release, local development, testing, architecture, and troubleshooting, see the [Guide](docs/guide.md).
 
@@ -151,7 +151,7 @@ This README covers installation and basic operation. For service configuration, 
 
 ---
 
-## 7.0 License
+## License
 
 MIT License — see [LICENSE](<LICENSE>) file.
 
@@ -170,6 +170,7 @@ MIT License — see [LICENSE](<LICENSE>) file.
 | 1.6 | 2026-07-02 | Added section numbering (1.0–10.0) to all headings and TOC. Added Web UI section (5.0): --serve, --http-port, --allow usage. |
 | 1.7 | 2026-07-03 | Simplified to exclusively user-facing content. Removed Configure Service (3.0), Architecture (8.0), and Project Status (9.0); migrated to docs/guide.md §10–§11. Renumbered remaining sections (1.0–7.0). Expanded Documentation section note pointing to Guide for developer and extended reference content. |
 | 1.8 | 2026-07-03 | Added install.sh --ip auto-registration usage and service flags to 2.0 Install. Updated 3.0 Verify to distinguish --ip and non-flagged installs. |
+| 1.9 | 2026-07-03 | Removed decimal section numbering from all headings, TOC, and internal cross-references. Corrects broken GitHub anchor links caused by period characters retained in anchor targets (GitHub strips punctuation from generated anchors; numbering was not compatible with GitHub's slug algorithm). |
 
 ---
 
