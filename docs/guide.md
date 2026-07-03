@@ -355,13 +355,16 @@ The emulator is a standalone script at `src/tools/emulator/solax_emulator.py`, o
 **Standalone installation** (e.g. on the Pi, independent of a repository checkout):
 
 ```bash
-# Provisioning (one-time)
+# Mac — transfer the script
+scp src/tools/emulator/solax_emulator.py admin@solax-modbus.local:/tmp/
+
+# Pi — provisioning (one-time)
 sudo mkdir -p /opt/emulator
+sudo mv /tmp/solax_emulator.py /opt/emulator/
 python3 -m venv /opt/emulator/venv
 /opt/emulator/venv/bin/pip install "pymodbus>=3.11.0,<4.0.0"
-sudo cp src/tools/emulator/solax_emulator.py /opt/emulator/
 
-# Execution
+# Pi — execution
 /opt/emulator/venv/bin/python3 /opt/emulator/solax_emulator.py --port 5020
 
 # Terminal 2: Connect monitor to emulator port
@@ -712,6 +715,7 @@ Or run the emulator on an unprivileged port instead: `--port 5020`.
 | 1.4 | 2026-07-03 | Merged docs/pi-setup.md into new §4 Raspberry Pi Setup (Hardware, Operating System, Boot Configuration, Development Access/USB OTG); renumbered §4–14 to §5–15 accordingly. Corrected pi-setup.md's stale Debian 12 (Bookworm) reference to Debian 13 (trixie) during merge. Converted pi-setup.md's Obsidian-style anchors to GitHub-hyphenated anchors for consistency with this document. Source document moved to docs/closed/. |
 | 1.5 | 2026-07-03 | §6.2 rewritten: emulator invocation reverts to the standalone-script method (src/tools/emulator/solax_emulator.py), reversing the 1.0 decision to drop it. The package-based module invocation (python -m solax_modbus.emulator.solax_emulator) is removed — it required a package install this section never specified, and nothing in the codebase depends on the emulator being package-importable. Emulator source relocated from src/solax_modbus/emulator/ to src/tools/emulator/ (see design-c2b3c4d5 1.5). src/solax_modbus/emulator/README.md merged into this section and reduced to a stub. |
 | 1.6 | 2026-07-03 | §6.2: pinned pymodbus>=3.11.0,<4.0.0 (matches project floor; Debian trixie's python3-pymodbus, 3.8.6, is below it). Added standalone installation procedure (/opt/emulator, dedicated venv, provisioning + execution) alongside the repository-checkout method. |
+| 1.7 | 2026-07-03 | §6.2: added scp transfer step to standalone installation (Mac → Pi), matching the §5.1 pattern. Standalone procedure no longer assumes the script is already present on the target machine. |
 
 ---
 
