@@ -350,13 +350,19 @@ deactivate
 
 ### 6.2 Emulator
 
-The emulator is a standalone script at `src/tools/emulator/solax_emulator.py`, outside the `solax_modbus` package. It requires only `pymodbus` — no project package install. Pure Python, no OS-specific dependencies; runs on macOS or Linux. Port 502 requires elevated privileges on both platforms; use `--port` to specify an unprivileged port instead.
+The emulator is a standalone script at `src/tools/emulator/solax_emulator.py`, outside the `solax_modbus` package. It requires `pymodbus>=3.11.0,<4.0.0` — the same floor `pyproject.toml` sets for the rest of the project. Debian's packaged version (`python3-pymodbus`, 3.8.6 in trixie) is below this floor; use a venv rather than the OS package. Pure Python, no OS-specific dependencies; runs on macOS or Linux. Port 502 requires elevated privileges on both platforms; use `--port` to specify an unprivileged port instead.
+
+**Standalone installation** (e.g. on the Pi, independent of a repository checkout):
 
 ```bash
-pip install pymodbus
+# Provisioning (one-time)
+sudo mkdir -p /opt/emulator
+python3 -m venv /opt/emulator/venv
+/opt/emulator/venv/bin/pip install "pymodbus>=3.11.0,<4.0.0"
+sudo cp src/tools/emulator/solax_emulator.py /opt/emulator/
 
-# Terminal 1: Start emulator on an unprivileged port
-python3 src/tools/emulator/solax_emulator.py --port 5020
+# Execution
+/opt/emulator/venv/bin/python3 /opt/emulator/solax_emulator.py --port 5020
 
 # Terminal 2: Connect monitor to emulator port
 solax-monitor 127.0.0.1 --port 5020
@@ -365,7 +371,17 @@ solax-monitor 127.0.0.1 --port 5020
 To use the default port 502, `sudo` is required:
 
 ```bash
-sudo python3 src/tools/emulator/solax_emulator.py
+sudo /opt/emulator/venv/bin/python3 /opt/emulator/solax_emulator.py
+```
+
+**Running from a repository checkout** (local development):
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install "pymodbus>=3.11.0,<4.0.0"
+
+python3 src/tools/emulator/solax_emulator.py --port 5020
 ```
 
 **Behavior:**
@@ -695,6 +711,7 @@ Or run the emulator on an unprivileged port instead: `--port 5020`.
 | 1.3 | 2026-07-03 | Corrected all internal anchor links (TOC and cross-references) to match GitHub's anchor generation rule: periods and spaces in numbered headings stripped/hyphenated (e.g. §4.1 → #41-development-deployment). Section numbering retained. |
 | 1.4 | 2026-07-03 | Merged docs/pi-setup.md into new §4 Raspberry Pi Setup (Hardware, Operating System, Boot Configuration, Development Access/USB OTG); renumbered §4–14 to §5–15 accordingly. Corrected pi-setup.md's stale Debian 12 (Bookworm) reference to Debian 13 (trixie) during merge. Converted pi-setup.md's Obsidian-style anchors to GitHub-hyphenated anchors for consistency with this document. Source document moved to docs/closed/. |
 | 1.5 | 2026-07-03 | §6.2 rewritten: emulator invocation reverts to the standalone-script method (src/tools/emulator/solax_emulator.py), reversing the 1.0 decision to drop it. The package-based module invocation (python -m solax_modbus.emulator.solax_emulator) is removed — it required a package install this section never specified, and nothing in the codebase depends on the emulator being package-importable. Emulator source relocated from src/solax_modbus/emulator/ to src/tools/emulator/ (see design-c2b3c4d5 1.5). src/solax_modbus/emulator/README.md merged into this section and reduced to a stub. |
+| 1.6 | 2026-07-03 | §6.2: pinned pymodbus>=3.11.0,<4.0.0 (matches project floor; Debian trixie's python3-pymodbus, 3.8.6, is below it). Added standalone installation procedure (/opt/emulator, dedicated venv, provisioning + execution) alongside the repository-checkout method. |
 
 ---
 

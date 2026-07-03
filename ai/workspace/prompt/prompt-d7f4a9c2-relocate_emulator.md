@@ -88,7 +88,7 @@ deliverable:
         [docs/guide.md §6.2](<../../../docs/guide.md#62-emulator>).
 
         ```bash
-        pip install pymodbus
+        pip install "pymodbus>=3.11.0,<4.0.0"
         python3 solax_emulator.py --port 5020
         ```
 
