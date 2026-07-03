@@ -93,7 +93,7 @@ scope:
     - "InverterDisplay class — display_statistics method"
     - "main() function — argument parsing, loop control, graceful exit"
   out_scope:
-    - "Modbus TCP emulator (src/solax_modbus/emulator/)"
+    - "Modbus TCP emulator (src/tools/emulator/)"
     - "Integration tests against live or emulated Modbus TCP endpoints"
     - "System tests on Raspberry Pi target hardware"
     - "Build and packaging scripts (build.sh, install.sh)"
@@ -801,7 +801,7 @@ coverage:
     target: "80%"
     achieved: ""
   untested_areas:
-    - component: "src/solax_modbus/emulator/"
+    - component: "src/tools/emulator/"
       reason: "Out of scope for this test document; emulator is a development utility"
     - component: "error recovery paths in poll_inverter() when read_registers returns None for individual groups"
       reason: "Not currently covered; candidate for future test expansion"
@@ -929,6 +929,7 @@ Three areas are identified as candidates for future test expansion:
 | Version | Date       | Author          | Changes                          |
 | ------- | ---------- | --------------- | -------------------------------- |
 | 1.0     | 2026-03-13 | William Watson  | Initial formalisation of existing test suite per P06 |
+| 1.1     | 2026-07-03 |                 | Updated emulator path references: src/solax_modbus/emulator/ → src/tools/emulator/ (see design-c2b3c4d5 1.5) |
 
 ---
 

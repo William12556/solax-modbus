@@ -169,9 +169,10 @@ technology_stack:
 
 ```
 src/
-├── main.py                 # SolaxInverterClient
-└── emulator/
-    └── solax_emulator.py   # SolaxEmulator
+└── main.py                 # SolaxInverterClient
+
+# SolaxEmulator (test server) relocated outside the package tree;
+# see src/tools/emulator/solax_emulator.py
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -185,7 +186,7 @@ src/
 | Component | File | Status | Purpose |
 |-----------|------|--------|---------|
 | SolaxInverterClient | main.py | Implemented | Modbus TCP client |
-| SolaxEmulator | emulator/solax_emulator.py | Implemented | Test server |
+| SolaxEmulator | src/tools/emulator/solax_emulator.py (outside solax_modbus package) | Implemented | Test server |
 
 ### SolaxInverterClient
 
@@ -386,7 +387,7 @@ logging:
 | Component | File |
 |-----------|------|
 | SolaxInverterClient | src/solax_modbus/main.py |
-| SolaxEmulator | src/solax_modbus/emulator/solax_emulator.py |
+| SolaxEmulator | src/tools/emulator/solax_emulator.py |
 
 ### Reference Documents
 
@@ -406,6 +407,7 @@ logging:
 | 1.1 | 2025-12-30 | Added Tier 3 component document references |
 | 1.2 | 2025-12-30 | Added InverterController component document |
 | 1.3 | 2026-01-09 | Removed all control/write operations. System is read-only. Removed InverterController component and references. Updated scope, boundaries, diagrams, and interfaces. |
+| 1.4 | 2026-07-03 | Updated SolaxEmulator source location: relocated from src/solax_modbus/emulator/ to src/tools/emulator/, outside the solax_modbus package tree (see design-c2b3c4d5 1.5). Corrected Directory Structure and component tables. |
 
 ---
 

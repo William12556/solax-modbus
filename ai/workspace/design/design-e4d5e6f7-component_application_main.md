@@ -327,7 +327,7 @@ $ python src/solax_poll.py 192.168.1.100 --debug
 
 ```bash
 # Terminal 1
-$ python src/solax_modbus/emulator/solax_emulator.py --port 5020
+$ python3 src/tools/emulator/solax_emulator.py --port 5020
 
 # Terminal 2
 $ python src/solax_poll.py localhost --port 5020
@@ -373,6 +373,7 @@ $ python src/solax_poll.py localhost --port 5020
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-12-30 | Initial component design documenting implemented function |
+| 1.1 | 2026-07-03 | Updated emulator invocation path: src/solax_modbus/emulator/solax_emulator.py → src/tools/emulator/solax_emulator.py (see design-c2b3c4d5 1.5). |
 
 ---
 

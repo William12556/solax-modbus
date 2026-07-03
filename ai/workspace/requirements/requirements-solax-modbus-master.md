@@ -798,7 +798,7 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | f6a7b8c9 | SolaxInverterClient | src/solax_modbus/main.py |
 | a7b8c9d0 | InverterDisplay | src/solax_modbus/main.py |
 | b8c9d0e1 | SolaxInverterClient | src/solax_modbus/main.py |
-| f8a9b0c1 | SolaxEmulator | src/solax_modbus/emulator/solax_emulator.py |
+| f8a9b0c1 | SolaxEmulator | src/tools/emulator/solax_emulator.py |
 | 1a2b3c4d | TelemetryServer | src/solax_modbus/presentation/server.py (planned) |
 
 [Return to Table of Contents](<#table of contents>)
@@ -889,6 +889,7 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | 1.2 | 2026-03-14 | AR-003: added macOS as supported target platform (x86_64 and ARM64). NFR-009: added macOS manual-start acceptance criterion; systemd criterion scoped to Linux only. Change: change-b4e7f1a9. |
 | 1.3 | 2026-06-25 | Removed macOS as deployment target (reverses 1.2). AR-003: dropped macOS target, macOS constraints, and OS-detection criterion; retained macOS as development platform. NFR-009: dropped macOS manual-start criterion. |
 | 1.4 | 2026-06-26 | Brought web UI in-scope (embedded HTTP telemetry server). Added FR-018 HTTP Telemetry Server. Amended NFR-006 with HTTP isolation and source-IP allowlist criteria. Added traceability rows and glossary terms (RFC 1918, source-IP allowlist, link-local). |
+| 1.5 | 2026-07-03 | Updated SolaxEmulator source path: src/solax_modbus/emulator/solax_emulator.py → src/tools/emulator/solax_emulator.py (see design-c2b3c4d5 1.5). |
 
 ---
 

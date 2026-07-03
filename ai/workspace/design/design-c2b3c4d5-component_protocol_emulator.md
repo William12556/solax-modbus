@@ -29,11 +29,11 @@ Created: 2025 December 30
 component_info:
   name: "SolaxEmulator"
   domain: "Protocol"
-  version: "1.4"
+  version: "1.5"
   date: "2025-12-30"
   status: "Implemented"
-  source_file: "src/solax_modbus/emulator/solax_emulator.py"
-  platforms: "Linux"
+  source_file: "src/tools/emulator/solax_emulator.py"
+  platforms: "macOS, Linux"
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -71,8 +71,14 @@ Modbus TCP server emulating a Solax X3 Hybrid 6.0-D inverter for development and
 ### File Location
 
 ```
-src/solax_modbus/emulator/solax_emulator.py
+src/tools/emulator/solax_emulator.py
 ```
+
+Located outside the `solax_modbus` package tree. The emulator has no import
+dependency on `solax_modbus` (confirmed by source inspection: only stdlib and
+`pymodbus` are imported) and no test or runtime code depends on it being
+package-importable. Package membership was structural coincidence, not
+functional coupling.
 
 ### Dependencies
 
@@ -267,23 +273,25 @@ def run_emulator(host: str, port: int, unit_id: int):
 
 ### Platform Support
 
-The emulator is implemented in pure Python with no OS-specific dependencies. It is scoped to Linux (Raspberry Pi / Debian) as the supported runtime. Port 502 is a privileged port; `sudo` is required unless an alternative port is used via `--port`.
+The emulator is implemented in pure Python with no OS-specific dependencies; it
+runs on macOS and Linux. Port 502 is a privileged port; `sudo` is required on
+both platforms unless an alternative port is used via `--port`.
 
 ### Command Line
 
 ```bash
-# Linux — sudo required for port 502
-sudo python src/solax_modbus/emulator/solax_emulator.py
+# sudo required for port 502
+sudo python3 src/tools/emulator/solax_emulator.py
 
 # Use a non-privileged port to avoid sudo
-python src/solax_modbus/emulator/solax_emulator.py --port 5020
+python3 src/tools/emulator/solax_emulator.py --port 5020
 ```
 
 ### Testing with Client
 
 ```bash
 # Terminal 1
-sudo python src/solax_modbus/emulator/solax_emulator.py
+sudo python3 src/tools/emulator/solax_emulator.py
 
 # Terminal 2
 python -m solax_modbus.main 127.0.0.1
@@ -293,7 +301,7 @@ If using a non-privileged port:
 
 ```bash
 # Terminal 1
-python src/solax_modbus/emulator/solax_emulator.py --port 5020
+python3 src/tools/emulator/solax_emulator.py --port 5020
 
 # Terminal 2
 python -m solax_modbus.main 127.0.0.1 --port 5020
@@ -321,7 +329,7 @@ python -m solax_modbus.main 127.0.0.1 --port 5020
 
 | Item | Location |
 |------|----------|
-| Module | src/solax_modbus/emulator/solax_emulator.py |
+| Module | src/tools/emulator/solax_emulator.py |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -348,6 +356,7 @@ python -m solax_modbus.main 127.0.0.1 --port 5020
 | 1.2 | 2026-03-24 | Corrected platform scope: emulator runs on macOS and Linux (not Pi only). Updated Component Information, added Platform Support section, updated Usage commands to include sudo and non-privileged port alternative. |
 | 1.3 | 2026-06-25 | Scoped emulator runtime to Linux only (reverses macOS scope from 1.2). Updated Component Information platforms field, Platform Support section, and Command Line comment. |
 | 1.4 | 2026-07-02 | Corrected stale "Starting the Server" docstring (claimed module-constants-only configuration; source already accepts --host/--port/--unit-id). Marked MP-002 resolved. No source change; documentation was out of date relative to source. |
+| 1.5 | 2026-07-03 | Reversed 1.3 Linux-only platform scope (no rationale was recorded for that change; contradicted by README.md 1.2 and docs/guide.md, and by source inspection showing no OS-specific dependencies). Restored macOS and Linux platform support. Relocated source file from src/solax_modbus/emulator/ to src/tools/emulator/, decoupling the emulator from the solax_modbus package: it has no import dependency on the package and nothing in the test suite requires it to be package-importable. Updated Component Information, File Location, Platform Support, Command Line, and Source Code references accordingly. |
 
 ---
 

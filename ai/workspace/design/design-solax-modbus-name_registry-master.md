@@ -189,9 +189,9 @@ modules:
     path: "src/solax_modbus/main.py"
     package: "solax_modbus"
     status: implemented
-  - name: "solax_modbus.emulator.solax_emulator"
-    path: "src/solax_modbus/emulator/solax_emulator.py"
-    package: "solax_modbus"
+  - name: "solax_emulator"
+    path: "src/tools/emulator/solax_emulator.py"
+    package: null  # standalone script; outside the solax_modbus package tree
     status: implemented
   - name: "solax_modbus.data.models"
     path: "src/solax_modbus/data/models.py"
@@ -237,11 +237,11 @@ classes:
     base_classes: []
     status: implemented
   - name: "DynamicModbusDataBlock"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     base_classes: ["BaseModbusDataBlock"]
     status: implemented
   - name: "SolaxEmulatorState"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     base_classes: []
     status: implemented
   # ── Planned ─────────────────────────────────────────────────
@@ -358,57 +358,57 @@ functions:
     class: null
     signature: "main() -> None"
     status: implemented
-  # ── solax_modbus.emulator.solax_emulator :: DynamicModbusDataBlock ──
+  # ── solax_emulator :: DynamicModbusDataBlock ──
   - name: "validate"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     class: "DynamicModbusDataBlock"
     signature: "validate(self, address: int, count: int = 1) -> bool"
     status: implemented
   - name: "getValues"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     class: "DynamicModbusDataBlock"
     signature: "getValues(self, address: int, count: int = 1) -> list"
     status: implemented
   - name: "setValues"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     class: "DynamicModbusDataBlock"
     signature: "setValues(self, address: int, values: list) -> None"
     status: implemented
-  # ── solax_modbus.emulator.solax_emulator :: SolaxEmulatorState ──
+  # ── solax_emulator :: SolaxEmulatorState ──
   - name: "get_pv_power"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     class: "SolaxEmulatorState"
     signature: "get_pv_power(self) -> Tuple[int, int]"
     status: implemented
   - name: "update_state"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     class: "SolaxEmulatorState"
     signature: "update_state(self) -> None"
     status: implemented
   - name: "get_input_registers"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     class: "SolaxEmulatorState"
     signature: "get_input_registers(self) -> list"
     status: implemented
   - name: "get_holding_registers"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     class: "SolaxEmulatorState"
     signature: "get_holding_registers(self) -> list"
     status: implemented
   - name: "_to_signed_16bit"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     class: "SolaxEmulatorState"
     signature: "_to_signed_16bit(value: int) -> int"
     static: true
     status: implemented
-  # ── solax_modbus.emulator.solax_emulator (module level) ──────
+  # ── solax_emulator (module level) ──────
   - name: "state_update_loop"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     class: null
     signature: "state_update_loop(state: SolaxEmulatorState, input_block: DynamicModbusDataBlock, holding_block: DynamicModbusDataBlock) -> None"
     status: implemented
   - name: "run_emulator"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     class: null
     signature: "run_emulator() -> None"
     status: implemented
@@ -459,77 +459,77 @@ constants:
     class: "SolaxInverterClient"
     type: "dict"
     status: implemented
-  # ── solax_modbus.emulator.solax_emulator (module-level) ──────
+  # ── solax_emulator (module-level) ──────
   - name: "MODBUS_HOST"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "str"
     status: implemented
   - name: "MODBUS_PORT"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "int"
     status: implemented
   - name: "MODBUS_UNIT_ID"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "int"
     status: implemented
   - name: "PV1_MAX_POWER"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "int"
     status: implemented
   - name: "PV2_MAX_POWER"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "int"
     status: implemented
   - name: "BATTERY_CAPACITY"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "int"
     status: implemented
   - name: "BATTERY_VOLTAGE"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "float"
     status: implemented
   - name: "BATTERY_MAX_CHARGE_CURRENT"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "int"
     status: implemented
   - name: "BATTERY_MAX_DISCHARGE_CURRENT"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "int"
     status: implemented
   - name: "GRID_VOLTAGE_NOMINAL"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "float"
     status: implemented
   - name: "GRID_FREQUENCY"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "float"
     status: implemented
   - name: "INITIAL_BATTERY_SOC"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "int"
     status: implemented
   - name: "INITIAL_RUN_MODE"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "int"
     status: implemented
   - name: "INITIAL_OPERATING_MODE"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "int"
     status: implemented
   - name: "UPDATE_INTERVAL"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "float"
     status: implemented
   - name: "PV_VARIATION_FACTOR"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "float"
     status: implemented
   - name: "BATTERY_CHARGE_RATE"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "int"
     status: implemented
   - name: "BATTERY_DISCHARGE_RATE"
-    module: "solax_modbus.emulator.solax_emulator"
+    module: "solax_emulator"
     type: "int"
     status: implemented
   # ── solax_modbus.presentation.server (module-level) ──────────
@@ -573,6 +573,7 @@ constants:
 |---------|------|---------|
 | 1.0 | 2026-03-13 | Initial creation. Retrospective population from source code and all design tiers. Covers 4 implemented classes, 22 functions, 20 constants, and 8 planned classes. |
 | 1.1 | 2026-06-26 | Registered TelemetryServer, TelemetryRequestHandler, StateHolder (module solax_modbus.presentation.server) and constant DEFAULT_ALLOWED_NETWORKS for the HTTP telemetry server. Marked HTMLRenderer and module solax_modbus.presentation.html superseded. Added design-9b7e2c4a cross-reference and superseded status legend. |
+| 1.2 | 2026-07-03 | Renamed module `solax_modbus.emulator.solax_emulator` to `solax_emulator` throughout (classes, functions, constants): source relocated to src/tools/emulator/solax_emulator.py, outside the solax_modbus package (see design-c2b3c4d5 1.5). Module entry `package` field set to null. |
 
 ---
 

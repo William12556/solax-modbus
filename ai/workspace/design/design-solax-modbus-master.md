@@ -197,12 +197,13 @@ solax-modbus/
 │       └── trace/
 ├── docs/                     # Reference documentation
 ├── src/                      # Source code
-│   └── solax_modbus/         # Package
-│       ├── __init__.py       # Version tracking
-│       ├── main.py           # Main polling client
-│       ├── emulator/
-│       │   └── solax_emulator.py # Test server
-│       └── tests/
+│   ├── solax_modbus/         # Package
+│   │   ├── __init__.py       # Version tracking
+│   │   ├── main.py           # Main polling client
+│   │   └── tests/
+│   └── tools/
+│       └── emulator/
+│           └── solax_emulator.py # Test server (outside package)
 └── tests/                    # Root test directory
 ```
 
@@ -246,8 +247,8 @@ target_platforms:
 | SolaxInverterClient | src/solax_modbus/main.py | 1-218 | Yes |
 | InverterDisplay | src/solax_modbus/main.py | 221-310 | Yes |
 | main() | src/solax_modbus/main.py | 313-395 | Partial |
-| SolaxEmulatorState | src/solax_modbus/emulator/solax_emulator.py | Full | No |
-| DynamicModbusDataBlock | src/solax_modbus/emulator/solax_emulator.py | Full | No |
+| SolaxEmulatorState | src/tools/emulator/solax_emulator.py | Full | No |
+| DynamicModbusDataBlock | src/tools/emulator/solax_emulator.py | Full | No |
 
 ### Planned Components
 
@@ -380,7 +381,7 @@ stateDiagram-v2
 
 ### SolaxEmulatorState (Implemented)
 
-**File:** `src/solax_modbus/emulator/solax_emulator.py`
+**File:** `src/tools/emulator/solax_emulator.py`
 
 **Purpose:** Modbus TCP server emulating Solax X3 Hybrid inverter for testing.
 
@@ -657,8 +658,8 @@ logging:
 | SolaxInverterClient | src/solax_modbus/main.py |
 | InverterDisplay | src/solax_modbus/main.py |
 | main | src/solax_modbus/main.py |
-| SolaxEmulatorState | src/solax_modbus/emulator/solax_emulator.py |
-| DynamicModbusDataBlock | src/solax_modbus/emulator/solax_emulator.py |
+| SolaxEmulatorState | src/tools/emulator/solax_emulator.py |
+| DynamicModbusDataBlock | src/tools/emulator/solax_emulator.py |
 | Unit tests | tests/test_solax_poll.py |
 
 ### Reference Documents
@@ -686,6 +687,7 @@ logging:
 | 1.7 | 2026-03-14 | Added macOS as supported target platform. Replaced single target_platform block with target_platforms list. Updated development_environment platform field. Change: change-b4e7f1a9. |
 | 1.8 | 2026-06-25 | Removed macOS from target_platforms (reverses 1.7); deployment target is Raspberry Pi / Debian only. Retained macOS in development_environment. |
 | 1.9 | 2026-06-26 | Brought web UI in-scope. Added HTTP telemetry server to In Scope and Primary Functions. Added TelemetryServer (design-9b7e2c4a) to Tier 3 components; marked HTMLRenderer (design-d9e0f1a2) Superseded. |
+| 1.10 | 2026-07-03 | Relocated SolaxEmulator source from src/solax_modbus/emulator/ to src/tools/emulator/, outside the package tree (see design-c2b3c4d5 1.5). Updated Directory Structure, Implementation Status, Components, and Source Code Mapping. |
 
 ---
 

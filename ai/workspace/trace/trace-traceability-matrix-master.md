@@ -39,7 +39,7 @@
 | c5d6e7f8 | Configuration write | design-f5e6f7a8-component_protocol_controller.md | TBD | TBD | Planned |
 | d6e7f8a9 | Configuration audit | design-f5e6f7a8-component_protocol_controller.md | TBD | TBD | Planned |
 | e7f8a9b0 | Multi-inverter coordination | design-f1a2b3c4-component_application_pool.md | TBD | TBD | Planned |
-| f8a9b0c1 | Development emulator | design-c2b3c4d5-component_protocol_emulator.md | src/solax_modbus/emulator/solax_emulator.py | TBD | Implemented |
+| f8a9b0c1 | Development emulator | design-c2b3c4d5-component_protocol_emulator.md | src/tools/emulator/solax_emulator.py | TBD | Implemented |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -71,7 +71,7 @@
 | SolaxInverterClient | a1b2c3d4, b2c3d4e5, c3d4e5f6, d4e5f6a7, e5f6a7b8, f6a7b8c9, b8c9d0e1 | design-c1a2b3d4-component_protocol_client.md | src/solax_modbus/main.py | tests/test_solax_poll.py |
 | InverterDisplay | a7b8c9d0 | design-d3c4d5e6-component_presentation_console.md | src/solax_modbus/main.py | tests/test_solax_poll.py |
 | main | a1b2c3d4 | design-e4d5e6f7-component_application_main.md | src/solax_modbus/main.py | TBD |
-| SolaxEmulator | f8a9b0c1 | design-c2b3c4d5-component_protocol_emulator.md | src/solax_modbus/emulator/solax_emulator.py | TBD |
+| SolaxEmulator | f8a9b0c1 | design-c2b3c4d5-component_protocol_emulator.md | src/tools/emulator/solax_emulator.py | TBD |
 | DataValidator | c9d0e1f2 | design-a6b7c8d9-component_data_validator.md | TBD | TBD |
 | TimeSeriesStore | d0e1f2a3, f2a3b4c5 | design-b7c8d9e0-component_data_storage.md | TBD | TBD |
 | DataBuffer | e1f2a3b4 | design-c8d9e0f1-component_data_buffer.md | TBD | TBD |
@@ -93,7 +93,7 @@
 | design-af5c3d4e-domain_presentation.md | a7b8c9d0 | src/solax_modbus/main.py | TBD |
 | design-bf6d4e5f-domain_application.md | a3b4c5d6, b4c5d6e7, e7f8a9b0 | TBD | TBD |
 | design-c1a2b3d4-component_protocol_client.md | a1b2c3d4, b2c3d4e5, c3d4e5f6, d4e5f6a7, e5f6a7b8, f6a7b8c9, b8c9d0e1 | src/solax_modbus/main.py | tests/test_solax_poll.py |
-| design-c2b3c4d5-component_protocol_emulator.md | f8a9b0c1 | src/solax_modbus/emulator/solax_emulator.py | TBD |
+| design-c2b3c4d5-component_protocol_emulator.md | f8a9b0c1 | src/tools/emulator/solax_emulator.py | TBD |
 | design-f5e6f7a8-component_protocol_controller.md | c5d6e7f8, d6e7f8a9 | TBD | TBD |
 | design-a6b7c8d9-component_data_validator.md | c9d0e1f2 | TBD | TBD |
 | design-b7c8d9e0-component_data_storage.md | d0e1f2a3, f2a3b4c5 | TBD | TBD |
@@ -141,7 +141,7 @@
 | c5d6e7f8 | design-f5e6f7a8-component_protocol_controller.md | TBD | TBD |
 | d6e7f8a9 | design-f5e6f7a8-component_protocol_controller.md | TBD | TBD |
 | e7f8a9b0 | design-f1a2b3c4-component_application_pool.md | TBD | TBD |
-| f8a9b0c1 | design-c2b3c4d5-component_protocol_emulator.md | src/solax_modbus/emulator/solax_emulator.py | TBD |
+| f8a9b0c1 | design-c2b3c4d5-component_protocol_emulator.md | src/tools/emulator/solax_emulator.py | TBD |
 
 ### Backward Traceability (Test → Code → Design → Req)
 
@@ -149,7 +149,7 @@
 |------|------|--------|-------------|
 | tests/test_solax_poll.py | src/solax_modbus/main.py | design-c1a2b3d4-component_protocol_client.md | a1b2c3d4, b2c3d4e5, c3d4e5f6, d4e5f6a7, e5f6a7b8, f6a7b8c9, b8c9d0e1 |
 | tests/test_solax_poll.py | src/solax_modbus/main.py | design-d3c4d5e6-component_presentation_console.md | a7b8c9d0 |
-| TBD | src/solax_modbus/emulator/solax_emulator.py | design-c2b3c4d5-component_protocol_emulator.md | f8a9b0c1 |
+| TBD | src/tools/emulator/solax_emulator.py | design-c2b3c4d5-component_protocol_emulator.md | f8a9b0c1 |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -163,6 +163,7 @@
 | 2.0 | 2026-01-08 | Populated with requirements-to-design traceability mappings |
 | 3.0 | 2026-01-08 | Updated with test documentation references (test-a1b2c3d5, result-b2c3d4e5), corrected test paths to tests/ directory, marked 8 requirements as fully validated |
 | 4.0 | 2026-01-09 | Updated file paths for Python package structure: src/solax_poll.py → src/solax_modbus/main.py, src/emulator/solax_emulator.py → src/solax_modbus/emulator/solax_emulator.py |
+| 5.0 | 2026-07-03 | Updated SolaxEmulator code path: src/solax_modbus/emulator/solax_emulator.py → src/tools/emulator/solax_emulator.py (relocated outside package tree, see design-c2b3c4d5 1.5). |
 
 ---
 
