@@ -139,11 +139,11 @@ curl -fsSL https://github.com/William12556/solax-modbus/releases/latest/download
 
 Note: the script executes without prior inspection.
 
-`install.sh` (all options): creates a virtual environment at `/opt/solax-monitor/venv/`, installs the wheel, and verifies the installed version.
+`install.sh` (all options): creates a virtual environment at `/opt/solax-monitor/venv/`, installs the wheel, and verifies the installed version. Pass `--ip <INVERTER-IP>` to also register and start the systemd service; see [4.3 Service Configuration](<#4.3 service configuration>) and `install.sh --help` for all service flags.
 
 ### 4.3 Service Configuration
 
-systemd registration is manual. Create a unit file after installation:
+`install.sh --ip <INVERTER-IP>` registers the systemd service automatically (see [4.2 General Deployment](<#4.2 general deployment>)). The procedure below is for manual registration, or to modify an existing unit file.
 
 ```bash
 sudo tee /etc/systemd/system/solax-monitor.service << 'EOF'
@@ -552,6 +552,7 @@ Or run the emulator on an unprivileged port instead: `--port 5020`.
 |---------|------|---------|
 | 1.0 | 2026-07-02 | Consolidated from deployment-guide.md, development.md, and development-testing-guide.md. Removed superseded manual-script emulator deployment procedure (development-testing-guide.md, pre-package emulator invocation); retained current package-based emulator workflow. Updated Raspberry Pi OS reference from Debian 12 to Debian 13 (trixie). Source documents moved to docs/closed/. |
 | 1.1 | 2026-07-03 | Added §10 Architecture and §11 Project Status, migrated from README.md §8.0 and §9.0; corrected stale Debian 12 reference to Debian 13; renumbered Components/Troubleshooting/Version History to §12–§14. |
+| 1.2 | 2026-07-03 | Noted install.sh --ip auto-registration in §4.2 and §4.3; clarified §4.3 manual procedure applies when --ip is not used. |
 
 ---
 

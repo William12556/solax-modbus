@@ -46,18 +46,45 @@ To install a specific version:
 ./install.sh 0.1.5
 ```
 
+To install and register `solax-monitor` as a systemd service in one step, pass `--ip`:
+
+```bash
+./install.sh --ip <INVERTER-IP>
+```
+
+**Optional service flags:**
+
+| Flag | Purpose |
+|---|---|
+| `--port PORT` | Modbus TCP port (default: 502) |
+| `--unit-id ID` | Modbus unit ID (default: 1) |
+| `--interval SECONDS` | Polling interval (default: 5) |
+| `--serve` | Enable the Web UI (see [4.0 Web UI](<#4.0-web-ui>)) |
+| `--http-port PORT` | Web UI port (default: 8080) |
+| `--allow CIDR` | Restrict Web UI access to a network (repeatable) |
+
+Example:
+
+```bash
+./install.sh --ip 192.168.1.100 --serve --http-port 8080
+```
+
+Without `--ip`, the service is not registered; run `solax-monitor <INVERTER-IP>` manually, or see [3.0 Verify](<#3.0-verify>) and the [Guide](docs/guide.md) to register the service afterward.
+
 [Return to Table of Contents](<#table-of-contents>)
 
 ---
 
 ## 3.0 Verify
 
-Register `solax-monitor` as a systemd service before verifying; see the [Guide](docs/guide.md) for service configuration.
+If installed with `--ip` (service registered):
 
 ```bash
 sudo systemctl status solax-monitor
 sudo journalctl -u solax-monitor -f
 ```
+
+If installed without `--ip`, run `solax-monitor <INVERTER-IP>` directly, or see the [Guide](docs/guide.md) to register the service afterward.
 
 [Return to Table of Contents](<#table-of-contents>)
 
@@ -142,6 +169,7 @@ MIT License — see [LICENSE](<LICENSE>) file.
 | 1.5 | 2026-06-25 | Removed macOS as installation target: deleted Apple macOS install section and TOC entry, macOS system-requirements row, and macOS manual-execution status line. Deployment target is Raspberry Pi / Linux only. |
 | 1.6 | 2026-07-02 | Added section numbering (1.0–10.0) to all headings and TOC. Added Web UI section (5.0): --serve, --http-port, --allow usage. |
 | 1.7 | 2026-07-03 | Simplified to exclusively user-facing content. Removed Configure Service (3.0), Architecture (8.0), and Project Status (9.0); migrated to docs/guide.md §10–§11. Renumbered remaining sections (1.0–7.0). Expanded Documentation section note pointing to Guide for developer and extended reference content. |
+| 1.8 | 2026-07-03 | Added install.sh --ip auto-registration usage and service flags to 2.0 Install. Updated 3.0 Verify to distinguish --ip and non-flagged installs. |
 
 ---
 
