@@ -21,9 +21,11 @@ Created: 2026 July 02
 - [7. Service Operations](<#7 service operations>)
 - [8. Updates](<#8 updates>)
 - [9. Uninstallation](<#9 uninstallation>)
-- [10. Components](<#10 components>)
-- [11. Troubleshooting](<#11 troubleshooting>)
-- [12. Version History](<#12 version history>)
+- [10. Architecture](<#10 architecture>)
+- [11. Project Status](<#11 project status>)
+- [12. Components](<#12 components>)
+- [13. Troubleshooting](<#13 troubleshooting>)
+- [14. Version History](<#14 version history>)
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -424,7 +426,37 @@ python3 -c "import solax_modbus"     # ModuleNotFoundError
 
 [Return to Table of Contents](<#table of contents>)
 
-## 10. Components
+## 10. Architecture
+
+```
+Raspberry Pi ──Modbus TCP (port 502)──> Solax X3 Hybrid Inverter
+     │
+     ├──> Console Display (journalctl logs)
+     └──> Web UI (optional, --serve)
+```
+
+**System Requirements:**
+
+| Platform | Requirement |
+|---|---|
+| Raspberry Pi 4 | Debian 13 (trixie), 100MB disk, network to inverter |
+
+[Return to Table of Contents](<#table of contents>)
+
+## 11. Project Status
+
+**Current Implementation:**
+- Single-inverter monitoring (read-only)
+- Validated with Solax X3 Hybrid 6.0-D
+- Debian 13 deployment on Raspberry Pi 4
+- Scripted build and installation workflow
+
+**Important Notice:**
+Experimental software in active development. Read-only operation ensures safe monitoring without inverter control risks. Fitness for production use not guaranteed.
+
+[Return to Table of Contents](<#table of contents>)
+
+## 12. Components
 
 | Component | Description |
 |---|---|
@@ -434,9 +466,9 @@ python3 -c "import solax_modbus"     # ModuleNotFoundError
 
 [Return to Table of Contents](<#table of contents>)
 
-## 11. Troubleshooting
+## 13. Troubleshooting
 
-### 11.1 Build Script Failures
+### 13.1 Build Script Failures
 
 **Python version:**
 ```bash
@@ -453,7 +485,7 @@ python3 -m pip install build
 chmod +x build.sh
 ```
 
-### 11.2 Install Script Failures
+### 13.2 Install Script Failures
 
 **Virtual environment missing:** indicates first-time installation. Follow [4. Installation](<#4 installation>).
 
@@ -462,7 +494,7 @@ chmod +x build.sh
 sudo /opt/solax-monitor/venv/bin/pip install --force-reinstall /tmp/solax_modbus-*.whl
 ```
 
-### 11.3 Service Won't Start
+### 13.3 Service Won't Start
 
 ```bash
 sudo systemctl status solax-monitor
@@ -471,7 +503,7 @@ sudo journalctl -u solax-monitor -n 50
 
 Common causes: Python < 3.9 (`python3 --version`); package not installed (`/opt/solax-monitor/venv/bin/pip list | grep solax-modbus`); invalid inverter IP in service file; network issues (`ping <INVERTER-IP>`); port blocked (`nc -zv <INVERTER-IP> 502`).
 
-### 11.4 Connection Failures
+### 13.4 Connection Failures
 
 ```bash
 ping <INVERTER-IP>
@@ -481,7 +513,7 @@ sudo iptables -L  # Check firewall
 
 Common causes: inverter powered off or rebooting; WiFi dongle not configured; wrong subnet; firewall blocking port 502; incorrect IP in service configuration.
 
-### 11.5 Data Display Issues
+### 13.5 Data Display Issues
 
 ```bash
 sudo journalctl -u solax-monitor | grep -i "error\|exception"
@@ -489,7 +521,7 @@ sudo journalctl -u solax-monitor | grep -i "error\|exception"
 
 Common causes: register read failures (verify inverter model compatibility); scaling errors (check register mappings); type conversion errors (signed/unsigned handling).
 
-### 11.6 Log Analysis
+### 13.6 Log Analysis
 
 ```bash
 sudo journalctl -u solax-monitor | grep -i "error\|exception\|traceback"
@@ -497,7 +529,7 @@ sudo journalctl -u solax-monitor | grep "connect"
 sudo journalctl -u solax-monitor | grep "Grid\|PV\|Battery"
 ```
 
-### 11.7 Emulator Issues
+### 13.7 Emulator Issues
 
 **Port already in use:**
 ```bash
@@ -514,11 +546,12 @@ Or run the emulator on an unprivileged port instead: `--port 5020`.
 
 [Return to Table of Contents](<#table of contents>)
 
-## 12. Version History
+## 14. Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-07-02 | Consolidated from deployment-guide.md, development.md, and development-testing-guide.md. Removed superseded manual-script emulator deployment procedure (development-testing-guide.md, pre-package emulator invocation); retained current package-based emulator workflow. Updated Raspberry Pi OS reference from Debian 12 to Debian 13 (trixie). Source documents moved to docs/closed/. |
+| 1.1 | 2026-07-03 | Added §10 Architecture and §11 Project Status, migrated from README.md §8.0 and §9.0; corrected stale Debian 12 reference to Debian 13; renumbered Components/Troubleshooting/Version History to §12–§14. |
 
 ---
 
