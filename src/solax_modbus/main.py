@@ -26,7 +26,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler('/tmp/solax_poll.log')
+        logging.FileHandler('/opt/solax-monitor/solax_poll.log')
     ]
 )
 logger = logging.getLogger(__name__)
