@@ -359,13 +359,13 @@ The emulator is a standalone script at `src/tools/emulator/solax_emulator.py`, o
 scp src/tools/emulator/solax_emulator.py admin@solax-modbus.local:/tmp/
 
 # Pi — provisioning (one-time)
-sudo mkdir -p /opt/emulator
-sudo mv /tmp/solax_emulator.py /opt/emulator/
-python3 -m venv /opt/emulator/venv
-/opt/emulator/venv/bin/pip install "pymodbus>=3.11.0,<4.0.0"
+sudo mkdir -p /opt/solax_emulator
+sudo mv /tmp/solax_emulator.py /opt/solax_emulator/
+python3 -m venv /opt/solax_emulator/venv
+/opt/solax_emulator/venv/bin/pip install "pymodbus>=3.11.0,<4.0.0"
 
 # Pi — execution
-/opt/emulator/venv/bin/python3 /opt/emulator/solax_emulator.py --port 5020
+/opt/solax_emulator/venv/bin/python3 /opt/solax_emulator/solax_emulator.py --port 5020
 
 # Terminal 2: Connect monitor to emulator port
 solax-monitor 127.0.0.1 --port 5020
@@ -374,7 +374,7 @@ solax-monitor 127.0.0.1 --port 5020
 To use the default port 502, `sudo` is required:
 
 ```bash
-sudo /opt/emulator/venv/bin/python3 /opt/emulator/solax_emulator.py
+sudo /opt/solax_emulator/venv/bin/python3 /opt/solax_emulator/solax_emulator.py
 ```
 
 **Running from a repository checkout** (local development):
@@ -384,7 +384,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install "pymodbus>=3.11.0,<4.0.0"
 
-python3 src/tools/emulator/solax_emulator.py --port 5020
+python3 src/tools/solax_emulator/solax_emulator.py --port 5020
 ```
 
 **Behavior:**
