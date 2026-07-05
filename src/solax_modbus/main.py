@@ -20,13 +20,12 @@ from solax_modbus.presentation.server import (
     TelemetryServer,
 )
 
-# Configure comprehensive logging with traceback per Protocol 005
+# Configure logging to stdout/stderr for journald capture
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('/opt/solax-monitor/solax_poll.log')
+        logging.StreamHandler()
     ]
 )
 logger = logging.getLogger(__name__)

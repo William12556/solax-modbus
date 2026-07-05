@@ -1,11 +1,13 @@
 #!/bin/bash
 # Solax-Modbus Install Script
 # Supports: Linux (Debian/Raspberry Pi)
+# Requires: root (sudo ./install.sh)
 #
 # Usage:
-#   ./install.sh                              # fetch latest release from GitHub
-#   ./install.sh <version>                    # fetch specific version from GitHub
-#   ./install.sh <path-to-wheel>              # install from local wheel file
+#   sudo ./install.sh                         # fetch latest release from GitHub
+#   sudo ./install.sh <version>               # fetch specific version from GitHub
+#   sudo ./install.sh <path-to-wheel>         # install from local wheel file
+#   sudo ./install.sh --uninstall             # remove installation (keeps monitor account)
 #
 # Optional flags (for automatic systemd service registration):
 #   --ip IP               Inverter IP address (triggers systemd service creation)
@@ -15,14 +17,17 @@
 #   --serve               Enable HTTP server (passed to solax-monitor --serve)
 #   --http-port PORT      HTTP server port (passed to solax-monitor --http-port)
 #   --allow CIDR          Allowed CIDR for HTTP (repeatable, passed as --allow)
+#   --uninstall           Remove installation completely (keeps monitor account)
 #   --help, -h            Show this help and exit
 #
 # Examples:
-#   ./install.sh --ip 192.168.1.100
-#   ./install.sh 1.0.0 --ip 192.168.1.100 --serve --http-port 8080
-#   ./install.sh --ip 192.168.1.100 --allow 10.0.0.0/24 --allow 192.168.1.0/24
+#   sudo ./install.sh --ip 192.168.1.100
+#   sudo ./install.sh 1.0.0 --ip 192.168.1.100 --serve --http-port 8080
+#   sudo ./install.sh --ip 192.168.1.100 --allow 10.0.0.0/24 --allow 192.168.1.0/24
+#   sudo ./install.sh --uninstall
 #
 # Linux:  installs to /opt/solax-monitor/, symlink in /usr/local/bin/
+# Service runs as unprivileged 'monitor' account
 
 set -e  # Exit on error
 
@@ -34,11 +39,13 @@ for arg in "$@"; do
         cat <<'EOF'
 Solax-Modbus Install Script
 Supports: Linux (Debian/Raspberry Pi)
+Requires: root (sudo ./install.sh)
 
 Usage:
-  ./install.sh                              # fetch latest release from GitHub
-  ./install.sh <version>                    # fetch specific version from GitHub
-  ./install.sh <path-to-wheel>              # install from local wheel file
+  sudo ./install.sh                         # fetch latest release from GitHub
+  sudo ./install.sh <version>               # fetch specific version from GitHub
+  sudo ./install.sh <path-to-wheel>         # install from local wheel file
+  sudo ./install.sh --uninstall             # remove installation (keeps monitor account)
 
 Optional flags (for automatic systemd service registration):
   --ip IP               Inverter IP address (triggers systemd service creation)
@@ -48,18 +55,29 @@ Optional flags (for automatic systemd service registration):
   --serve               Enable HTTP server (passed to solax-monitor --serve)
   --http-port PORT      HTTP server port (passed to solax-monitor --http-port)
   --allow CIDR          Allowed CIDR for HTTP (repeatable, passed as --allow)
+  --uninstall           Remove installation completely (keeps monitor account)
   --help, -h            Show this help and exit
 
 Examples:
-  ./install.sh --ip 192.168.1.100
-  ./install.sh 1.0.0 --ip 192.168.1.100 --serve --http-port 8080
-  ./install.sh --ip 192.168.1.100 --allow 10.0.0.0/24 --allow 192.168.1.0/24
+  sudo ./install.sh --ip 192.168.1.100
+  sudo ./install.sh 1.0.0 --ip 192.168.1.100 --serve --http-port 8080
+  sudo ./install.sh --ip 192.168.1.100 --allow 10.0.0.0/24 --allow 192.168.1.0/24
+  sudo ./install.sh --uninstall
 
 Linux:  installs to /opt/solax-monitor/, symlink in /usr/local/bin/
+Service runs as unprivileged 'monitor' account
 EOF
         exit 0
     fi
 done
+
+# ---------------------------------------------------------------------------
+# Root check
+# ---------------------------------------------------------------------------
+if [ "$(id -u)" -ne 0 ]; then
+    echo "ERROR: Run as root: sudo ./install.sh"
+    exit 1
+fi
 
 # ---------------------------------------------------------------------------
 # OS detection
@@ -81,9 +99,33 @@ GITHUB_REPO="William12556/solax-modbus"
 GITHUB_API="https://api.github.com/repos/${GITHUB_REPO}/releases"
 
 # ---------------------------------------------------------------------------
+# Uninstall mode (checked early before download logic)
+# ---------------------------------------------------------------------------
+for arg in "$@"; do
+    if [ "$arg" = "--uninstall" ]; then
+        echo "==> Uninstalling solax-modbus..."
+        systemctl stop solax-monitor 2>/dev/null || true
+        systemctl disable solax-monitor 2>/dev/null || true
+        rm -f /etc/systemd/system/solax-monitor.service
+        systemctl daemon-reload
+        rm -f /usr/local/bin/solax-monitor
+        rm -rf /opt/solax-monitor
+        echo "==> Uninstalled. Account monitor retained."
+        exit 0
+    fi
+done
+
+# ---------------------------------------------------------------------------
+# Ensure monitor user exists
+# ---------------------------------------------------------------------------
+echo "==> Ensuring monitor user exists..."
+id monitor >/dev/null 2>&1 || useradd --system --no-create-home --shell /usr/sbin/nologin monitor
+
+# ---------------------------------------------------------------------------
 # Resolve wheel: local file, specific version, or latest release
 # ---------------------------------------------------------------------------
 WHEEL_PATH=""
+DOWNLOAD_DIR=""
 
 if [ -z "$1" ] || [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ "$1" == --* ]]; then
     # No argument, version string, or flag: download from GitHub releases
@@ -114,7 +156,11 @@ if [ -z "$1" ] || [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || [[ "$1" == --* ]]; t
         exit 1
     fi
 
-    WHEEL_PATH="/tmp/solax_modbus-${VERSION}-py3-none-any.whl"
+    # Create temp directory for download and register cleanup trap
+    DOWNLOAD_DIR=$(mktemp -d)
+    trap 'rm -rf "$DOWNLOAD_DIR"' EXIT
+
+    WHEEL_PATH="$DOWNLOAD_DIR/solax_modbus-${VERSION}-py3-none-any.whl"
     echo "==> Downloading wheel: $WHEEL_URL"
     if command -v curl >/dev/null 2>&1; then
         curl -fsSL "$WHEEL_URL" -o "$WHEEL_PATH"
@@ -133,7 +179,7 @@ elif [ -f "$1" ]; then
 
 else
     echo "ERROR: Argument is not a file or version string: $1"
-    echo "Usage: ./install.sh [version|path-to-wheel]"
+    echo "Usage: sudo ./install.sh [version|path-to-wheel]"
     exit 1
 fi
 
@@ -215,19 +261,30 @@ fi
 # ---------------------------------------------------------------------------
 if [ ! -d "$VENV_DIR" ]; then
     echo "==> Creating virtual environment at $VENV_DIR"
-    # /opt requires elevated privileges
-    sudo mkdir -p "$INSTALL_DIR"
-    sudo python3 -m venv "$VENV_DIR"
+    mkdir -p "$INSTALL_DIR"
+    python3 -m venv "$VENV_DIR"
 fi
+
+# ---------------------------------------------------------------------------
+# Teardown previous installation
+# ---------------------------------------------------------------------------
+echo "==> Stopping service if active..."
+systemctl is-active --quiet solax-monitor && systemctl stop solax-monitor || true
+
+echo "==> Cleaning existing package..."
+"$VENV_DIR/bin/pip" uninstall -y solax-modbus 2>/dev/null || true
 
 # ---------------------------------------------------------------------------
 # Install package
 # ---------------------------------------------------------------------------
-echo "==> Cleaning existing installation..."
-"$VENV_DIR/bin/pip" uninstall -y solax-modbus 2>/dev/null || true
-
 echo "==> Installing from $WHEEL_PATH"
 "$VENV_DIR/bin/pip" install "$WHEEL_PATH"
+
+# ---------------------------------------------------------------------------
+# Set permissions for monitor user
+# ---------------------------------------------------------------------------
+echo "==> Setting permissions for monitor user..."
+chmod -R a+rX "$INSTALL_DIR"
 
 # ---------------------------------------------------------------------------
 # Version verification
@@ -255,7 +312,7 @@ if [ -L "$SYMLINK" ] && [ "$(readlink "$SYMLINK")" = "$TARGET" ]; then
     echo "==> Symlink already correct: $SYMLINK"
 else
     echo "==> Configuring symlink: $SYMLINK -> $TARGET"
-    sudo ln -sf "$TARGET" "$SYMLINK"
+    ln -sf "$TARGET" "$SYMLINK"
 fi
 
 # ---------------------------------------------------------------------------
@@ -291,8 +348,8 @@ if [ -n "$IP" ]; then
         EXEC_START="$EXEC_START --allow $CIDR"
     done
 
-    # Write systemd unit file
-    sudo tee /etc/systemd/system/solax-monitor.service > /dev/null <<EOF
+    # Write systemd unit file with hardening directives
+    tee /etc/systemd/system/solax-monitor.service > /dev/null <<EOF
 [Unit]
 Description=Solax Modbus Monitor
 After=network-online.target
@@ -300,18 +357,28 @@ Wants=network-online.target
 
 [Service]
 ExecStart=$EXEC_START
-User=root
+User=monitor
+Group=monitor
 Restart=on-failure
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6
+ProtectKernelTunables=true
+RestrictNamespaces=true
+LockPersonality=true
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
     echo "==> Reloading systemd daemon..."
-    sudo systemctl daemon-reload
+    systemctl daemon-reload
 
     echo "==> Enabling and starting solax-monitor service..."
-    sudo systemctl enable --now solax-monitor
+    systemctl enable --now solax-monitor
 
     echo ""
     echo "✓ Systemd service installed and started"
@@ -323,18 +390,33 @@ EOF
     echo "  journalctl -u solax-monitor -f"
 else
     # ---------------------------------------------------------------------------
-    # Post-install instructions (no systemd)
+    # Restart service if enabled (Option A: preserve existing unit)
     # ---------------------------------------------------------------------------
-    echo ""
-    echo "Run monitor with:"
-    echo "  solax-monitor <inverter-ip> [options]"
-    echo ""
-    echo "To register as a systemd service, re-run install.sh with --ip:"
-    echo "  ./install.sh --ip <inverter-ip> [--serve] [--http-port PORT]"
-    echo ""
-    echo "Options:"
-    echo "  --port PORT         Modbus TCP port (default: 502)"
-    echo "  --unit-id ID        Modbus unit ID (default: 1)"
-    echo "  --interval SECONDS  Polling interval (default: 5)"
-    echo "  --debug             Enable debug logging"
+    if [ -f /etc/systemd/system/solax-monitor.service ]; then
+        if systemctl is-enabled --quiet solax-monitor 2>/dev/null; then
+            echo "==> Restarting existing solax-monitor service..."
+            systemctl restart solax-monitor
+            echo ""
+            echo "✓ Service restarted"
+            echo ""
+            echo "View logs:"
+            echo "  journalctl -u solax-monitor -f"
+        fi
+    else
+        # ---------------------------------------------------------------------------
+        # Post-install instructions (no systemd)
+        # ---------------------------------------------------------------------------
+        echo ""
+        echo "Run monitor with:"
+        echo "  solax-monitor <inverter-ip> [options]"
+        echo ""
+        echo "To register as a systemd service, re-run install.sh with --ip:"
+        echo "  sudo ./install.sh --ip <inverter-ip> [--serve] [--http-port PORT]"
+        echo ""
+        echo "Options:"
+        echo "  --port PORT         Modbus TCP port (default: 502)"
+        echo "  --unit-id ID        Modbus unit ID (default: 1)"
+        echo "  --interval SECONDS  Polling interval (default: 5)"
+        echo "  --debug             Enable debug logging"
+    fi
 fi
