@@ -21,6 +21,9 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
+# Default HTTP port for telemetry server (non-privileged, avoids common conflict)
+DEFAULT_HTTP_PORT: int = 8181
+
 # Default RFC 1918 private networks plus link-local (USB-gadget direct path)
 DEFAULT_ALLOWED_NETWORKS: List[ipaddress.IPv4Network] = [
     ipaddress.IPv4Network("10.0.0.0/8"),
@@ -175,7 +178,7 @@ class TelemetryServer:
         self,
         state: StateHolder,
         bind_host: str = "0.0.0.0",
-        port: int = 8080,
+        port: int = DEFAULT_HTTP_PORT,
         allowed_networks: Optional[List[ipaddress.IPv4Network]] = None,
     ) -> None:
         """
@@ -184,7 +187,7 @@ class TelemetryServer:
         Args:
             state: Shared, lock-guarded telemetry snapshot holder.
             bind_host: Interface to bind (default all interfaces).
-            port: TCP port (non-privileged default 8080).
+            port: TCP port (non-privileged default 8181).
             allowed_networks: Permitted source ranges (None = DEFAULT_ALLOWED_NETWORKS).
         """
         self.state = state

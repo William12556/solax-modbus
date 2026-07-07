@@ -16,6 +16,7 @@ from pymodbus.exceptions import ModbusException
 
 from solax_modbus.presentation.server import (
     DEFAULT_ALLOWED_NETWORKS,
+    DEFAULT_HTTP_PORT,
     StateHolder,
     TelemetryServer,
 )
@@ -426,13 +427,13 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s 192.168.1.100                    # Monitor with 5-second interval
+  %(prog)s 192.168.1.100                    # Monitor with HTTP server on port 8181
   %(prog)s 192.168.1.100 --interval 10      # Monitor with 10-second interval
   %(prog)s 192.168.1.100 --port 1502        # Use non-standard Modbus port
   %(prog)s 192.168.1.100 --debug            # Enable debug logging
-  %(prog)s 192.168.1.100 --serve            # Enable HTTP telemetry server
-  %(prog)s 192.168.1.100 --serve --http-port 9000  # Use custom HTTP port
-  %(prog)s 192.168.1.100 --serve --allow 192.168.1.0/24  # Restrict to subnet
+  %(prog)s 192.168.1.100 --no-serve         # Disable HTTP telemetry server
+  %(prog)s 192.168.1.100 --http-port 9000   # Use custom HTTP port
+  %(prog)s 192.168.1.100 --allow 192.168.1.0/24  # Restrict to subnet
         """
     )
     
@@ -464,15 +465,17 @@ Examples:
         help='Enable debug logging'
     )
     parser.add_argument(
-        '--serve',
-        action='store_true',
-        help='Enable HTTP telemetry server'
+        '--no-serve',
+        action='store_false',
+        dest='serve',
+        help='Disable the HTTP telemetry server (enabled by default)'
     )
+    parser.set_defaults(serve=True)
     parser.add_argument(
         '--http-port',
         type=int,
-        default=8080,
-        help='HTTP server port (default: 8080)'
+        default=DEFAULT_HTTP_PORT,
+        help='HTTP server port (default: 8181)'
     )
     parser.add_argument(
         '--allow',
@@ -509,6 +512,8 @@ Examples:
     print(f"Polling interval: {poll_interval} seconds")
     if args.serve:
         print(f"HTTP server: http://0.0.0.0:{args.http_port}/")
+    else:
+        print("HTTP server: disabled (--no-serve)")
     print(f"Press Ctrl+C to stop\n")
     print("-" * 70)
 

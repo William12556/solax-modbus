@@ -329,8 +329,8 @@ class TestMainExecution:
         mock_args.unit_id = 1
         mock_args.interval = 5
         mock_args.debug = False
-        mock_args.serve = False
-        mock_args.http_port = 8080
+        mock_args.serve = True
+        mock_args.http_port = 8181
         mock_args.allow = None
         mock_parse_args.return_value = mock_args
         
@@ -360,6 +360,52 @@ class TestMainExecution:
         
         # Verify cleanup was called
         mock_client.disconnect.assert_called_once()
+
+    @patch('solax_modbus.main.argparse.ArgumentParser.parse_args')
+    @patch('solax_modbus.main.TelemetryServer')
+    @patch('solax_modbus.main.SolaxInverterClient')
+    @patch('solax_modbus.main.InverterDisplay')
+    @patch('solax_modbus.main.time.sleep')
+    def test_no_serve_flag_disables_server(self, mock_sleep, mock_display_class,
+                                           mock_client_class, mock_server_class,
+                                           mock_parse_args):
+        """Test that --no-serve flag prevents HTTP server from starting."""
+        # Setup argument parser mock with serve=False (simulates --no-serve)
+        mock_args = Mock()
+        mock_args.ip = '192.168.1.100'
+        mock_args.port = 502
+        mock_args.unit_id = 1
+        mock_args.interval = 5
+        mock_args.debug = False
+        mock_args.serve = False  # --no-serve sets this to False
+        mock_args.http_port = 8181
+        mock_args.allow = None
+        mock_parse_args.return_value = mock_args
+
+        # Setup client mock
+        mock_client = Mock()
+        mock_client.client = Mock()
+        mock_client.client.is_socket_open.return_value = True
+        mock_client.connect.return_value = True
+        mock_client.poll_inverter.return_value = {'test': 'data'}
+        mock_client_class.return_value = mock_client
+
+        # Setup display mock
+        mock_display = Mock()
+        mock_display_class.return_value = mock_display
+
+        # Simulate KeyboardInterrupt after one iteration
+        mock_sleep.side_effect = KeyboardInterrupt()
+
+        from solax_modbus.main import main
+
+        try:
+            main()
+        except SystemExit:
+            pass
+
+        # Verify TelemetryServer was NOT constructed when --no-serve is used
+        mock_server_class.assert_not_called()
 
 
 if __name__ == "__main__":
