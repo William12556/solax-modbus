@@ -537,6 +537,10 @@ constants:
     module: "solax_modbus.presentation.server"
     type: "list"
     status: planned
+  - name: "DEFAULT_HTTP_PORT"
+    module: "solax_modbus.presentation.server"
+    type: "int"
+    status: planned
 ```
 
 [Return to Table of Contents](<#table-of-contents>)
@@ -574,6 +578,7 @@ constants:
 | 1.0 | 2026-03-13 | Initial creation. Retrospective population from source code and all design tiers. Covers 4 implemented classes, 22 functions, 20 constants, and 8 planned classes. |
 | 1.1 | 2026-06-26 | Registered TelemetryServer, TelemetryRequestHandler, StateHolder (module solax_modbus.presentation.server) and constant DEFAULT_ALLOWED_NETWORKS for the HTTP telemetry server. Marked HTMLRenderer and module solax_modbus.presentation.html superseded. Added design-9b7e2c4a cross-reference and superseded status legend. |
 | 1.2 | 2026-07-03 | Renamed module `solax_modbus.emulator.solax_emulator` to `solax_emulator` throughout (classes, functions, constants): source relocated to src/tools/emulator/solax_emulator.py, outside the solax_modbus package (see design-c2b3c4d5 1.5). Module entry `package` field set to null. |
+| 1.3 | 2026-07-07 | Registered constant `DEFAULT_HTTP_PORT` (module solax_modbus.presentation.server) for the serve-by-default / port-8181 change. See change-a7c3e9d2. |
 
 ---
 

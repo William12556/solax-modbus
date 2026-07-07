@@ -237,8 +237,8 @@ src/
 | --unit-id | int | 1 | Modbus unit ID |
 | --interval | int | 5 | Polling interval (seconds) |
 | --debug | flag | false | Enable debug logging |
-| --serve | flag | false | Enable HTTP telemetry server |
-| --http-port | int | 8080 | HTTP server port |
+| --no-serve | flag | false | Disable the HTTP telemetry server (enabled by default) |
+| --http-port | int | 8181 | HTTP server port |
 | --allow | str (repeatable) | RFC 1918 + link-local | Permitted source IP ranges |
 
 **State Machine:**
@@ -547,6 +547,7 @@ alerts:
 | 1.2 | 2025-12-30 | Added AlertManager and InverterPool component document references |
 | 1.3 | 2026-01-08 | Removed multi-inverter coordination. Removed InverterPool and PollingCoordinator components. Updated NFR targets for single-inverter deployment. |
 | 1.4 | 2026-06-26 | Added HTTP server coordination: shared-state (StateHolder) ownership, server thread lifecycle, and ordered shutdown sequencing. Added Server Coordination subsection, CLI flags (--serve, --http-port, --allow), and StateHolder to component summary. Cross-references TelemetryServer (design-9b7e2c4a). |
+| 1.5 | 2026-07-07 | CLI Arguments: --serve replaced by --no-serve (server enabled by default); --http-port default 8080 -> 8181. See change-a7c3e9d2. |
 
 ---
 

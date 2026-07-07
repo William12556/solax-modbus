@@ -590,7 +590,7 @@ python3 -c "import solax_modbus"     # ModuleNotFoundError
 Raspberry Pi ──Modbus TCP (port 502)──> Solax X3 Hybrid Inverter
      │
      ├──> Console Display (journalctl logs)
-     └──> Web UI (optional, --serve)
+     └──> Web UI (enabled by default on port 8181; --no-serve to disable)
 ```
 
 **System Requirements:**
@@ -716,6 +716,7 @@ Or run the emulator on an unprivileged port instead: `--port 5020`.
 | 1.5 | 2026-07-03 | §6.2 rewritten: emulator invocation reverts to the standalone-script method (src/tools/emulator/solax_emulator.py), reversing the 1.0 decision to drop it. The package-based module invocation (python -m solax_modbus.emulator.solax_emulator) is removed — it required a package install this section never specified, and nothing in the codebase depends on the emulator being package-importable. Emulator source relocated from src/solax_modbus/emulator/ to src/tools/emulator/ (see design-c2b3c4d5 1.5). src/solax_modbus/emulator/README.md merged into this section and reduced to a stub. |
 | 1.6 | 2026-07-03 | §6.2: pinned pymodbus>=3.11.0,<4.0.0 (matches project floor; Debian trixie's python3-pymodbus, 3.8.6, is below it). Added standalone installation procedure (/opt/emulator, dedicated venv, provisioning + execution) alongside the repository-checkout method. |
 | 1.7 | 2026-07-03 | §6.2: added scp transfer step to standalone installation (Mac → Pi), matching the §5.1 pattern. Standalone procedure no longer assumes the script is already present on the target machine. |
+| 1.8 | 2026-07-07 | §11 Architecture: Web UI now enabled by default (port 8181); `--serve` replaced by `--no-serve`. See change-a7c3e9d2. |
 
 ---
 

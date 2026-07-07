@@ -14,7 +14,7 @@
 #   --port PORT           Modbus TCP port (passed to solax-monitor --port)
 #   --unit-id ID          Modbus unit ID (passed to solax-monitor --unit-id)
 #   --interval SECONDS    Polling interval (passed to solax-monitor --interval)
-#   --serve               Enable HTTP server (passed to solax-monitor --serve)
+#   --no-serve            Disable HTTP server (server runs by default)
 #   --http-port PORT      HTTP server port (passed to solax-monitor --http-port)
 #   --allow CIDR          Allowed CIDR for HTTP (repeatable, passed as --allow)
 #   --uninstall           Remove installation completely (keeps monitor account)
@@ -22,7 +22,7 @@
 #
 # Examples:
 #   sudo ./install.sh --ip 192.168.1.100
-#   sudo ./install.sh 1.0.0 --ip 192.168.1.100 --serve --http-port 8080
+#   sudo ./install.sh 1.0.0 --ip 192.168.1.100 --http-port 8181
 #   sudo ./install.sh --ip 192.168.1.100 --allow 10.0.0.0/24 --allow 192.168.1.0/24
 #   sudo ./install.sh --uninstall
 #
@@ -52,7 +52,7 @@ Optional flags (for automatic systemd service registration):
   --port PORT           Modbus TCP port (passed to solax-monitor --port)
   --unit-id ID          Modbus unit ID (passed to solax-monitor --unit-id)
   --interval SECONDS    Polling interval (passed to solax-monitor --interval)
-  --serve               Enable HTTP server (passed to solax-monitor --serve)
+  --no-serve            Disable HTTP server (server runs by default)
   --http-port PORT      HTTP server port (passed to solax-monitor --http-port)
   --allow CIDR          Allowed CIDR for HTTP (repeatable, passed as --allow)
   --uninstall           Remove installation completely (keeps monitor account)
@@ -60,7 +60,7 @@ Optional flags (for automatic systemd service registration):
 
 Examples:
   sudo ./install.sh --ip 192.168.1.100
-  sudo ./install.sh 1.0.0 --ip 192.168.1.100 --serve --http-port 8080
+  sudo ./install.sh 1.0.0 --ip 192.168.1.100 --http-port 8181
   sudo ./install.sh --ip 192.168.1.100 --allow 10.0.0.0/24 --allow 192.168.1.0/24
   sudo ./install.sh --uninstall
 
@@ -194,13 +194,13 @@ echo "==> Install directory: $INSTALL_DIR"
 echo "==> Wheel: $WHEEL_PATH"
 
 # ---------------------------------------------------------------------------
-# Parse service flags (--ip, --port, --unit-id, --interval, --serve, etc.)
+# Parse service flags (--ip, --port, --unit-id, --interval, --no-serve, etc.)
 # ---------------------------------------------------------------------------
 IP=""
 MODBUS_PORT_ARG=""
 UNIT_ID_ARG=""
 INTERVAL_ARG=""
-SERVE_FLAG=""
+NO_SERVE_FLAG=""
 HTTP_PORT_ARG=""
 ALLOW_ARGS=()
 
@@ -228,8 +228,8 @@ while [ $# -gt 0 ]; do
             INTERVAL_ARG="$2"
             shift 2
             ;;
-        --serve)
-            SERVE_FLAG="1"
+        --no-serve)
+            NO_SERVE_FLAG="1"
             shift
             ;;
         --http-port)
@@ -336,8 +336,8 @@ if [ -n "$IP" ]; then
         EXEC_START="$EXEC_START --interval $INTERVAL_ARG"
     fi
 
-    if [ -n "$SERVE_FLAG" ]; then
-        EXEC_START="$EXEC_START --serve"
+    if [ -n "$NO_SERVE_FLAG" ]; then
+        EXEC_START="$EXEC_START --no-serve"
     fi
 
     if [ -n "$HTTP_PORT_ARG" ]; then
@@ -411,7 +411,7 @@ else
         echo "  solax-monitor <inverter-ip> [options]"
         echo ""
         echo "To register as a systemd service, re-run install.sh with --ip:"
-        echo "  sudo ./install.sh --ip <inverter-ip> [--serve] [--http-port PORT]"
+        echo "  sudo ./install.sh --ip <inverter-ip> [--no-serve] [--http-port PORT]"
         echo ""
         echo "Options:"
         echo "  --port PORT         Modbus TCP port (default: 502)"

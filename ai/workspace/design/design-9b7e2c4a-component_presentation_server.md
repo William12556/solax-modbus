@@ -34,8 +34,8 @@ Created: 2026 June 26
 component_info:
   name: "TelemetryServer"
   domain: "Presentation"
-  version: "1.1"
-  date: "2026-06-26"
+  version: "1.2"
+  date: "2026-07-07"
   status: "Planned"
   source_file: "src/solax_modbus/presentation/server.py"
   static_asset: "src/solax_modbus/presentation/templates/dashboard.html"
@@ -47,7 +47,7 @@ component_info:
 
 ## Purpose
 
-Serve live single-inverter telemetry over HTTP to local-network clients. The server reads the most recent polled telemetry from shared state populated by the polling loop; it does not communicate with the inverter directly. Activation is opt-in; default behaviour is unchanged.
+Serve live single-inverter telemetry over HTTP to local-network clients. The server reads the most recent polled telemetry from shared state populated by the polling loop; it does not communicate with the inverter directly. Activation is on by default; disable with `--no-serve`.
 
 ### Responsibilities
 
@@ -177,7 +177,7 @@ def __init__(
     self,
     state: StateHolder,
     bind_host: str = "0.0.0.0",
-    port: int = 8080,
+    port: int = DEFAULT_HTTP_PORT,
     allowed_networks: list = None
 ):
     """
@@ -371,8 +371,8 @@ Parameters are supplied by the Application domain via command-line flags.
 
 | Flag | Maps to | Default |
 |------|---------|---------|
-| `--serve` | Enable the server | disabled |
-| `--http-port` | `port` | 8080 |
+| `--no-serve` | Disable the server | enabled by default |
+| `--http-port` | `port` | 8181 (`DEFAULT_HTTP_PORT`) |
 | `--allow` | `allowed_networks` (override) | DEFAULT_ALLOWED_NETWORKS |
 
 [Return to Table of Contents](<#table of contents>)
@@ -415,6 +415,7 @@ Parameters are supplied by the Application domain via command-line flags.
 |---------|------|---------|
 | 1.0 | 2026-06-26 | Initial component design for the embedded HTTP telemetry server (TelemetryServer). |
 | 1.1 | 2026-07-02 | Noted packaging requirement for dashboard.html (package-data declaration); root cause of a wheel-install runtime defect. No design/interface change. |
+| 1.2 | 2026-07-07 | Serve-by-default: `--serve` replaced by `--no-serve` (Purpose and Configuration); default port 8080 -> 8181 via new `DEFAULT_HTTP_PORT` constant (Constructor, Configuration). See change-a7c3e9d2. |
 
 ---
 

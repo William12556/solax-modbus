@@ -2,6 +2,8 @@
 
 Created: 2026 July 01
 
+> **Superseded in part (2026-07-07):** The opt-in serve contract defined here (server disabled unless `--serve` is passed; default port 8080) is superseded by change-a7c3e9d2, which serves by default (`--no-serve` to disable) and sets the default port to 8181 via `DEFAULT_HTTP_PORT`. Retained for history.
+
 ---
 
 ## Table of Contents
