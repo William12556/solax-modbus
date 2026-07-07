@@ -5,7 +5,7 @@ Created: 2026 June 26
 **Document Type:** Tier 3 Component Design  
 **Document ID:** design-9b7e2c4a-component_presentation_server  
 **Parent:** [design-af5c3d4e-domain_presentation.md](<design-af5c3d4e-domain_presentation.md>)  
-**Status:** Planned  
+**Status:** Active  
 
 ---
 
@@ -36,7 +36,7 @@ component_info:
   domain: "Presentation"
   version: "1.2"
   date: "2026-07-07"
-  status: "Planned"
+  status: "Active"
   source_file: "src/solax_modbus/presentation/server.py"
   static_asset: "src/solax_modbus/presentation/templates/dashboard.html"
 ```
@@ -77,8 +77,8 @@ Serve live single-inverter telemetry over HTTP to local-network clients. The ser
 ### File Location
 
 ```
-src/solax_modbus/presentation/server.py (planned)
-src/solax_modbus/presentation/templates/dashboard.html (planned)
+src/solax_modbus/presentation/server.py
+src/solax_modbus/presentation/templates/dashboard.html
 ```
 
 `dashboard.html` is non-Python package data. It must be declared under
@@ -402,8 +402,8 @@ Parameters are supplied by the Application domain via command-line flags.
 
 | Item | Location |
 |------|----------|
-| Module | src/solax_modbus/presentation/server.py (planned) |
-| Static asset | src/solax_modbus/presentation/templates/dashboard.html (planned) |
+| Module | src/solax_modbus/presentation/server.py |
+| Static asset | src/solax_modbus/presentation/templates/dashboard.html |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -416,6 +416,7 @@ Parameters are supplied by the Application domain via command-line flags.
 | 1.0 | 2026-06-26 | Initial component design for the embedded HTTP telemetry server (TelemetryServer). |
 | 1.1 | 2026-07-02 | Noted packaging requirement for dashboard.html (package-data declaration); root cause of a wheel-install runtime defect. No design/interface change. |
 | 1.2 | 2026-07-07 | Serve-by-default: `--serve` replaced by `--no-serve` (Purpose and Configuration); default port 8080 -> 8181 via new `DEFAULT_HTTP_PORT` constant (Constructor, Configuration). See change-a7c3e9d2. |
+| 1.3 | 2026-07-07 | Status Planned -> Active; removed stale (planned) annotations from File Location and Source Code (implementation confirmed in source). |
 
 ---
 

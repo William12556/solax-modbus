@@ -85,6 +85,23 @@ classDiagram
 
     DynamicModbusDataBlock --|> BaseModbusDataBlock
 
+    class StateHolder {
+        +get() dict
+        +set(data) None
+    }
+
+    class TelemetryServer {
+        +str bind_host
+        +int port
+        +list allowed_networks
+        +start() None
+        +stop() None
+    }
+
+    class TelemetryRequestHandler {
+        +do_GET() None
+    }
+
     %% ── Planned ──────────────────────────────────────────────
 
     class Measurement {
@@ -131,23 +148,6 @@ classDiagram
 
     class HTMLRenderer {
         +render(data, output_path) bool
-    }
-
-    class StateHolder {
-        +get() dict
-        +set(data) None
-    }
-
-    class TelemetryServer {
-        +str bind_host
-        +int port
-        +list allowed_networks
-        +start() None
-        +stop() None
-    }
-
-    class TelemetryRequestHandler {
-        +do_GET() None
     }
 
     DataValidator --> ValidationResult
@@ -224,7 +224,7 @@ modules:
   - name: "solax_modbus.presentation.server"
     path: "src/solax_modbus/presentation/server.py"
     package: "solax_modbus"
-    status: planned
+    status: implemented
 
 classes:
   # ── Implemented ─────────────────────────────────────────────
@@ -280,15 +280,15 @@ classes:
   - name: "StateHolder"
     module: "solax_modbus.presentation.server"
     base_classes: []
-    status: planned
+    status: implemented
   - name: "TelemetryServer"
     module: "solax_modbus.presentation.server"
     base_classes: []
-    status: planned
+    status: implemented
   - name: "TelemetryRequestHandler"
     module: "solax_modbus.presentation.server"
     base_classes: ["BaseHTTPRequestHandler"]
-    status: planned
+    status: implemented
 
 functions:
   # ── solax_modbus.main :: SolaxInverterClient ─────────────────
@@ -417,29 +417,29 @@ functions:
     module: "solax_modbus.presentation.server"
     class: "StateHolder"
     signature: "get(self) -> Dict[str, Any]"
-    status: planned
+    status: implemented
   - name: "set"
     module: "solax_modbus.presentation.server"
     class: "StateHolder"
     signature: "set(self, data: Dict[str, Any]) -> None"
-    status: planned
+    status: implemented
   # ── solax_modbus.presentation.server :: TelemetryServer ──────
   - name: "start"
     module: "solax_modbus.presentation.server"
     class: "TelemetryServer"
     signature: "start(self) -> None"
-    status: planned
+    status: implemented
   - name: "stop"
     module: "solax_modbus.presentation.server"
     class: "TelemetryServer"
     signature: "stop(self) -> None"
-    status: planned
+    status: implemented
   # ── solax_modbus.presentation.server :: TelemetryRequestHandler ──
   - name: "do_GET"
     module: "solax_modbus.presentation.server"
     class: "TelemetryRequestHandler"
     signature: "do_GET(self) -> None"
-    status: planned
+    status: implemented
 
 constants:
   # ── solax_modbus (__init__.py) ────────────────────────────────
@@ -536,11 +536,11 @@ constants:
   - name: "DEFAULT_ALLOWED_NETWORKS"
     module: "solax_modbus.presentation.server"
     type: "list"
-    status: planned
+    status: implemented
   - name: "DEFAULT_HTTP_PORT"
     module: "solax_modbus.presentation.server"
     type: "int"
-    status: planned
+    status: implemented
 ```
 
 [Return to Table of Contents](<#table-of-contents>)
@@ -579,6 +579,7 @@ constants:
 | 1.1 | 2026-06-26 | Registered TelemetryServer, TelemetryRequestHandler, StateHolder (module solax_modbus.presentation.server) and constant DEFAULT_ALLOWED_NETWORKS for the HTTP telemetry server. Marked HTMLRenderer and module solax_modbus.presentation.html superseded. Added design-9b7e2c4a cross-reference and superseded status legend. |
 | 1.2 | 2026-07-03 | Renamed module `solax_modbus.emulator.solax_emulator` to `solax_emulator` throughout (classes, functions, constants): source relocated to src/tools/emulator/solax_emulator.py, outside the solax_modbus package (see design-c2b3c4d5 1.5). Module entry `package` field set to null. |
 | 1.3 | 2026-07-07 | Registered constant `DEFAULT_HTTP_PORT` (module solax_modbus.presentation.server) for the serve-by-default / port-8181 change. See change-a7c3e9d2. |
+| 1.4 | 2026-07-07 | Corrected stale `planned` status to `implemented` for the presentation.server module, its 3 classes, 5 methods, and 2 constants (feature confirmed present in source, see change-c4d8e1f6 / change-a7c3e9d2). Moved the corresponding classes to the Implemented section of the class diagram. |
 
 ---
 
