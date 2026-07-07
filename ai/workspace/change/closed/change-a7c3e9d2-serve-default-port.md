@@ -7,7 +7,7 @@ change_info:
   title: "Web UI Serve-by-Default and Port Default 8181"
   date: "2026-07-07"
   author: "William Watson"
-  status: "approved"
+  status: "implemented"
   priority: "low"
   iteration: 1
   coupled_docs:
@@ -172,11 +172,11 @@ implementation:
     protocol) to match.
 
 verification:
-  implemented_date: ""
-  implemented_by: ""
-  verification_date: ""
-  verified_by: ""
-  test_results: ""
+  implemented_date: "2026-07-07"
+  implemented_by: "Claude Code"
+  verification_date: "2026-07-07"
+  verified_by: "William Watson"
+  test_results: "pytest: 24 passed, 0 failed"
   issues_found: []
 
 traceability:
@@ -213,6 +213,11 @@ version_history:
     author: "William Watson"
     changes:
       - "Initial change document"
+  - version: "1.1"
+    date: "2026-07-07"
+    author: "William Watson"
+    changes:
+      - "Status implemented; verified via pytest (24 passed); closed"
 
 metadata:
   copyright: "Copyright (c) 2025 William Watson. This work is licensed under the MIT License."

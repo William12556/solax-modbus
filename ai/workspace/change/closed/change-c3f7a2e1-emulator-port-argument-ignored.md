@@ -123,9 +123,9 @@ implementation:
 verification:
   implemented_date: "2026-03-18"
   implemented_by: "Strategic Domain"
-  verification_date: ""
-  verified_by: ""
-  test_results: "Pending manual verification"
+  verification_date: "2026-07-07"
+  verified_by: "William Watson"
+  test_results: "Source-verified 2026-07-07 (argparse/run_emulator parameterisation present, relocated path). No live execution witnessed this session."
   issues_found: []
 
 traceability:
@@ -153,6 +153,11 @@ version_history:
     changes:
       - "Status updated to implemented"
       - "verification.implemented_date populated"
+  - version: "1.2"
+    date: "2026-07-07"
+    author: "William Watson"
+    changes:
+      - "Source-verified against relocated file src/tools/emulator/solax_emulator.py; closed"
 
 metadata:
   copyright: "Copyright (c) 2025 William Watson. This work is licensed under the MIT License."

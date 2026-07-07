@@ -7,7 +7,7 @@ issue_info:
   title: "Emulator --port argument silently ignored"
   date: "2026-03-18"
   reporter: "William Watson"
-  status: "open"
+  status: "resolved"
   severity: "high"
   type: "bug"
   iteration: 1
@@ -80,16 +80,21 @@ resolution:
   assigned_to: "William Watson"
   target_date: ""
   approach: "Add argparse to __main__ entry point; thread args through run_emulator()"
-  change_ref: ""
-  resolved_date: ""
-  resolved_by: ""
-  fix_description: ""
+  change_ref: "change-c3f7a2e1"
+  resolved_date: "2026-07-07"
+  resolved_by: "William Watson"
+  fix_description: >
+    Confirmed present in src/tools/emulator/solax_emulator.py (relocated from
+    src/solax_modbus/emulator/, see change-d7f4a9c2): __main__ contains
+    argparse; run_emulator(host, port, unit_id) is parameterised. Source-
+    verified 2026-07-07; live functional execution not independently
+    witnessed in this session.
 
 verification:
-  verified_date: ""
-  verified_by: ""
-  test_results: ""
-  closure_notes: ""
+  verified_date: "2026-07-07"
+  verified_by: "William Watson"
+  test_results: "Source-verified against change-c3f7a2e1 specification; no live execution witnessed this session."
+  closure_notes: "Closed on source-inspection evidence. Recommend a live functional pass (--port 5020) if independent confirmation is required."
 
 prevention:
   preventive_measures: "Test CLI argument handling as part of emulator unit tests."
@@ -105,7 +110,8 @@ verification_enhanced:
 traceability:
   design_refs:
     - "ai/workspace/design/design-c2b3c4d5-component_protocol_emulator.md"
-  change_refs: []
+  change_refs:
+    - "change-c3f7a2e1"
   test_refs: []
 
 notes: "Discovered during T2 testing of change-b4e7f1a9 (macOS platform support)"
@@ -122,6 +128,11 @@ version_history:
     author: "William Watson"
     changes:
       - "Initial issue document"
+  - version: "1.1"
+    date: "2026-07-07"
+    author: "William Watson"
+    changes:
+      - "Status resolved (source-verified); closed"
 
 metadata:
   copyright: "Copyright (c) 2025 William Watson. This work is licensed under the MIT License."

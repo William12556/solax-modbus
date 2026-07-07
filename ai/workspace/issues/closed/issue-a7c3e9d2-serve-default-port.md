@@ -7,7 +7,7 @@ issue_info:
   title: "Web UI Serve-by-Default and Port Default 8181"
   date: "2026-07-07"
   reporter: "William Watson"
-  status: "open"
+  status: "resolved"
   severity: "low"
   type: "enhancement"
   iteration: 1
@@ -92,15 +92,19 @@ resolution:
     set_defaults serve=True). Update the epilog examples and the affected
     tests. Update design-9b7e2c4a, design-bf6d4e5f, and the name registry.
   change_ref: "change-a7c3e9d2"
-  resolved_date: ""
-  resolved_by: ""
-  fix_description: ""
+  resolved_date: "2026-07-07"
+  resolved_by: "William Watson"
+  fix_description: >
+    DEFAULT_HTTP_PORT constant (8181) added in server.py; --serve replaced by
+    --no-serve (store_false, dest=serve, default serve=True) in main.py;
+    --http-port default references the constant. Confirmed present in source
+    2026-07-07.
 
 verification:
-  verified_date: ""
-  verified_by: ""
-  test_results: ""
-  closure_notes: ""
+  verified_date: "2026-07-07"
+  verified_by: "William Watson"
+  test_results: "pytest: 24 passed, 0 failed (2026-07-07)"
+  closure_notes: "Source-verified against change-a7c3e9d2; full test suite green."
 
 prevention:
   preventive_measures: "Declare shared defaults once as a named constant."
@@ -112,7 +116,7 @@ verification_enhanced:
     - "solax-monitor <ip> --no-serve runs the poll loop and binds no port"
     - "solax-monitor <ip> --http-port 9000 serves on 9000"
     - "pytest passes with the inverted serve contract"
-  verification_results: ""
+  verification_results: "All steps confirmed by source inspection and pytest (24 passed)."
 
 traceability:
   design_refs:
@@ -140,6 +144,11 @@ version_history:
     author: "William Watson"
     changes:
       - "Initial issue document"
+  - version: "1.1"
+    date: "2026-07-07"
+    author: "William Watson"
+    changes:
+      - "Status resolved; pytest 24 passed; closed"
 
 metadata:
   copyright: "Copyright (c) 2025 William Watson. This work is licensed under the MIT License."

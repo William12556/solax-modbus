@@ -7,7 +7,7 @@ issue_info:
   title: "Automatic Systemd Service Registration"
   date: "2026-07-02"
   reporter: "William Watson"
-  status: "open"
+  status: "resolved"
   severity: "medium"
   type: "requirement_change"
   iteration: 1
@@ -80,15 +80,18 @@ resolution:
     --interval/--serve/--http-port/--allow flags on install.sh; systemd unit
     generated and enabled when --ip is supplied.
   change_ref: "change-f2a8c471"
-  resolved_date: ""
-  resolved_by: ""
-  fix_description: ""
+  resolved_date: "2026-07-07"
+  resolved_by: "William Watson"
+  fix_description: >
+    Confirmed present in bin/install.sh: --ip flag parsing, ExecStart
+    construction, systemctl enable --now. Unit User directive superseded
+    from root to monitor by change-d6b1f38a (least-privilege deployment).
 
 verification:
-  verified_date: ""
-  verified_by: ""
-  test_results: ""
-  closure_notes: ""
+  verified_date: "2026-07-07"
+  verified_by: "William Watson"
+  test_results: "Source-verified: bin/install.sh contains --ip parsing, unit generation, systemctl enable --now."
+  closure_notes: "User=root superseded by User=monitor (change-d6b1f38a); flag parsing and unit generation otherwise as specified."
 
 prevention:
   preventive_measures: "None specific; standard scope-definition practice applies."
@@ -100,12 +103,15 @@ verification_enhanced:
     - "Run systemctl status solax-monitor; confirm active and correct ExecStart"
     - "Reboot host; confirm service starts after network is online"
     - "Run install.sh without --ip; confirm behavior unchanged from prior release"
-  verification_results: ""
+  verification_results: "Confirmed by direct source inspection of bin/install.sh, 2026-07-07."
 
 traceability:
   design_refs: []
   change_refs:
     - "change-f2a8c471"
+  related_changes:
+    - change_ref: "change-d6b1f38a"
+      relationship: "supersedes the User=root unit directive with User=monitor"
   test_refs: []
 
 notes: "Raised during review of issue-b4e7f1a9 (macOS support, rejected). This concern is independent."
@@ -122,6 +128,11 @@ version_history:
     author: "William Watson"
     changes:
       - "Initial issue document"
+  - version: "1.1"
+    date: "2026-07-07"
+    author: "William Watson"
+    changes:
+      - "Status resolved; source-verified against bin/install.sh; noted User=root superseded by User=monitor (change-d6b1f38a); closed"
 
 metadata:
   copyright: "Copyright (c) 2025 William Watson. This work is licensed under the MIT License."

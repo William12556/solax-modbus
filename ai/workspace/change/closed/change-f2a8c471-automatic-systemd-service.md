@@ -7,7 +7,7 @@ change_info:
   title: "Automatic Systemd Service Registration"
   date: "2026-07-02"
   author: "William Watson"
-  status: "approved"
+  status: "implemented"
   priority: "medium"
   iteration: 1
   coupled_docs:
@@ -149,11 +149,11 @@ implementation:
   deployment_notes: "No impact on existing installations that do not use --ip."
 
 verification:
-  implemented_date: ""
-  implemented_by: ""
-  verification_date: ""
-  verified_by: ""
-  test_results: ""
+  implemented_date: "2026-07-07"
+  implemented_by: "Claude Code"
+  verification_date: "2026-07-07"
+  verified_by: "William Watson"
+  test_results: "Source-verified: bin/install.sh contains --ip parsing, unit generation, systemctl enable --now."
   issues_found: []
 
 traceability:
@@ -161,6 +161,8 @@ traceability:
   related_changes:
     - change_ref: "change-b4e7f1a9"
       relationship: "related, raised during same review; unrelated concern"
+    - change_ref: "change-d6b1f38a"
+      relationship: "supersedes the User=root unit directive with User=monitor"
   related_issues:
     - issue_ref: "issue-f2a8c471"
       relationship: "source"
@@ -173,6 +175,11 @@ version_history:
     author: "William Watson"
     changes:
       - "Initial change document"
+  - version: "1.1"
+    date: "2026-07-07"
+    author: "William Watson"
+    changes:
+      - "Status implemented; source-verified against bin/install.sh; noted supersession by change-d6b1f38a; closed"
 
 metadata:
   copyright: "Copyright (c) 2025 William Watson. This work is licensed under the MIT License."

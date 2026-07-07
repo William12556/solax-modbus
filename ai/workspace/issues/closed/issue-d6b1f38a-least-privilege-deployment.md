@@ -7,7 +7,7 @@ issue_info:
   title: "Least-Privilege Deployment and Install Reliability"
   date: "2026-07-05"
   reporter: "William Watson"
-  status: "open"
+  status: "resolved"
   severity: "high"
   type: "defect"
   iteration: 1
@@ -97,15 +97,19 @@ resolution:
     off /tmp (sidesteps Fault B); package-level teardown before install;
     explicit --uninstall mode; hardened systemd unit with User=monitor.
   change_ref: "change-d6b1f38a"
-  resolved_date: ""
-  resolved_by: ""
-  fix_description: ""
+  resolved_date: "2026-07-07"
+  resolved_by: "William Watson"
+  fix_description: >
+    Confirmed present in bin/install.sh: root check, monitor-account
+    creation, mktemp wheel download, stop+pip-uninstall teardown, a+rX
+    permissions, hardened User=monitor unit (nine directives), --uninstall
+    mode. main.py logging.basicConfig carries only StreamHandler.
 
 verification:
-  verified_date: ""
-  verified_by: ""
-  test_results: ""
-  closure_notes: ""
+  verified_date: "2026-07-07"
+  verified_by: "William Watson"
+  test_results: "Source-verified against change-d6b1f38a specification; no live Pi execution witnessed this session."
+  closure_notes: "Closed on source-inspection evidence. Live sudo ./install.sh / --uninstall pass on the Pi recommended if independent confirmation is required."
 
 prevention:
   preventive_measures: "Separate install-time privilege (root, bounded) from runtime privilege (least). Runtime user owns nothing and writes nothing."
@@ -143,6 +147,11 @@ version_history:
     author: "William Watson"
     changes:
       - "Initial issue document"
+  - version: "1.1"
+    date: "2026-07-07"
+    author: "William Watson"
+    changes:
+      - "Status resolved (source-verified); closed"
 
 metadata:
   copyright: "Copyright (c) 2025 William Watson. This work is licensed under the MIT License."

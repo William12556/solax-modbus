@@ -7,7 +7,7 @@ change_info:
   title: "Least-Privilege Deployment and Install Reliability"
   date: "2026-07-05"
   author: "William Watson"
-  status: "approved"
+  status: "implemented"
   priority: "high"
   iteration: 1
   coupled_docs:
@@ -207,11 +207,11 @@ implementation:
     non-protocol update: sudo ./install.sh, journalctl, and --uninstall.
 
 verification:
-  implemented_date: ""
-  implemented_by: ""
-  verification_date: ""
-  verified_by: ""
-  test_results: ""
+  implemented_date: "2026-07-07"
+  implemented_by: "Claude Code"
+  verification_date: "2026-07-07"
+  verified_by: "William Watson"
+  test_results: "Source-verified against change-d6b1f38a specification; no live Pi execution witnessed this session."
   issues_found: []
 
 traceability:
@@ -237,6 +237,11 @@ version_history:
     author: "William Watson"
     changes:
       - "Initial change document"
+  - version: "1.1"
+    date: "2026-07-07"
+    author: "William Watson"
+    changes:
+      - "Status implemented (source-verified); closed"
 
 metadata:
   copyright: "Copyright (c) 2025 William Watson. This work is licensed under the MIT License."
