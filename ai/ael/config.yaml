@@ -39,12 +39,11 @@ loop:
   state_dir: "ai/state/ralph"
 
 # Context budget
-# context_window: null resolves from model config.json on disk.
-# Set explicitly to override (e.g. when model is remote and not stored locally).
-# F18: model_context_windows allows per-model overrides (absent falls back to detected value).
+# context_window: null attempts a live query to the oMLX admin API, then falls
+# back to model_context_windows per-model overrides.
+# Set explicitly to override all tiers (e.g. when model is remote and admin API unavailable).
 context:
-  models_dir: "/Users/williamwatson/ai-models"
-  context_window: null      # tokens; null = read from model config.json
+  context_window: null      # tokens; null = try live oMLX query, then per-model override
   budget_warn_pct: 0.80     # print warning at this fraction of context window
   budget_abort_pct: 0.95    # abort phase at this fraction
   # Per-model context window overrides (optional)
