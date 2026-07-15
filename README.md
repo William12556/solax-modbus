@@ -102,10 +102,10 @@ solax-monitor <INVERTER-IP> --no-serve
 
 **Optional flags:**
 
-| Flag | Purpose | Default |
-|---|---|---|
-| `--http-port <N>` | HTTP server port | 8181 |
-| `--allow <CIDR>` | Restrict access to a network (repeatable) | RFC 1918 private ranges + link-local |
+| Flag              | Purpose                                   | Default                              |
+| ----------------- | ----------------------------------------- | ------------------------------------ |
+| `--http-port <N>` | HTTP server port                          | 8181                                 |
+| `--allow <CIDR>`  | Restrict access to a network (repeatable) | RFC 1918 private ranges + link-local |
 
 **Access:**
 
