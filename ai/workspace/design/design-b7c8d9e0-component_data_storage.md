@@ -11,80 +11,85 @@ Created: 2025 December 30
 
 ## Table of Contents
 
-- [Component Information](<#component information>)
-- [Purpose](<#purpose>)
-- [Implementation](<#implementation>)
-- [Class Design](<#class design>)
-- [Database Schema](<#database schema>)
-- [Retention Policies](<#retention policies>)
-- [Interfaces](<#interfaces>)
-- [Error Handling](<#error handling>)
-- [Design Element Cross-References](<#design element cross-references>)
+- [1.0 Component Information](<#1.0 component information>)
+- [2.0 Purpose](<#2.0 purpose>)
+- [3.0 Implementation](<#3.0 implementation>)
+- [4.0 Class Design](<#4.0 class design>)
+- [5.0 Database Schema](<#5.0 database schema>)
+- [6.0 Retention and Rollup](<#6.0 retention and rollup>)
+- [7.0 Write-Path Validation](<#7.0 write-path validation>)
+- [8.0 Interfaces](<#8.0 interfaces>)
+- [9.0 Error Handling](<#9.0 error handling>)
+- [10.0 Design Element Cross-References](<#10.0 design element cross-references>)
 - [Version History](<#version history>)
 
 ---
 
-## Component Information
+## 1.0 Component Information
 
 ```yaml
 component_info:
   name: "TimeSeriesStore"
   domain: "Data"
-  version: "1.0"
-  date: "2025-12-30"
+  version: "2.0"
+  date: "2026-07-16"
   status: "Planned"
-  source_file: "src/data/storage.py"
+  source_file: "src/solax_modbus/data/storage.py"
 ```
 
 [Return to Table of Contents](<#table of contents>)
 
 ---
 
-## Purpose
+## 2.0 Purpose
 
-Interface to InfluxDB for time-series data persistence. Provides write, query, and retention management operations.
+Local SQLite store for telemetry history. Records raw samples and a downsampled
+rollup, prunes both by age, and serves history for trend visualisation. Uses the
+Python standard library `sqlite3`; no external database or network dependency.
 
-### Responsibilities
+### 2.1 Responsibilities
 
 | Responsibility | Description |
 |----------------|-------------|
-| Data persistence | Write measurements to InfluxDB |
-| Query interface | Retrieve historical data |
-| Retention management | Configure and enforce data retention |
-| Connection management | Handle database connectivity |
+| Persistence | Write telemetry samples to a raw table |
+| Downsampling | Aggregate raw samples into rollup buckets (avg, min, max) |
+| Retention | Prune raw and rollup rows past their age windows |
+| Query | Return rollup series for the primary metrics |
+| Write-path validation | Reject out-of-range values before insert |
 
-### Design Principles
+### 2.2 Design Principles
 
 | Principle | Implementation |
 |-----------|----------------|
-| Abstraction | Hide InfluxDB specifics from callers |
-| Resilience | Handle transient connection failures |
-| Efficiency | Batch writes when possible |
+| Standard library only | `sqlite3`; no external dependency |
+| Local file | Single database file on the deployment host |
+| Non-blocking | Writes must not stall the polling loop |
+| Bounded size | Age-based pruning keeps the file small |
 
 [Return to Table of Contents](<#table of contents>)
 
 ---
 
-## Implementation
+## 3.0 Implementation
 
-### File Location
+### 3.1 File Location
 
 ```
-src/data/storage.py (planned)
+src/solax_modbus/data/storage.py (planned)
 ```
 
-### Dependencies
+### 3.2 Dependencies
 
 ```yaml
 dependencies:
-  external:
-    - "influxdb_client"
-    - "influxdb_client.client.write_api"
+  external: []
   internal:
-    - "data.models.Measurement"
+    - "Telemetry dict from poll_inverter() (Protocol domain)"
   standard_library:
+    - "sqlite3"
+    - "time"
     - "logging"
-    - "datetime"
+    - "threading"
     - "typing"
 ```
 
@@ -92,60 +97,41 @@ dependencies:
 
 ---
 
-## Class Design
+## 4.0 Class Design
 
-### Class Diagram
+### 4.1 Class Diagram
 
 ```mermaid
 classDiagram
     class TimeSeriesStore {
-        +str url
-        +str token
-        +str org
-        +str bucket
-        +InfluxDBClient client
-        +WriteApi write_api
-        +QueryApi query_api
-        +__init__(url, token, org, bucket)
-        +connect() bool
-        +disconnect() void
-        +write_measurement(data: Dict) bool
-        +write_batch(measurements: List) int
-        +query(start, end, fields) DataFrame
-        +get_latest(inverter_id: str) Dict
-        +is_connected() bool
+        +str db_path
+        +Connection conn
+        +Lock lock
+        +__init__(db_path)
+        +init_schema() None
+        +write_sample(data: dict) bool
+        +rollup() int
+        +prune() int
+        +query_history(metric, window) list
+        +close() None
+        -_validate(data: dict) dict
     }
-    
-    class ConnectionConfig {
-        +str url
-        +str token
-        +str org
-        +str bucket
-        +int timeout
-        +bool verify_ssl
-    }
-    
-    TimeSeriesStore --> ConnectionConfig
 ```
 
-### Constructor
+### 4.2 Constructor
 
 ```python
-def __init__(
-    self,
-    url: str = "http://localhost:8086",
-    token: str = None,
-    org: str = "solax",
-    bucket: str = "solar_monitoring"
-):
+def __init__(self, db_path: str = "solax_history.db"):
     """
-    Initialize InfluxDB connection.
-    
+    Open (or create) the SQLite store at db_path.
+
     Args:
-        url: InfluxDB server URL
-        token: Authentication token
-        org: Organization name
-        bucket: Default bucket for writes
+        db_path: Path to the SQLite database file.
+
+    Notes:
+        Opens with check_same_thread=False and guards access with a lock,
+        since the poll loop writes and HTTP handlers read. WAL journal mode
+        is enabled for concurrent read during write.
     """
 ```
 
@@ -153,271 +139,245 @@ def __init__(
 
 ---
 
-## Database Schema
+## 5.0 Database Schema
 
-### Measurement: inverter_telemetry
+Two tables. `raw` holds recent full-resolution samples; `rollup` holds
+downsampled aggregates. Timestamps are integer epoch seconds.
 
-```
-measurement: inverter_telemetry
+```sql
+CREATE TABLE IF NOT EXISTS raw (
+    ts            INTEGER NOT NULL,   -- epoch seconds
+    pv_power      INTEGER,            -- total solar production (W)
+    battery_soc   INTEGER,            -- state of charge (%)
+    battery_power INTEGER,            -- signed: + charging, - discharging (W)
+    house_load    INTEGER             -- AC output to house loads (W)
+);
+CREATE INDEX IF NOT EXISTS idx_raw_ts ON raw(ts);
 
-tags:
-  - inverter_id: string    # Unique inverter identifier
-  - location: string       # Physical location label
-
-fields:
-  # Grid metrics
-  - grid_voltage_r: float
-  - grid_voltage_s: float
-  - grid_voltage_t: float
-  - grid_current_r: float
-  - grid_current_s: float
-  - grid_current_t: float
-  - grid_power_r: integer
-  - grid_power_s: integer
-  - grid_power_t: integer
-  - grid_frequency: float
-  
-  # PV metrics
-  - pv1_voltage: float
-  - pv1_current: float
-  - pv1_power: integer
-  - pv2_voltage: float
-  - pv2_current: float
-  - pv2_power: integer
-  - pv_total_power: integer
-  
-  # Battery metrics
-  - battery_voltage: float
-  - battery_current: float
-  - battery_power: integer
-  - battery_soc: integer
-  - battery_temperature: integer
-  
-  # System metrics
-  - feed_in_power: integer
-  - inverter_temperature: integer
-  - run_mode: integer
-  
-  # Energy totals
-  - energy_today: float
-  - energy_total: float
-
-timestamp: nanosecond precision
+CREATE TABLE IF NOT EXISTS rollup (
+    bucket_ts  INTEGER NOT NULL,      -- epoch seconds, 15-min bucket start
+    metric     TEXT    NOT NULL,      -- 'pv_power' | 'battery_soc' | 'battery_power' | 'house_load'
+    avg        REAL,
+    min        REAL,
+    max        REAL,
+    PRIMARY KEY (bucket_ts, metric)
+);
+CREATE INDEX IF NOT EXISTS idx_rollup_ts ON rollup(bucket_ts);
 ```
 
-### Data Point Format
+### 5.1 Metric Mapping
+
+| Metric | Source field(s) in telemetry dict |
+|--------|------------------------------------|
+| `pv_power` | `pv1_power` + `pv2_power` |
+| `battery_soc` | `battery_soc` |
+| `battery_power` | `battery_power` (signed) |
+| `house_load` | derived from grid-phase power fields (relabelled at display; stored as house load) |
+
+House load is the AC output. Field names in `/api/telemetry` are unchanged;
+the relabelling is a presentation concern (see the dashboard). The store
+records the value under `house_load` for clarity of history.
+
+[Return to Table of Contents](<#table of contents>)
+
+---
+
+## 6.0 Retention and Rollup
+
+| Table | Resolution | Window | Aggregation |
+|-------|------------|--------|-------------|
+| raw | 1 minute | 24 hours | none (samples) |
+| rollup | 15 minutes | 30 days | avg, min, max per metric |
+
+### 6.1 Rollup Procedure
+
+`rollup()` aggregates raw samples into 15-minute buckets per metric and upserts
+into `rollup`. Bucket start is `ts - (ts % 900)`. Aggregation is deterministic
+SQL:
+
+```sql
+INSERT INTO rollup (bucket_ts, metric, avg, min, max)
+SELECT (ts - (ts % 900)) AS bucket_ts,
+       'pv_power', AVG(pv_power), MIN(pv_power), MAX(pv_power)
+FROM raw
+WHERE ts >= :since
+GROUP BY bucket_ts
+ON CONFLICT(bucket_ts, metric) DO UPDATE SET
+    avg = excluded.avg, min = excluded.min, max = excluded.max;
+```
+
+Repeated per metric. Invoked on an interval by the Application domain (for
+example every 15 minutes), or opportunistically after writes.
+
+### 6.2 Pruning
+
+`prune()` deletes rows past the windows:
+
+```sql
+DELETE FROM raw    WHERE ts        < :now - 86400;      -- 24 hours
+DELETE FROM rollup WHERE bucket_ts < :now - 2592000;    -- 30 days
+```
+
+### 6.3 Storage Estimate
+
+| Table | Row rate | Rows retained | Approx size |
+|-------|----------|---------------|-------------|
+| raw | 1/min | ~1,440 | small (tens of KB) |
+| rollup | 4/hr x 4 metrics | ~11,520 | small (hundreds of KB) |
+
+The steady-state file is bounded well under 1 GB (NFR-008).
+
+[Return to Table of Contents](<#table of contents>)
+
+---
+
+## 7.0 Write-Path Validation
+
+Minimal range validation is folded into `write_sample()` via `_validate()`.
+It replaces the retired standalone DataValidator (quality scoring and
+stuck-sensor detection are not carried forward).
+
+| Field | Min | Max | Action on breach |
+|-------|-----|-----|------------------|
+| pv_power | 0 | 15000 | log warning, drop field (store NULL) |
+| battery_soc | 0 | 100 | log warning, drop field |
+| battery_power | -15000 | 15000 | log warning, drop field |
+| house_load | -15000 | 15000 | log warning, drop field |
+
+Out-of-range fields are set NULL rather than discarding the whole sample.
+
+[Return to Table of Contents](<#table of contents>)
+
+---
+
+## 8.0 Interfaces
+
+### 8.1 Public Methods
+
+#### init_schema()
 
 ```python
-{
-    "measurement": "inverter_telemetry",
-    "tags": {
-        "inverter_id": "inv001",
-        "location": "home"
-    },
-    "fields": {
-        "pv_total_power": 3274,
-        "battery_soc": 75,
-        # ... other fields
-    },
-    "time": "2025-12-30T14:30:45.123456789Z"
-}
+def init_schema(self) -> None:
+    """Create tables and indexes if absent. Idempotent."""
+```
+
+#### write_sample()
+
+```python
+def write_sample(self, data: Dict[str, Any]) -> bool:
+    """
+    Validate and insert one telemetry sample into the raw table.
+
+    Args:
+        data: Telemetry dictionary from poll_inverter().
+
+    Returns:
+        True if a row was inserted, False on error.
+    """
+```
+
+#### rollup()
+
+```python
+def rollup(self) -> int:
+    """
+    Aggregate recent raw samples into 15-minute rollup buckets.
+
+    Returns:
+        Number of buckets written or updated.
+    """
+```
+
+#### prune()
+
+```python
+def prune(self) -> int:
+    """
+    Delete raw rows older than 24h and rollup rows older than 30d.
+
+    Returns:
+        Number of rows deleted.
+    """
+```
+
+#### query_history()
+
+```python
+def query_history(
+    self,
+    metric: str,
+    window_seconds: int
+) -> List[Dict[str, Any]]:
+    """
+    Return rollup series for one metric over a trailing window.
+
+    Args:
+        metric: One of pv_power, battery_soc, battery_power, house_load.
+        window_seconds: Trailing window (e.g. 30 days).
+
+    Returns:
+        List of {bucket_ts, avg, min, max} in chronological order.
+    """
+```
+
+#### close()
+
+```python
+def close(self) -> None:
+    """Flush and close the SQLite connection. Idempotent."""
 ```
 
 [Return to Table of Contents](<#table of contents>)
 
 ---
 
-## Retention Policies
-
-### Policy Configuration
-
-| Policy | Resolution | Duration | Purpose |
-|--------|------------|----------|---------|
-| raw | 1 second | 30 days | Full resolution data |
-| aggregated_1m | 1 minute | 1 year | Medium-term analysis |
-| aggregated_1h | 1 hour | 10 years | Long-term trends |
-
-### Downsampling Tasks
-
-```flux
-// 1-minute aggregation task
-option task = {name: "downsample_1m", every: 1m}
-
-from(bucket: "solar_monitoring")
-  |> range(start: -2m)
-  |> aggregateWindow(every: 1m, fn: mean)
-  |> to(bucket: "solar_monitoring_1m")
-```
-
-### Storage Estimates
-
-| Policy | Data Rate | 30-Day Size | 1-Year Size |
-|--------|-----------|-------------|-------------|
-| raw | ~500 bytes/s | ~1.3 GB | N/A |
-| 1m aggregate | ~500 bytes/min | ~22 MB | ~260 MB |
-| 1h aggregate | ~500 bytes/hr | ~360 KB | ~4.3 MB |
-
-[Return to Table of Contents](<#table of contents>)
-
----
-
-## Interfaces
-
-### Public Methods
-
-#### connect()
-
-```python
-def connect(self) -> bool:
-    """
-    Establish connection to InfluxDB.
-    
-    Returns:
-        True if connection successful.
-    """
-```
-
-#### disconnect()
-
-```python
-def disconnect(self) -> None:
-    """
-    Close InfluxDB connection and flush pending writes.
-    """
-```
-
-#### write_measurement()
-
-```python
-def write_measurement(
-    self,
-    data: Dict[str, Any],
-    inverter_id: str = "default"
-) -> bool:
-    """
-    Write single measurement to database.
-    
-    Args:
-        data: Telemetry dictionary from poll_inverter()
-        inverter_id: Inverter identifier tag
-        
-    Returns:
-        True if write successful.
-    """
-```
-
-#### write_batch()
-
-```python
-def write_batch(
-    self,
-    measurements: List[Dict[str, Any]]
-) -> int:
-    """
-    Write multiple measurements in single operation.
-    
-    Args:
-        measurements: List of telemetry dictionaries
-        
-    Returns:
-        Number of measurements successfully written.
-    """
-```
-
-#### query()
-
-```python
-def query(
-    self,
-    start: datetime,
-    end: datetime,
-    fields: List[str] = None,
-    inverter_id: str = None
-) -> pd.DataFrame:
-    """
-    Query historical data.
-    
-    Args:
-        start: Query start time
-        end: Query end time
-        fields: List of fields to retrieve (None = all)
-        inverter_id: Filter by inverter (None = all)
-        
-    Returns:
-        DataFrame with requested data.
-    """
-```
-
-#### get_latest()
-
-```python
-def get_latest(self, inverter_id: str) -> Optional[Dict]:
-    """
-    Get most recent measurement for inverter.
-    
-    Args:
-        inverter_id: Inverter identifier
-        
-    Returns:
-        Latest measurement dictionary or None.
-    """
-```
-
-[Return to Table of Contents](<#table of contents>)
-
----
-
-## Error Handling
-
-### Connection Errors
+## 9.0 Error Handling
 
 | Error | Handling |
 |-------|----------|
-| Connection refused | Log error, return False |
-| Authentication failure | Log error, raise exception |
-| Timeout | Retry once, then fail |
+| Database locked | Retry briefly; log on persistent failure; do not block poll loop |
+| Disk full / write error | Log error, return False, continue polling |
+| Out-of-range field | Log warning, store NULL for that field |
+| Corrupt database file | Log error; operator intervention (no auto-recreate) |
 
-### Write Errors
-
-| Error | Handling |
-|-------|----------|
-| Write failure | Buffer locally, retry later |
-| Invalid data | Log warning, skip record |
-| Bucket not found | Create bucket or fail |
-
-### Logging
+### 9.1 Logging
 
 ```python
-# Log levels
-# DEBUG: Query details, write confirmations
-# INFO: Connection events, batch summaries
-# WARNING: Retry attempts, skipped records
-# ERROR: Connection failures, write failures
+# DEBUG: write/rollup/prune row counts
+# INFO: schema init, periodic rollup summary
+# WARNING: out-of-range fields, transient lock retries
+# ERROR: write failures, corrupt database
 ```
 
 [Return to Table of Contents](<#table of contents>)
 
 ---
 
-## Design Element Cross-References
+## 10.0 Design Element Cross-References
 
-### Parent Documents
+### 10.1 Parent Documents
 
 - Domain: [design-9e4b2c3d-domain_data.md](<design-9e4b2c3d-domain_data.md>)
 - Master: [design-solax-modbus-master.md](<design-solax-modbus-master.md>)
 
-### Sibling Components (Data Domain)
+### 10.2 Sibling Components (Data Domain)
 
-| Component | Document |
-|-----------|----------|
-| DataValidator | [design-a6b7c8d9-component_data_validator.md](<design-a6b7c8d9-component_data_validator.md>) |
-| DataBuffer | [design-c8d9e0f1-component_data_buffer.md](<design-c8d9e0f1-component_data_buffer.md>) |
+| Component | Document | Status |
+|-----------|----------|--------|
+| DataValidator | [design-a6b7c8d9-component_data_validator.md](<design-a6b7c8d9-component_data_validator.md>) | Retired |
+| DataBuffer | [design-c8d9e0f1-component_data_buffer.md](<design-c8d9e0f1-component_data_buffer.md>) | Retired |
 
-### Source Code
+### 10.3 Related Documents
+
+- History endpoint: [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>) (Routes: /api/history)
+- Requirements: FR-010, FR-012, FR-019, NFR-008 in [requirements-solax-modbus-master.md](<../requirements/requirements-solax-modbus-master.md>)
+- Change: change-a2d5f7c9
+
+### 10.4 Source Code
 
 | Item | Location |
 |------|----------|
-| Module | src/data/storage.py (planned) |
+| Module | src/solax_modbus/data/storage.py (planned) |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -427,7 +387,8 @@ def get_latest(self, inverter_id: str) -> Optional[Dict]:
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0 | 2025-12-30 | Initial component design for planned storage |
+| 1.0 | 2025-12-30 | Initial component design for planned storage (InfluxDB). |
+| 2.0 | 2026-07-16 | Superseded in place: InfluxDB replaced by local SQLite store (change-a2d5f7c9). New raw + rollup schema (avg/min/max), retention raw 1-min/24h and rollup 15-min/30d, folded write-path validation replacing the retired DataValidator, and a query_history interface for the /api/history endpoint. Removed InfluxDB connection config, tags, nanosecond precision, Flux downsampling, and buffer coupling. Added section numbering. |
 
 ---
 

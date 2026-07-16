@@ -61,7 +61,8 @@ Render telemetry data for human consumption. Provides formatted output through c
 | Responsibility | Description |
 |----------------|-------------|
 | Console display | Format and print telemetry to terminal |
-| HTTP serving | Serve live telemetry over HTTP as JSON and static dashboard (planned) |
+| HTTP serving | Serve live telemetry over HTTP as JSON and static dashboard |
+| History serving | Serve downsampled rollup history as JSON for client-side sparklines (change-a2d5f7c9) |
 | Value formatting | Apply units, precision, directional indicators |
 | Section organization | Group related metrics logically |
 
@@ -121,7 +122,8 @@ flowchart LR
 | Console display | ✓ Implemented | Formatted terminal output |
 | Value formatting | ✓ Implemented | Units, precision, labels |
 | Section grouping | ✓ Implemented | Logical metric organization |
-| HTTP telemetry serving | ○ Planned | Live telemetry over HTTP (JSON + static dashboard) |
+| HTTP telemetry serving | ✓ Implemented | Live telemetry over HTTP (JSON + static dashboard) |
+| Historical telemetry serving | ○ Planned | /api/history rollup series for client-side sparklines (change-a2d5f7c9) |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -188,7 +190,7 @@ src/
 | Component | File | Status | Purpose |
 |-----------|------|--------|---------|
 | InverterDisplay | main.py | Implemented | Console output |
-| TelemetryServer | presentation/server.py | Planned | Live HTTP telemetry serving |
+| TelemetryServer | presentation/server.py | Implemented | Live HTTP telemetry serving; /api/history planned (change-a2d5f7c9) |
 | Formatters | presentation/formatters.py | Partial | Value formatting |
 
 ### InverterDisplay
@@ -259,7 +261,7 @@ INVERTER
 
 ---
 
-### TelemetryServer (Planned)
+### TelemetryServer (Implemented; /api/history Planned)
 
 **Tier 3 Document:** [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>)
 
@@ -267,9 +269,10 @@ INVERTER
 
 **Key Responsibilities:**
 - Serve current telemetry as JSON from shared state
-- Serve a static HTML dashboard that fetches the JSON endpoint
+- Serve downsampled rollup history as JSON via /api/history (planned, change-a2d5f7c9)
+- Serve a static HTML dashboard that fetches the JSON and history endpoints
 - Restrict access by source-IP allowlist (defense-in-depth)
-- Run as a background server thread with read-only access to inverter state
+- Run as a background server thread with read-only access to inverter state and the history store
 
 Routes, concurrency model, and security detail are specified in the Tier 3 component document.
 
@@ -371,7 +374,7 @@ logging:
 |-----------|----------|--------|
 | InverterDisplay | [design-d3c4d5e6-component_presentation_console.md](<design-d3c4d5e6-component_presentation_console.md>) | Active |
 | HTMLRenderer | [design-d9e0f1a2-component_presentation_html.md](<design-d9e0f1a2-component_presentation_html.md>) | Superseded |
-| TelemetryServer | [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>) | Planned |
+| TelemetryServer | [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>) | Active |
 
 ### Sibling Domain Documents
 
@@ -386,7 +389,7 @@ logging:
 | Component | File |
 |-----------|------|
 | InverterDisplay | src/solax_modbus/main.py |
-| TelemetryServer | src/solax_modbus/presentation/server.py (planned) |
+| TelemetryServer | src/solax_modbus/presentation/server.py |
 | Formatters | src/presentation/formatters.py (planned) |
 
 [Return to Table of Contents](<#table of contents>)
@@ -401,6 +404,7 @@ logging:
 | 1.1 | 2025-12-30 | Added Tier 3 component document reference |
 | 1.2 | 2025-12-30 | Added HTMLRenderer component document reference |
 | 1.3 | 2026-06-26 | Replaced static HTMLRenderer model with TelemetryServer (live HTTP serving). Updated purpose, boundaries, responsibilities, diagrams, technology stack (stdlib, dropped jinja2), component summary and interface. Marked HTMLRenderer (design-d9e0f1a2) Superseded; added TelemetryServer (design-9b7e2c4a). |
+| 1.4 | 2026-07-16 | Corrected stale TelemetryServer status Planned -> Implemented/Active (component design already Active at 1.3). Added history-serving responsibility and /api/history function (planned) for client-side sparklines (change-a2d5f7c9, FR-019). Updated source-code mapping (dropped (planned) on server.py). |
 
 ---
 

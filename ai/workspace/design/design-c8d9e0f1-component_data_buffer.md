@@ -5,7 +5,12 @@ Created: 2025 December 30
 **Document Type:** Tier 3 Component Design  
 **Document ID:** design-c8d9e0f1-component_data_buffer  
 **Parent:** [design-9e4b2c3d-domain_data.md](<design-9e4b2c3d-domain_data.md>)  
-**Status:** Planned  
+**Status:** Retired  
+
+> **Retired 2026-07-16 (change-a2d5f7c9).** DataBuffer addressed outage buffering
+> for a remote InfluxDB dependency. The persistence store is now a local SQLite
+> file (design-b7c8d9e0); network-outage buffering does not apply. FR-011 is
+> retired. This document is retained for history; content below is superseded.
 
 ---
 
@@ -29,10 +34,10 @@ Created: 2025 December 30
 component_info:
   name: "DataBuffer"
   domain: "Data"
-  version: "1.0"
-  date: "2025-12-30"
-  status: "Planned"
-  source_file: "src/data/buffer.py"
+  version: "1.1"
+  date: "2026-07-16"
+  status: "Retired"
+  source_file: "src/data/buffer.py (not implemented)"
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -371,6 +376,7 @@ def clear(self) -> None:
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-12-30 | Initial component design for planned buffer |
+| 1.1 | 2026-07-16 | Retired (change-a2d5f7c9). Outage buffering not applicable to a local SQLite store; FR-011 retired. Status Planned -> Retired. |
 
 ---
 

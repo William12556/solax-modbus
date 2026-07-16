@@ -174,10 +174,14 @@ flowchart TD
 technology_stack:
   language: "Python 3.9+"
   libraries:
-    - "influxdb-client 1.38.0+ (InfluxDB v2 API)"
+    - "sqlite3 (Python standard library)"
     - "dataclasses (data models)"
-  data_store: "InfluxDB 2.7+"
+  data_store: "Local SQLite file (raw + rollup tables)"
 ```
+
+> Change-a2d5f7c9 (2026-07-16): the Data domain persistence layer is a local
+> SQLite store. The prior InfluxDB model, DataValidator, and DataBuffer are
+> retired. See design-b7c8d9e0 for the SQLite store.
 
 ### Directory Structure
 
@@ -201,10 +205,10 @@ src/
 
 | Component | File | Status | Purpose |
 |-----------|------|--------|---------|
-| DataValidator | data/validator.py | Planned | Range validation |
-| TimeSeriesStore | data/storage.py | Planned | InfluxDB interface |
-| DataBuffer | data/buffer.py | Planned | Outage buffering |
-| Data Models | data/models.py | Planned | Data structures |
+| TimeSeriesStore | solax_modbus/data/storage.py | Planned | Local SQLite store (raw + rollup) with folded write-path validation |
+| Data Models | solax_modbus/data/models.py | Planned | Data structures |
+| DataValidator | data/validator.py | Retired | Superseded by folded write-path validation (change-a2d5f7c9) |
+| DataBuffer | data/buffer.py | Retired | Outage buffering not applicable to local SQLite (change-a2d5f7c9) |
 
 ### DataValidator
 
@@ -245,13 +249,12 @@ src/
 - Manage retention policies
 - Handle connection failures gracefully
 
-**Retention Policies:**
+**Retention (SQLite; change-a2d5f7c9):**
 
-| Policy | Resolution | Duration |
-|--------|------------|----------|
-| raw | 1 second | 30 days |
-| aggregated_1m | 1 minute | 1 year |
-| aggregated_1h | 1 hour | 10 years |
+| Table | Resolution | Window | Aggregation |
+|-------|------------|--------|-------------|
+| raw | 1 minute | 24 hours | none |
+| rollup | 15 minutes | 30 days | avg, min, max per metric |
 
 **Database Schema:**
 
@@ -521,9 +524,9 @@ logging:
 
 | Component | Document | Status |
 |-----------|----------|--------|
-| DataValidator | [design-a6b7c8d9-component_data_validator.md](<design-a6b7c8d9-component_data_validator.md>) | Active |
-| TimeSeriesStore | [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>) | Active |
-| DataBuffer | [design-c8d9e0f1-component_data_buffer.md](<design-c8d9e0f1-component_data_buffer.md>) | Active |
+| TimeSeriesStore | [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>) | Planned (SQLite) |
+| DataValidator | [design-a6b7c8d9-component_data_validator.md](<design-a6b7c8d9-component_data_validator.md>) | Retired |
+| DataBuffer | [design-c8d9e0f1-component_data_buffer.md](<design-c8d9e0f1-component_data_buffer.md>) | Retired |
 
 ### Sibling Domain Documents
 
@@ -552,6 +555,7 @@ logging:
 |---------|------|---------|
 | 1.0 | 2025-12-30 | Initial domain design |
 | 1.1 | 2025-12-30 | Added Tier 3 component document references |
+| 1.2 | 2026-07-16 | Off-grid SQLite history (change-a2d5f7c9). Technology stack InfluxDB -> local SQLite (sqlite3). Retention restated (raw 1-min/24h, rollup 15-min/30d, avg/min/max). DataValidator and DataBuffer retired; TimeSeriesStore retargeted to SQLite. Component tables and Tier 3 references updated. |
 
 ---
 

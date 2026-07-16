@@ -26,6 +26,7 @@ Canonical name registry for the `solax-modbus` project. Authoritative reference 
 - `implemented` — element exists in source code
 - `planned` — element defined in design, not yet implemented
 - `superseded` — element replaced by a newer design; retained for history
+- `retired` — element withdrawn from the design; not to be implemented (retained for history)
 
 [Return to Table of Contents](<#table-of-contents>)
 
@@ -110,29 +111,17 @@ classDiagram
         +str inverter_id
     }
 
-    class ValidationResult {
-        <<dataclass>>
-        +bool is_valid
-        +list anomalies
-        +float quality_score
-    }
-
-    class DataValidator {
-        +validate_metrics(data) ValidationResult
-        +check_range(value, min_val, max_val, field_name) str
-    }
-
     class TimeSeriesStore {
-        +write_measurement(measurement) bool
-        +write_batch(measurements) int
-        +query(start, end, inverter_id, fields) list
+        +init_schema() None
+        +write_sample(data) bool
+        +rollup() int
+        +prune() int
+        +query_history(metric, window) list
     }
 
-    class DataBuffer {
-        +enqueue(measurement) None
-        +flush() int
-        +size() int
-    }
+    %% ── Retired (change-a2d5f7c9) ─────────────────────────────
+    %% DataValidator, DataBuffer, ValidationResult retired;
+    %% validation folded into TimeSeriesStore (SQLite). See registry 3.0.
 
     class AlertManager {
         +evaluate_conditions(measurement) list
@@ -150,10 +139,7 @@ classDiagram
         +render(data, output_path) bool
     }
 
-    DataValidator --> ValidationResult
-    DataValidator --> Measurement
     TimeSeriesStore --> Measurement
-    TimeSeriesStore --> DataBuffer
     AlertManager --> NotificationDispatcher
     TelemetryServer --> StateHolder
     TelemetryServer --> TelemetryRequestHandler
@@ -200,15 +186,15 @@ modules:
   - name: "solax_modbus.data.validator"
     path: "src/solax_modbus/data/validator.py"
     package: "solax_modbus"
-    status: planned
+    status: retired  # change-a2d5f7c9: validation folded into data.storage
   - name: "solax_modbus.data.storage"
     path: "src/solax_modbus/data/storage.py"
     package: "solax_modbus"
-    status: planned
+    status: planned  # change-a2d5f7c9: SQLite store (raw + rollup)
   - name: "solax_modbus.data.buffer"
     path: "src/solax_modbus/data/buffer.py"
     package: "solax_modbus"
-    status: planned
+    status: retired  # change-a2d5f7c9: outage buffering N/A for local SQLite
   - name: "solax_modbus.application.alerting"
     path: "src/solax_modbus/application/alerting.py"
     package: "solax_modbus"
@@ -252,19 +238,19 @@ classes:
   - name: "ValidationResult"
     module: "solax_modbus.data.models"
     base_classes: []
-    status: planned
+    status: retired  # change-a2d5f7c9: tied to retired DataValidator
   - name: "DataValidator"
     module: "solax_modbus.data.validator"
     base_classes: []
-    status: planned
+    status: retired  # change-a2d5f7c9: folded into TimeSeriesStore write path
   - name: "TimeSeriesStore"
     module: "solax_modbus.data.storage"
     base_classes: []
-    status: planned
+    status: planned  # change-a2d5f7c9: SQLite store
   - name: "DataBuffer"
     module: "solax_modbus.data.buffer"
     base_classes: []
-    status: planned
+    status: retired  # change-a2d5f7c9: outage buffering N/A for local SQLite
   - name: "AlertManager"
     module: "solax_modbus.application.alerting"
     base_classes: []
@@ -580,6 +566,7 @@ constants:
 | 1.2 | 2026-07-03 | Renamed module `solax_modbus.emulator.solax_emulator` to `solax_emulator` throughout (classes, functions, constants): source relocated to src/tools/emulator/solax_emulator.py, outside the solax_modbus package (see design-c2b3c4d5 1.5). Module entry `package` field set to null. |
 | 1.3 | 2026-07-07 | Registered constant `DEFAULT_HTTP_PORT` (module solax_modbus.presentation.server) for the serve-by-default / port-8181 change. See change-a7c3e9d2. |
 | 1.4 | 2026-07-07 | Corrected stale `planned` status to `implemented` for the presentation.server module, its 3 classes, 5 methods, and 2 constants (feature confirmed present in source, see change-c4d8e1f6 / change-a7c3e9d2). Moved the corresponding classes to the Implemented section of the class diagram. |
+| 1.5 | 2026-07-16 | Off-grid SQLite history (change-a2d5f7c9). Added `retired` status legend value. Retired modules data.validator and data.buffer, and classes DataValidator, DataBuffer, ValidationResult. data.storage / TimeSeriesStore retained as `planned` (SQLite store). |
 
 ---
 

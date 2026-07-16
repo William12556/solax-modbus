@@ -5,7 +5,13 @@ Created: 2025 December 30
 **Document Type:** Tier 3 Component Design  
 **Document ID:** design-a6b7c8d9-component_data_validator  
 **Parent:** [design-9e4b2c3d-domain_data.md](<design-9e4b2c3d-domain_data.md>)  
-**Status:** Planned  
+**Status:** Retired  
+
+> **Retired 2026-07-16 (change-a2d5f7c9).** The standalone DataValidator is not
+> implemented. A minimal range check is folded into the SQLite store write path
+> (see design-b7c8d9e0 7.0 Write-Path Validation). Quality scoring and
+> stuck-sensor detection are not carried forward. This document is retained for
+> history; content below is superseded.
 
 ---
 
@@ -29,10 +35,10 @@ Created: 2025 December 30
 component_info:
   name: "DataValidator"
   domain: "Data"
-  version: "1.0"
-  date: "2025-12-30"
-  status: "Planned"
-  source_file: "src/data/validator.py"
+  version: "1.1"
+  date: "2026-07-16"
+  status: "Retired"
+  source_file: "src/data/validator.py (not implemented)"
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -335,6 +341,7 @@ def calculate_quality_score(
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-12-30 | Initial component design for planned validator |
+| 1.1 | 2026-07-16 | Retired (change-a2d5f7c9). Standalone validator not pursued; minimal range validation folded into the SQLite TimeSeriesStore write path. Status Planned -> Retired. |
 
 ---
 

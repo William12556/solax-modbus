@@ -54,9 +54,11 @@ Serve live single-inverter telemetry over HTTP to local-network clients. The ser
 | Responsibility | Description |
 |----------------|-------------|
 | JSON endpoint | Serve current telemetry snapshot as JSON |
-| Dashboard | Serve a static HTML client that fetches the JSON endpoint |
+| History endpoint | Serve downsampled rollup series as JSON from the SQLite store (change-a2d5f7c9) |
+| Dashboard | Serve a static HTML client that fetches the JSON and history endpoints |
 | Access control | Reject requests from source IPs outside the configured allowlist |
 | State access | Read most recent telemetry snapshot from shared state (read-only) |
+| History access | Read rollup series from the TimeSeriesStore (read-only) |
 | Lifecycle | Provide explicit start and stop for coordination by the Application domain |
 
 ### Design Principles
@@ -94,6 +96,7 @@ dependencies:
   external: []
   internal:
     - "Application shared state (StateHolder)"
+    - "TimeSeriesStore (read-only, for /api/history) - change-a2d5f7c9"
   standard_library:
     - "http.server (ThreadingHTTPServer, BaseHTTPRequestHandler)"
     - "json"
@@ -202,10 +205,21 @@ def __init__(
 |-------|--------|----------|--------------|
 | `/` | GET | Static dashboard HTML | text/html |
 | `/api/telemetry` | GET | Current telemetry snapshot | application/json |
+| `/api/history` | GET | Downsampled rollup series (all four primary metrics) | application/json |
 | any other path | GET | 404 Not Found | text/plain |
 | any path, disallowed source IP | GET | 403 Forbidden | text/plain |
 
-The dashboard is served once and polls `/api/telemetry` on a client-side interval using `fetch()`, updating the DOM without a full-page reload.
+The dashboard is served once and polls `/api/telemetry` on a client-side interval using `fetch()`, updating the DOM without a full-page reload. It fetches `/api/history` less frequently and renders inline SVG sparklines client-side.
+
+### /api/history (change-a2d5f7c9)
+
+Returns rollup series for the four primary metrics (`pv_power`, `battery_soc`,
+`battery_power`, `house_load`) over the rollup window (30 days). Each point
+carries `bucket_ts`, `avg`, `min`, and `max`. The handler reads via the
+TimeSeriesStore `query_history()` method; it does not query SQLite directly.
+When the store is unavailable or empty, the endpoint returns an empty object
+per metric with HTTP 200. The route is subject to the same source-IP allowlist
+as the other routes.
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -305,6 +319,18 @@ def set(self, data: Dict[str, Any]) -> None:
     """Replace the telemetry snapshot under lock. Called by the poll loop."""
 ```
 
+### History Access (change-a2d5f7c9)
+
+The handler reads history via the injected TimeSeriesStore:
+
+```python
+def query_history(self, metric: str, window_seconds: int) -> list:
+    """Return rollup series {bucket_ts, avg, min, max} for one metric."""
+```
+
+The store is passed to the server by the Application domain (as StateHolder is)
+and attached to the handler context alongside `state`.
+
 [Return to Table of Contents](<#table of contents>)
 
 ---
@@ -374,6 +400,7 @@ Parameters are supplied by the Application domain via command-line flags.
 | `--no-serve` | Disable the server | enabled by default |
 | `--http-port` | `port` | 8181 (`DEFAULT_HTTP_PORT`) |
 | `--allow` | `allowed_networks` (override) | DEFAULT_ALLOWED_NETWORKS |
+| `--db-path` | SQLite store path (for /api/history) | (Application domain default) |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -396,7 +423,8 @@ Parameters are supplied by the Application domain via command-line flags.
 ### Related Documents
 
 - Application domain (state ownership, thread lifecycle): [design-bf6d4e5f-domain_application.md](<design-bf6d4e5f-domain_application.md>)
-- Requirement: FR-018 (HTTP Telemetry Server), NFR-006 (network security) in [requirements-solax-modbus-master.md](<../requirements/requirements-solax-modbus-master.md>)
+- Requirement: FR-018 (HTTP Telemetry Server), FR-019 (Historical Telemetry Endpoint), NFR-006 (network security) in [requirements-solax-modbus-master.md](<../requirements/requirements-solax-modbus-master.md>)
+- History source: [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>) (TimeSeriesStore, SQLite)
 
 ### Source Code
 
@@ -417,6 +445,7 @@ Parameters are supplied by the Application domain via command-line flags.
 | 1.1 | 2026-07-02 | Noted packaging requirement for dashboard.html (package-data declaration); root cause of a wheel-install runtime defect. No design/interface change. |
 | 1.2 | 2026-07-07 | Serve-by-default: `--serve` replaced by `--no-serve` (Purpose and Configuration); default port 8080 -> 8181 via new `DEFAULT_HTTP_PORT` constant (Constructor, Configuration). See change-a7c3e9d2. |
 | 1.3 | 2026-07-07 | Status Planned -> Active; removed stale (planned) annotations from File Location and Source Code (implementation confirmed in source). |
+| 1.4 | 2026-07-16 | Added /api/history route serving downsampled rollup series for the four primary metrics from the TimeSeriesStore (SQLite), for client-side sparklines (change-a2d5f7c9, FR-019). Added TimeSeriesStore read dependency, history-access interface, and --db-path configuration. |
 
 ---
 

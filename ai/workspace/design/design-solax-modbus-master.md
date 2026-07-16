@@ -50,9 +50,9 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 - Register reading with scaling and type conversion
 - Console-based telemetry display
 - Modbus TCP emulator for development testing
-- Future: Time-series data storage (InfluxDB)
+- HTTP server for live telemetry (single inverter, read-only)
+- Future: Local SQLite time-series history (raw + rollup) and /api/history endpoint
 - Future: Monitoring and alerting
-- Future: HTTP server for live telemetry (single inverter, read-only)
 
 ### Out of Scope
 
@@ -70,7 +70,9 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 | Modbus TCP | Ethernet variant of Modbus protocol using TCP/IP |
 | Register | 16-bit data storage location in Modbus device |
 | Unit ID | Modbus device identifier (slave address) |
-| Feed-in | Export of excess solar generation to grid |
+| Feed-in | Export of excess solar generation to grid (grid-tied deployments) |
+| House Load | AC output to house loads; the display-layer label for the grid-power fields in the off-grid deployment (change-a2d5f7c9) |
+| Rollup | Downsampled aggregate (avg/min/max) per time bucket in the SQLite history store |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -96,7 +98,7 @@ flowchart LR
     end
     
     subgraph "Future Components"
-        DB[(InfluxDB)]
+        DB[(SQLite)]
         ALERT[Alert Service]
     end
     
@@ -123,9 +125,10 @@ flowchart LR
 | Data scaling/conversion | ✓ Implemented | Apply scaling factors, handle signed integers |
 | Console display | ✓ Implemented | Formatted statistics output |
 | Emulator | ✓ Implemented | Test server with dynamic state simulation |
-| Data persistence | ○ Planned | InfluxDB time-series storage |
+| HTTP telemetry server | ✓ Implemented | Live telemetry over HTTP, read-only |
+| Data persistence | ○ Planned | Local SQLite time-series history (raw + rollup) |
+| Historical endpoint | ○ Planned | /api/history rollup series for client-side sparklines |
 | Alerting | ○ Planned | Threshold monitoring and notifications |
-| HTTP telemetry server | ○ Planned | Live telemetry over HTTP, read-only |
 
 
 [Return to Table of Contents](<#table of contents>)
@@ -149,7 +152,7 @@ flowchart TD
     end
     
     subgraph "Planned"
-        STORE[TimeSeriesStore<br/>InfluxDB]
+        STORE[TimeSeriesStore<br/>SQLite]
         MONITOR[AlertManager<br/>Notifications]
     end
     
@@ -176,10 +179,10 @@ technology_stack:
     implemented:
       - "pymodbus 3.5.0+ (Modbus TCP client/server)"
     planned:
-      - "influxdb-client 1.38.0+ (time-series database)"
+      - "sqlite3 (Python standard library; time-series history)"
       - "pyyaml 6.0+ (configuration)"
       - "requests (webhook notifications)"
-  data_store: "InfluxDB 2.7+ (planned)"
+  data_store: "Local SQLite file (planned; change-a2d5f7c9)"
 ```
 
 ### Directory Structure
@@ -254,9 +257,10 @@ target_platforms:
 
 | Component | Priority | Dependencies |
 |-----------|----------|--------------|
-| TimeSeriesStore | High | influxdb-client |
-| DataValidator | High | None |
+| TimeSeriesStore | High | sqlite3 (stdlib) |
 | AlertManager | Medium | smtplib, requests |
+
+Retired (change-a2d5f7c9): DataValidator (folded into TimeSeriesStore), DataBuffer (not applicable to local SQLite).
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -406,18 +410,18 @@ stateDiagram-v2
 
 ### TimeSeriesStore (Planned)
 
-**Purpose:** Persist telemetry to InfluxDB with buffering during outages.
+**Purpose:** Persist telemetry to a local SQLite store with raw and rollup tables (change-a2d5f7c9).
 
 **Responsibilities:**
-- Write measurements with nanosecond timestamps
-- Buffer data during database unavailability (max 1 hour)
-- Enforce retention policies
-- Provide query interface for historical data
+- Write telemetry samples to a raw table (epoch-second timestamps)
+- Downsample raw samples into 15-minute rollup buckets (avg, min, max per metric)
+- Prune raw and rollup rows past their retention windows
+- Provide a query interface for the /api/history endpoint
+- Apply minimal range validation on the write path (folded from the retired DataValidator)
 
-**Retention Policies:**
-- Raw data: 30 days at 1-second resolution
-- Aggregated: 1 year at 1-minute resolution
-- Statistical: 10 years at 1-hour resolution
+**Retention:**
+- Raw: 1-minute resolution, 24 hours
+- Rollup: 15-minute resolution, 30 days (avg, min, max)
 
 ---
 
@@ -640,12 +644,12 @@ logging:
 | SolaxInverterClient | Protocol | [design-c1a2b3d4-component_protocol_client.md](<design-c1a2b3d4-component_protocol_client.md>) | Active |
 | SolaxEmulator | Protocol | [design-c2b3c4d5-component_protocol_emulator.md](<design-c2b3c4d5-component_protocol_emulator.md>) | Active |
 
-| DataValidator | Data | [design-a6b7c8d9-component_data_validator.md](<design-a6b7c8d9-component_data_validator.md>) | Active |
-| TimeSeriesStore | Data | [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>) | Active |
-| DataBuffer | Data | [design-c8d9e0f1-component_data_buffer.md](<design-c8d9e0f1-component_data_buffer.md>) | Active |
+| TimeSeriesStore | Data | [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>) | Planned (SQLite) |
+| DataValidator | Data | [design-a6b7c8d9-component_data_validator.md](<design-a6b7c8d9-component_data_validator.md>) | Retired |
+| DataBuffer | Data | [design-c8d9e0f1-component_data_buffer.md](<design-c8d9e0f1-component_data_buffer.md>) | Retired |
 | InverterDisplay | Presentation | [design-d3c4d5e6-component_presentation_console.md](<design-d3c4d5e6-component_presentation_console.md>) | Active |
 | HTMLRenderer | Presentation | [design-d9e0f1a2-component_presentation_html.md](<design-d9e0f1a2-component_presentation_html.md>) | Superseded |
-| TelemetryServer | Presentation | [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>) | Planned |
+| TelemetryServer | Presentation | [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>) | Active |
 | main | Application | [design-e4d5e6f7-component_application_main.md](<design-e4d5e6f7-component_application_main.md>) | Active |
 | AlertManager | Application | [design-e0f1a2b3-component_application_alerting.md](<design-e0f1a2b3-component_application_alerting.md>) | Active |
 | NotificationDispatcher | Application | design-XXXX-component_application_notifications.md | Planned |
@@ -688,6 +692,7 @@ logging:
 | 1.8 | 2026-06-25 | Removed macOS from target_platforms (reverses 1.7); deployment target is Raspberry Pi / Debian only. Retained macOS in development_environment. |
 | 1.9 | 2026-06-26 | Brought web UI in-scope. Added HTTP telemetry server to In Scope and Primary Functions. Added TelemetryServer (design-9b7e2c4a) to Tier 3 components; marked HTMLRenderer (design-d9e0f1a2) Superseded. |
 | 1.10 | 2026-07-03 | Relocated SolaxEmulator source from src/solax_modbus/emulator/ to src/tools/emulator/, outside the package tree (see design-c2b3c4d5 1.5). Updated Directory Structure, Implementation Status, Components, and Source Code Mapping. |
+| 1.11 | 2026-07-16 | Off-grid UI / SQLite history (change-a2d5f7c9). Persistence retargeted InfluxDB -> local SQLite (Scope, System Overview, Technology Stack, TimeSeriesStore section, retention). DataValidator and DataBuffer retired; TimeSeriesStore marked Planned (SQLite). TelemetryServer status corrected to Active. Added House Load and Rollup terminology. Noted /api/history endpoint. |
 
 ---
 

@@ -218,7 +218,7 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 ```yaml
 - id: "c9d0e1f2"
   type: "functional"
-  description: "System SHALL validate telemetry data against physical and protocol constraints"
+  description: "System SHALL apply range validation to telemetry values on the persistence write path"
   acceptance_criteria:
     - "Grid voltage range: 180-260V"
     - "Grid frequency range: 45-55Hz"
@@ -228,10 +228,11 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
     - "Battery current range: -100 to +100A"
     - "Battery SOC range: 0-100%"
     - "Temperature range: -20 to +80°C"
-    - "Out-of-range values flagged as anomalies"
+    - "Out-of-range values logged and rejected before storage"
   source: "Physical system constraints, data quality requirements"
-  rationale: "Validation detects sensor failures and prevents invalid data propagation"
+  rationale: "Range validation detects sensor failures and prevents invalid data from being persisted"
   dependencies: ["a1b2c3d4"]
+  notes: "Change: change-a2d5f7c9. Narrowed from a standalone DataValidator (with quality scoring) to a minimal range check folded into the SQLite store write path."
 ```
 
 ### FR-010: Time-Series Storage
@@ -251,19 +252,20 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   dependencies: ["c9d0e1f2"]
 ```
 
-### FR-011: Data Buffering
+### FR-011: Data Buffering (Retired)
 
 ```yaml
 - id: "e1f2a3b4"
   type: "functional"
-  description: "System SHALL buffer measurements in memory during database outages (maximum 1 hour)"
-  acceptance_criteria:
-    - "Buffer capacity: 3600 measurements (1 hour at 1s polling)"
-    - "FIFO buffer behavior (oldest dropped on overflow)"
-    - "Automatic flush on database reconnection"
-    - "Buffer status logged (size, overflow events)"
-  source: "Data loss prevention requirements"
-  rationale: "Transient database outages should not result in data loss"
+  status: "retired"
+  description: "RETIRED. System SHALL buffer measurements in memory during database outages (maximum 1 hour)"
+  retirement:
+    date: "2026-07-16"
+    change_ref: "change-a2d5f7c9"
+    reason: >
+      Outage buffering addressed a remote InfluxDB network dependency. The
+      persistence store is now a local SQLite file (FR-010); a network-outage
+      buffer is no longer applicable. The DataBuffer component is retired.
   dependencies: ["d0e1f2a3"]
 ```
 
@@ -272,16 +274,17 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 ```yaml
 - id: "f2a3b4c5"
   type: "functional"
-  description: "System SHALL enforce time-based data retention policies"
+  description: "System SHALL enforce time-based retention on the SQLite store"
   acceptance_criteria:
-    - "Raw data: 30 days at 1-second resolution"
-    - "Aggregated data: 1 year at 1-minute resolution"
-    - "Statistical summaries: 10 years at 1-hour resolution"
-    - "Policies configurable via database settings"
-    - "Automatic downsampling to aggregated buckets"
-  source: "Storage management requirements"
-  rationale: "Retention policies prevent unbounded storage growth while preserving long-term trends"
+    - "Raw table: 1-minute resolution retained for 24 hours"
+    - "Rollup table: 15-minute resolution retained for 30 days"
+    - "Each rollup bucket stores average, minimum, and maximum per metric"
+    - "Raw samples older than the raw window pruned"
+    - "Rollup buckets older than the rollup window pruned"
+  source: "Storage management requirements (off-grid deployment)"
+  rationale: "Bounded raw and rollup windows keep the local database file small while preserving a 30-day trend"
   dependencies: ["d0e1f2a3"]
+  notes: "Change: change-a2d5f7c9. Replaces the InfluxDB three-tier retention model."
 ```
 
 ### FR-013: Threshold Alerting
@@ -393,6 +396,24 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   source: "Headless deployment monitoring requirements"
   rationale: "Headless devices require remote access to live telemetry without a local console"
   dependencies: ["a1b2c3d4", "a7b8c9d0"]
+```
+
+### FR-019: Historical Telemetry Endpoint
+
+```yaml
+- id: "2e5f8a1b"
+  type: "functional"
+  description: "System SHALL serve downsampled historical telemetry over HTTP for trend visualisation"
+  acceptance_criteria:
+    - "JSON endpoint (/api/history) returns rollup series from the SQLite store"
+    - "Series cover the four primary metrics: solar production, battery SOC, battery power, house load"
+    - "Each rollup point exposes average, minimum, and maximum for the bucket"
+    - "Endpoint governed by the same source-IP allowlist as /api/telemetry (HTTP 403 for non-permitted sources)"
+    - "Dashboard renders inline sparklines client-side from the returned series"
+  source: "Off-grid historical overview requirements"
+  rationale: "A local historical trend lets an operator assess production and battery behaviour over time without an external tool"
+  dependencies: ["d0e1f2a3", "1a2b3c4d"]
+  notes: "Change: change-a2d5f7c9."
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -537,13 +558,14 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   category: "efficiency"
   description: "System SHALL manage storage growth through retention policies"
   acceptance_criteria:
-    - "Database storage growth predictable and bounded by retention policies"
-    - "Downsampling reduces long-term storage requirements"
-    - "Storage consumption linear with polling frequency"
-  target_metric: "Storage growth <10GB per year"
+    - "SQLite file size bounded by the raw (24h) and rollup (30d) retention windows"
+    - "Downsampling to the rollup table reduces long-term storage requirements"
+    - "Steady-state file size is bounded and does not grow without limit"
+  target_metric: "Bounded SQLite file size (well under 1 GB at the defined retention)"
   source: "Long-term operational sustainability"
   rationale: "Embedded systems have limited storage capacity"
   dependencies: []
+  notes: "Change: change-a2d5f7c9. Bounds restated for the SQLite store."
 ```
 
 ### NFR-009: Installation Simplicity
@@ -619,7 +641,7 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   acceptance_criteria:
     - "Python 3.9+ runtime"
     - "pymodbus 3.5.0+ for Modbus TCP"
-    - "influxdb-client 1.38.0+ for time-series storage"
+    - "sqlite3 (Python standard library) for time-series storage"
     - "pyyaml for configuration"
     - "pytest for testing"
   constraints:
@@ -736,7 +758,7 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   description: "System SHALL support future extension via plugin architecture"
   acceptance_criteria:
     - "Notification channel plugins"
-    - "Data store adapters (beyond InfluxDB)"
+    - "Data store adapters (beyond the default SQLite store)"
     - "Plugin discovery and loading mechanism"
   constraints:
     - "Core system functionality independent of plugins"
@@ -768,11 +790,12 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | a7b8c9d0 | design-d3c4d5e6-component_presentation_console.md | InverterDisplay |
 | b8c9d0e1 | design-c1a2b3d4-component_protocol_client.md | Connection Management |
 | c9d0e1f2 | design-9e4b2c3d-domain_data.md | Data Validation |
-| c9d0e1f2 | design-a6b7c8d9-component_data_validator.md | DataValidator |
+| c9d0e1f2 | design-b7c8d9e0-component_data_storage.md | Write-path validation |
 | d0e1f2a3 | design-9e4b2c3d-domain_data.md | Time-Series Storage |
 | d0e1f2a3 | design-b7c8d9e0-component_data_storage.md | TimeSeriesStore |
-| e1f2a3b4 | design-c8d9e0f1-component_data_buffer.md | DataBuffer |
 | f2a3b4c5 | design-b7c8d9e0-component_data_storage.md | Retention Policies |
+| 2e5f8a1b | design-9b7e2c4a-component_presentation_server.md | Routes (/api/history) |
+| 2e5f8a1b | design-b7c8d9e0-component_data_storage.md | History query |
 | a3b4c5d6 | design-bf6d4e5f-domain_application.md | Application Domain |
 | a3b4c5d6 | design-e0f1a2b3-component_application_alerting.md | AlertManager |
 | b4c5d6e7 | design-e0f1a2b3-component_application_alerting.md | Notification Dispatch |
@@ -781,6 +804,8 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | f8a9b0c1 | design-c2b3c4d5-component_protocol_emulator.md | SolaxEmulator |
 | 1a2b3c4d | design-af5c3d4e-domain_presentation.md | Presentation Domain |
 | 1a2b3c4d | design-9b7e2c4a-component_presentation_server.md | TelemetryServer |
+
+Retired references (change-a2d5f7c9): e1f2a3b4 -> design-c8d9e0f1 (DataBuffer) and the standalone c9d0e1f2 -> design-a6b7c8d9 (DataValidator) mapping are withdrawn.
 
 ### Test References
 
@@ -799,7 +824,8 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | a7b8c9d0 | InverterDisplay | src/solax_modbus/main.py |
 | b8c9d0e1 | SolaxInverterClient | src/solax_modbus/main.py |
 | f8a9b0c1 | SolaxEmulator | src/tools/emulator/solax_emulator.py |
-| 1a2b3c4d | TelemetryServer | src/solax_modbus/presentation/server.py (planned) |
+| 1a2b3c4d | TelemetryServer | src/solax_modbus/presentation/server.py |
+| 2e5f8a1b | TelemetryServer / TimeSeriesStore | src/solax_modbus/presentation/server.py, src/solax_modbus/data/storage.py |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -814,7 +840,8 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 **Coverage:**
 - Data acquisition and display: FR-001 through FR-007
 - Connection management: FR-008
-- Data quality and persistence: FR-009 through FR-012
+- Data quality and persistence: FR-009, FR-010, FR-012 (FR-011 retired)
+- Historical telemetry endpoint: FR-019
 - Monitoring and alerting: FR-013 through FR-014
 - Configuration control: FR-015 through FR-016
 - Development infrastructure: FR-017
@@ -870,8 +897,9 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | RFC 1918 | IETF specification defining private IPv4 address ranges not routable on the public internet (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) |
 | Source-IP Allowlist | Access control admitting requests only from configured source address ranges; a network-address filter, not user authentication |
 | Link-local Address | IPv4 address in 169.254.0.0/16, valid only on a single network segment; used by the USB-gadget direct-connection path |
-| InfluxDB | Time-series database optimized for high-frequency data ingestion |
-| Retention Policy | Rules governing data aging and deletion in time-series database |
+| SQLite | Embedded, serverless relational database provided by the Python standard library (sqlite3); the local time-series store |
+| Rollup | Downsampled aggregate table holding average, minimum, and maximum per time bucket |
+| Retention Policy | Rules governing data aging and deletion in the local store |
 | Downsampling | Aggregation of fine-grained data to coarser time resolution |
 | Exponential Backoff | Retry strategy with geometrically increasing delays |
 | Circuit Breaker | Fault tolerance pattern preventing cascading failures |
@@ -890,6 +918,7 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | 1.3 | 2026-06-25 | Removed macOS as deployment target (reverses 1.2). AR-003: dropped macOS target, macOS constraints, and OS-detection criterion; retained macOS as development platform. NFR-009: dropped macOS manual-start criterion. |
 | 1.4 | 2026-06-26 | Brought web UI in-scope (embedded HTTP telemetry server). Added FR-018 HTTP Telemetry Server. Amended NFR-006 with HTTP isolation and source-IP allowlist criteria. Added traceability rows and glossary terms (RFC 1918, source-IP allowlist, link-local). |
 | 1.5 | 2026-07-03 | Updated SolaxEmulator source path: src/solax_modbus/emulator/solax_emulator.py → src/tools/emulator/solax_emulator.py (see design-c2b3c4d5 1.5). |
+| 1.6 | 2026-07-16 | Off-grid UI / SQLite history (change-a2d5f7c9). FR-010 persistence retargeted InfluxDB → local SQLite. FR-012 retention retargeted to raw 1-min/24h + rollup 15-min/30d (avg/min/max). FR-011 (buffering) retired. FR-009 narrowed to write-path range validation. Added FR-019 (/api/history). NFR-008 restated for SQLite. AR-002 dropped influxdb-client (added sqlite3). AR-008 generalised store-adapter wording. Updated traceability (withdrew DataValidator/DataBuffer standalone rows; added FR-019 rows) and glossary (replaced InfluxDB with SQLite/Rollup). |
 
 ---
 
