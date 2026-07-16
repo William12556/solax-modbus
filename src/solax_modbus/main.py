@@ -14,12 +14,16 @@ from typing import Any, Dict, List, Optional, Tuple
 from pymodbus.client import ModbusTcpClient
 from pymodbus.exceptions import ModbusException
 
+from solax_modbus.data.storage import TimeSeriesStore
 from solax_modbus.presentation.server import (
     DEFAULT_ALLOWED_NETWORKS,
     DEFAULT_HTTP_PORT,
     StateHolder,
     TelemetryServer,
 )
+
+# Rollup and prune interval in seconds (15 minutes)
+ROLLUP_INTERVAL_SECONDS = 900
 
 # Configure logging to stdout/stderr for journald capture
 logging.basicConfig(
@@ -483,6 +487,12 @@ Examples:
         metavar='CIDR',
         help='Allowed source network in CIDR notation (repeatable; default: RFC 1918 + link-local)'
     )
+    parser.add_argument(
+        '--db-path',
+        type=str,
+        default='solax_history.db',
+        help='SQLite database path for history storage (default: solax_history.db)'
+    )
 
     args = parser.parse_args()
     
@@ -510,6 +520,7 @@ Examples:
     print(f"\nSolax X3 Hybrid Inverter - Modbus TCP Monitor")
     print(f"Connecting to {args.ip}:{args.port}")
     print(f"Polling interval: {poll_interval} seconds")
+    print(f"History database: {args.db_path}")
     if args.serve:
         print(f"HTTP server: http://0.0.0.0:{args.http_port}/")
     else:
@@ -522,6 +533,14 @@ Examples:
     display = InverterDisplay()
     state = StateHolder()
 
+    # Initialize TimeSeriesStore for history persistence
+    store: Optional[TimeSeriesStore] = None
+    try:
+        store = TimeSeriesStore(args.db_path)
+    except Exception as e:
+        logger.error(f"Failed to initialize history store: {e}")
+        # Continue without store; history will be unavailable
+
     # Initialize HTTP server if enabled
     server: Optional[TelemetryServer] = None
     if args.serve:
@@ -529,12 +548,16 @@ Examples:
             state=state,
             port=args.http_port,
             allowed_networks=allowed_networks,
+            store=store,
         )
         try:
             server.start()
         except OSError:
             # Logged in server.start(); continue without server
             server = None
+
+    # Track time since last rollup/prune for periodic maintenance
+    last_rollup_time = time.time()
 
     # Main monitoring loop
     try:
@@ -550,7 +573,20 @@ Examples:
                 # Poll and display data
                 data = client.poll_inverter()
                 state.set(data)
+
+                # Write sample to history store
+                if store is not None:
+                    store.write_sample(data)
+
                 display.display_statistics(data)
+
+                # Periodic rollup and prune (roughly every 15 minutes)
+                now = time.time()
+                if now - last_rollup_time >= ROLLUP_INTERVAL_SECONDS:
+                    if store is not None:
+                        store.rollup()
+                        store.prune()
+                    last_rollup_time = now
 
                 # Wait for next poll
                 time.sleep(poll_interval)
@@ -564,9 +600,11 @@ Examples:
     except KeyboardInterrupt:
         print("\n\n   Shutdown signal received...")
     finally:
-        # Ordered shutdown: stop server before disconnecting client
+        # Ordered shutdown: stop server, close store, disconnect client
         if server is not None:
             server.stop()
+        if store is not None:
+            store.close()
         client.disconnect()
         print("   Monitoring stopped")
         logger.info("Application terminated")

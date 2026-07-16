@@ -75,6 +75,7 @@ class TelemetryRequestHandler(BaseHTTPRequestHandler):
     Routes:
         /              - Static dashboard HTML
         /api/telemetry - Current telemetry snapshot as JSON
+        /api/history   - Downsampled rollup series as JSON
         Other paths    - 404 Not Found
         Disallowed IP  - 403 Forbidden
     """
@@ -100,6 +101,8 @@ class TelemetryRequestHandler(BaseHTTPRequestHandler):
                 self._serve_dashboard()
             elif self.path == "/api/telemetry":
                 self._serve_telemetry()
+            elif self.path == "/api/history":
+                self._serve_history()
             else:
                 self._send_error(404, "Not Found")
 
@@ -147,6 +150,43 @@ class TelemetryRequestHandler(BaseHTTPRequestHandler):
             logger.error("JSON serialization failed: %s", e, exc_info=True)
             self._send_error(500, "Serialization error")
 
+    def _serve_history(self) -> None:
+        """Serve downsampled rollup series as JSON for all primary metrics."""
+        # Metrics to include in the history response
+        metrics = ("pv_power", "battery_power", "battery_soc", "grid_power_total")
+        # 30-day window in seconds
+        window_seconds = 30 * 24 * 3600
+
+        store = getattr(self.server, "store", None)
+
+        # Build the response object with all metrics
+        result: Dict[str, List[Dict[str, Any]]] = {}
+
+        for metric in metrics:
+            if store is None:
+                result[metric] = []
+            else:
+                try:
+                    result[metric] = store.query_history(metric, window_seconds)
+                except ValueError as e:
+                    logger.warning("query_history failed for %s: %s", metric, e)
+                    result[metric] = []
+                except Exception as e:
+                    logger.error(
+                        "Unexpected error in query_history for %s: %s",
+                        metric,
+                        e,
+                        exc_info=True,
+                    )
+                    result[metric] = []
+
+        try:
+            content = json.dumps(result)
+            self._send_response(200, "application/json", content.encode("utf-8"))
+        except (TypeError, ValueError) as e:
+            logger.error("History JSON serialization failed: %s", e, exc_info=True)
+            self._send_error(500, "Serialization error")
+
     def _send_response(self, status: int, content_type: str, body: bytes) -> None:
         """Send an HTTP response with headers and body."""
         self.send_response(status)
@@ -180,6 +220,7 @@ class TelemetryServer:
         bind_host: str = "0.0.0.0",
         port: int = DEFAULT_HTTP_PORT,
         allowed_networks: Optional[List[ipaddress.IPv4Network]] = None,
+        store: Optional[Any] = None,
     ) -> None:
         """
         Initialize the telemetry server.
@@ -189,6 +230,7 @@ class TelemetryServer:
             bind_host: Interface to bind (default all interfaces).
             port: TCP port (non-privileged default 8181).
             allowed_networks: Permitted source ranges (None = DEFAULT_ALLOWED_NETWORKS).
+            store: Optional TimeSeriesStore for /api/history (None yields empty series).
         """
         self.state = state
         self.bind_host = bind_host
@@ -196,6 +238,7 @@ class TelemetryServer:
         self.allowed_networks = (
             allowed_networks if allowed_networks is not None else DEFAULT_ALLOWED_NETWORKS
         )
+        self.store = store
 
         # Resolve dashboard template path relative to this module
         self.template_path = Path(__file__).parent / "templates" / "dashboard.html"
@@ -218,6 +261,7 @@ class TelemetryServer:
             self._httpd.state = self.state  # type: ignore[attr-defined]
             self._httpd.allowed_networks = self.allowed_networks  # type: ignore[attr-defined]
             self._httpd.template_path = self.template_path  # type: ignore[attr-defined]
+            self._httpd.store = self.store  # type: ignore[attr-defined]
 
             self._thread = threading.Thread(
                 target=self._httpd.serve_forever, name="TelemetryServer", daemon=True
