@@ -555,7 +555,7 @@ logging:
 |---------|------|---------|
 | 1.0 | 2025-12-30 | Initial domain design |
 | 1.1 | 2025-12-30 | Added Tier 3 component document references |
-| 1.2 | 2026-07-16 | Off-grid SQLite history (change-a2d5f7c9). Technology stack InfluxDB -> local SQLite (sqlite3). Retention restated (raw 1-min/24h, rollup 15-min/30d, avg/min/max). DataValidator and DataBuffer retired; TimeSeriesStore retargeted to SQLite. Component tables and Tier 3 references updated. |
+| 1.2 | 2026-07-16 | Off-grid SQLite history (change-a2d5f7c9). Technology stack InfluxDB -> local SQLite (sqlite3). Retention restated (raw 1-min/24h, rollup 15-min/30d, avg/min/max). DataValidator and DataBuffer retired; TimeSeriesStore retargeted to SQLite. Component tables and Tier 3 references updated. Store persists primitives (pv_power, battery_power, battery_soc, grid_power_total); house_load derived at display, not persisted. |
 
 ---
 

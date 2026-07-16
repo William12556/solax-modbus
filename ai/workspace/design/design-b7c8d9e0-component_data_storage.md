@@ -31,7 +31,7 @@ Created: 2025 December 30
 component_info:
   name: "TimeSeriesStore"
   domain: "Data"
-  version: "2.0"
+  version: "2.1"
   date: "2026-07-16"
   status: "Planned"
   source_file: "src/solax_modbus/data/storage.py"
@@ -142,21 +142,23 @@ def __init__(self, db_path: str = "solax_history.db"):
 ## 5.0 Database Schema
 
 Two tables. `raw` holds recent full-resolution samples; `rollup` holds
-downsampled aggregates. Timestamps are integer epoch seconds.
+downsampled aggregates. Timestamps are integer epoch seconds. The store records
+**primitive** measurements only; `house_load` is not stored, it is derived at
+display time (see 5.1). This keeps history correctable if the derivation changes.
 
 ```sql
 CREATE TABLE IF NOT EXISTS raw (
-    ts            INTEGER NOT NULL,   -- epoch seconds
-    pv_power      INTEGER,            -- total solar production (W)
-    battery_soc   INTEGER,            -- state of charge (%)
-    battery_power INTEGER,            -- signed: + charging, - discharging (W)
-    house_load    INTEGER             -- AC output to house loads (W)
+    ts               INTEGER NOT NULL,   -- epoch seconds
+    pv_power         INTEGER,            -- total solar production (W, >= 0)
+    battery_power    INTEGER,            -- signed: + charging, - discharging (W)
+    battery_soc      INTEGER,            -- state of charge (%)
+    grid_power_total INTEGER             -- signed sum of grid-port phase power (W)
 );
 CREATE INDEX IF NOT EXISTS idx_raw_ts ON raw(ts);
 
 CREATE TABLE IF NOT EXISTS rollup (
     bucket_ts  INTEGER NOT NULL,      -- epoch seconds, 15-min bucket start
-    metric     TEXT    NOT NULL,      -- 'pv_power' | 'battery_soc' | 'battery_power' | 'house_load'
+    metric     TEXT    NOT NULL,      -- 'pv_power' | 'battery_power' | 'battery_soc' | 'grid_power_total'
     avg        REAL,
     min        REAL,
     max        REAL,
@@ -165,18 +167,36 @@ CREATE TABLE IF NOT EXISTS rollup (
 CREATE INDEX IF NOT EXISTS idx_rollup_ts ON rollup(bucket_ts);
 ```
 
-### 5.1 Metric Mapping
+### 5.1 Metric Mapping and Derived House Load
 
-| Metric | Source field(s) in telemetry dict |
-|--------|------------------------------------|
+| Stored metric | Source field(s) in telemetry dict |
+|---------------|------------------------------------|
 | `pv_power` | `pv1_power` + `pv2_power` |
+| `battery_power` | `battery_power` (signed: + charging, - discharging) |
 | `battery_soc` | `battery_soc` |
-| `battery_power` | `battery_power` (signed) |
-| `house_load` | derived from grid-phase power fields (relabelled at display; stored as house load) |
+| `grid_power_total` | `grid_power_r` + `grid_power_s` + `grid_power_t` |
 
-House load is the AC output. Field names in `/api/telemetry` are unchanged;
-the relabelling is a presentation concern (see the dashboard). The store
-records the value under `house_load` for clarity of history.
+**House load is derived, not stored.** By conservation of energy:
+
+```
+house_load = pv_power - battery_power + grid_power_total
+```
+
+(`battery_power` positive when charging removes power from the house; grid
+contribution added when present.) The dashboard computes this from the primitive
+series. Storing primitives avoids baking an unverified derivation into pruned
+history and lets the formula be corrected retroactively.
+
+**Aggregation note.** The derivation is linear, so a derived `house_load`
+*average* equals the same combination of the primitive averages (exact). The
+derived *min/max* band does not compose exactly (min of a sum is not the sum of
+mins); combining primitive min/max yields a conservative outer envelope, which
+is acceptable for the dashboard's variability band.
+
+> Derivation status: provisional. On a true off-grid island the grid port may
+> read near zero and house consumption is served via an EPS/backup output not in
+> the current register map. Validate the formula against emulator and live data
+> before relying on the history (issue-a2d5f7c9 analysis).
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -206,7 +226,8 @@ ON CONFLICT(bucket_ts, metric) DO UPDATE SET
     avg = excluded.avg, min = excluded.min, max = excluded.max;
 ```
 
-Repeated per metric. Invoked on an interval by the Application domain (for
+Repeated for each stored metric (`pv_power`, `battery_power`, `battery_soc`,
+`grid_power_total`). Invoked on an interval by the Application domain (for
 example every 15 minutes), or opportunistically after writes.
 
 ### 6.2 Pruning
@@ -240,9 +261,9 @@ stuck-sensor detection are not carried forward).
 | Field | Min | Max | Action on breach |
 |-------|-----|-----|------------------|
 | pv_power | 0 | 15000 | log warning, drop field (store NULL) |
-| battery_soc | 0 | 100 | log warning, drop field |
 | battery_power | -15000 | 15000 | log warning, drop field |
-| house_load | -15000 | 15000 | log warning, drop field |
+| battery_soc | 0 | 100 | log warning, drop field |
+| grid_power_total | -15000 | 15000 | log warning, drop field |
 
 Out-of-range fields are set NULL rather than discarding the whole sample.
 
@@ -312,7 +333,7 @@ def query_history(
     Return rollup series for one metric over a trailing window.
 
     Args:
-        metric: One of pv_power, battery_soc, battery_power, house_load.
+        metric: One of pv_power, battery_power, battery_soc, grid_power_total.
         window_seconds: Trailing window (e.g. 30 days).
 
     Returns:
@@ -389,6 +410,7 @@ def close(self) -> None:
 |---------|------|---------|
 | 1.0 | 2025-12-30 | Initial component design for planned storage (InfluxDB). |
 | 2.0 | 2026-07-16 | Superseded in place: InfluxDB replaced by local SQLite store (change-a2d5f7c9). New raw + rollup schema (avg/min/max), retention raw 1-min/24h and rollup 15-min/30d, folded write-path validation replacing the retired DataValidator, and a query_history interface for the /api/history endpoint. Removed InfluxDB connection config, tags, nanosecond precision, Flux downsampling, and buffer coupling. Added section numbering. |
+| 2.1 | 2026-07-16 | Store primitives, not derived house_load (change-a2d5f7c9). raw/rollup metrics: pv_power, battery_power, battery_soc, grid_power_total. house_load derived at display (house_load = pv_power - battery_power + grid_power_total); documented linearity/min-max caveat and provisional-derivation warning. Updated schema, metric mapping (5.1), rollup metric list, write-path validation, and query_history metric enum. |
 
 ---
 

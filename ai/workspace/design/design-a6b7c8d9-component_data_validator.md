@@ -341,7 +341,7 @@ def calculate_quality_score(
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-12-30 | Initial component design for planned validator |
-| 1.1 | 2026-07-16 | Retired (change-a2d5f7c9). Standalone validator not pursued; minimal range validation folded into the SQLite TimeSeriesStore write path. Status Planned -> Retired. |
+| 1.1 | 2026-07-16 | Retired (change-a2d5f7c9). Standalone validator not pursued; minimal range validation folded into the SQLite TimeSeriesStore write path (stored primitives: pv_power, battery_power, battery_soc, grid_power_total). Status Planned -> Retired. |
 
 ---
 

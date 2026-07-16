@@ -692,7 +692,7 @@ logging:
 | 1.8 | 2026-06-25 | Removed macOS from target_platforms (reverses 1.7); deployment target is Raspberry Pi / Debian only. Retained macOS in development_environment. |
 | 1.9 | 2026-06-26 | Brought web UI in-scope. Added HTTP telemetry server to In Scope and Primary Functions. Added TelemetryServer (design-9b7e2c4a) to Tier 3 components; marked HTMLRenderer (design-d9e0f1a2) Superseded. |
 | 1.10 | 2026-07-03 | Relocated SolaxEmulator source from src/solax_modbus/emulator/ to src/tools/emulator/, outside the package tree (see design-c2b3c4d5 1.5). Updated Directory Structure, Implementation Status, Components, and Source Code Mapping. |
-| 1.11 | 2026-07-16 | Off-grid UI / SQLite history (change-a2d5f7c9). Persistence retargeted InfluxDB -> local SQLite (Scope, System Overview, Technology Stack, TimeSeriesStore section, retention). DataValidator and DataBuffer retired; TimeSeriesStore marked Planned (SQLite). TelemetryServer status corrected to Active. Added House Load and Rollup terminology. Noted /api/history endpoint. |
+| 1.11 | 2026-07-16 | Off-grid UI / SQLite history (change-a2d5f7c9). Persistence retargeted InfluxDB -> local SQLite (Scope, System Overview, Technology Stack, TimeSeriesStore section, retention). DataValidator and DataBuffer retired; TimeSeriesStore marked Planned (SQLite). TelemetryServer status corrected to Active. Added House Load and Rollup terminology. Noted /api/history endpoint. Store persists primitives; house_load derived at display (house_load = pv_power - battery_power + grid_power_total). |
 
 ---
 

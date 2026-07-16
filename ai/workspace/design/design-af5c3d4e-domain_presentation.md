@@ -404,7 +404,7 @@ logging:
 | 1.1 | 2025-12-30 | Added Tier 3 component document reference |
 | 1.2 | 2025-12-30 | Added HTMLRenderer component document reference |
 | 1.3 | 2026-06-26 | Replaced static HTMLRenderer model with TelemetryServer (live HTTP serving). Updated purpose, boundaries, responsibilities, diagrams, technology stack (stdlib, dropped jinja2), component summary and interface. Marked HTMLRenderer (design-d9e0f1a2) Superseded; added TelemetryServer (design-9b7e2c4a). |
-| 1.4 | 2026-07-16 | Corrected stale TelemetryServer status Planned -> Implemented/Active (component design already Active at 1.3). Added history-serving responsibility and /api/history function (planned) for client-side sparklines (change-a2d5f7c9, FR-019). Updated source-code mapping (dropped (planned) on server.py). |
+| 1.4 | 2026-07-16 | Corrected stale TelemetryServer status Planned -> Implemented/Active (component design already Active at 1.3). Added history-serving responsibility and /api/history function (planned) for client-side sparklines (change-a2d5f7c9, FR-019). Updated source-code mapping (dropped (planned) on server.py). /api/history serves stored primitives (pv_power, battery_power, battery_soc, grid_power_total); house_load derived client-side. |
 
 ---
 

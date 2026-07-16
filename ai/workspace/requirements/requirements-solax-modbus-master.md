@@ -406,8 +406,9 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   description: "System SHALL serve downsampled historical telemetry over HTTP for trend visualisation"
   acceptance_criteria:
     - "JSON endpoint (/api/history) returns rollup series from the SQLite store"
-    - "Series cover the four primary metrics: solar production, battery SOC, battery power, house load"
+    - "Stored series are the primitives: pv_power, battery_power, battery_soc, grid_power_total"
     - "Each rollup point exposes average, minimum, and maximum for the bucket"
+    - "House load is derived client-side (house_load = pv_power - battery_power + grid_power_total), not stored"
     - "Endpoint governed by the same source-IP allowlist as /api/telemetry (HTTP 403 for non-permitted sources)"
     - "Dashboard renders inline sparklines client-side from the returned series"
   source: "Off-grid historical overview requirements"

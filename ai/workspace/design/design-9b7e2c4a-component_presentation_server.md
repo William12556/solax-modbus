@@ -213,13 +213,15 @@ The dashboard is served once and polls `/api/telemetry` on a client-side interva
 
 ### /api/history (change-a2d5f7c9)
 
-Returns rollup series for the four primary metrics (`pv_power`, `battery_soc`,
-`battery_power`, `house_load`) over the rollup window (30 days). Each point
-carries `bucket_ts`, `avg`, `min`, and `max`. The handler reads via the
-TimeSeriesStore `query_history()` method; it does not query SQLite directly.
-When the store is unavailable or empty, the endpoint returns an empty object
-per metric with HTTP 200. The route is subject to the same source-IP allowlist
-as the other routes.
+Returns rollup series for the stored primitive metrics (`pv_power`,
+`battery_power`, `battery_soc`, `grid_power_total`) over the rollup window
+(30 days). Each point carries `bucket_ts`, `avg`, `min`, and `max`. The dashboard
+derives the house-load series client-side
+(`house_load = pv_power - battery_power + grid_power_total`). The handler reads
+via the TimeSeriesStore `query_history()` method; it does not query SQLite
+directly. When the store is unavailable or empty, the endpoint returns an empty
+object per metric with HTTP 200. The route is subject to the same source-IP
+allowlist as the other routes.
 
 [Return to Table of Contents](<#table of contents>)
 

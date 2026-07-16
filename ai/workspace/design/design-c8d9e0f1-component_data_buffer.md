@@ -376,7 +376,7 @@ def clear(self) -> None:
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-12-30 | Initial component design for planned buffer |
-| 1.1 | 2026-07-16 | Retired (change-a2d5f7c9). Outage buffering not applicable to a local SQLite store; FR-011 retired. Status Planned -> Retired. |
+| 1.1 | 2026-07-16 | Retired (change-a2d5f7c9). Outage buffering not applicable to a local SQLite store (single local file, not a remote database); FR-011 retired. Status Planned -> Retired. |
 
 ---
 
