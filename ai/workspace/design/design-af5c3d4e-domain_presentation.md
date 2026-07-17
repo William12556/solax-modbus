@@ -62,7 +62,7 @@ Render telemetry data for human consumption. Provides formatted output through c
 |----------------|-------------|
 | Console display | Format and print telemetry to terminal |
 | HTTP serving | Serve live telemetry over HTTP as JSON and static dashboard |
-| History serving | Serve downsampled rollup history as JSON for client-side sparklines (change-a2d5f7c9) |
+| History serving | Serve downsampled rollup history (30-day) and daily-rollup history (12-month, rolling trailing) as JSON for client-side sparklines (change-a2d5f7c9, change-b1c2d3e4) |
 | Value formatting | Apply units, precision, directional indicators |
 | Section organization | Group related metrics logically |
 
@@ -124,6 +124,7 @@ flowchart LR
 | Section grouping | ✓ Implemented | Logical metric organization |
 | HTTP telemetry serving | ✓ Implemented | Live telemetry over HTTP (JSON + static dashboard) |
 | Historical telemetry serving | ○ Planned | /api/history rollup series for client-side sparklines (change-a2d5f7c9) |
+| Extended historical telemetry serving | ○ Planned | /api/history/12mo daily-rollup series, rolling trailing 12 months (change-b1c2d3e4) |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -270,6 +271,7 @@ INVERTER
 **Key Responsibilities:**
 - Serve current telemetry as JSON from shared state
 - Serve downsampled rollup history as JSON via /api/history (planned, change-a2d5f7c9)
+- Serve daily-rollup history (rolling trailing 12 months) as JSON via /api/history/12mo (planned, change-b1c2d3e4)
 - Serve a static HTML dashboard that fetches the JSON and history endpoints
 - Restrict access by source-IP allowlist (defense-in-depth)
 - Run as a background server thread with read-only access to inverter state and the history store
@@ -405,6 +407,7 @@ logging:
 | 1.2 | 2025-12-30 | Added HTMLRenderer component document reference |
 | 1.3 | 2026-06-26 | Replaced static HTMLRenderer model with TelemetryServer (live HTTP serving). Updated purpose, boundaries, responsibilities, diagrams, technology stack (stdlib, dropped jinja2), component summary and interface. Marked HTMLRenderer (design-d9e0f1a2) Superseded; added TelemetryServer (design-9b7e2c4a). |
 | 1.4 | 2026-07-16 | Corrected stale TelemetryServer status Planned -> Implemented/Active (component design already Active at 1.3). Added history-serving responsibility and /api/history function (planned) for client-side sparklines (change-a2d5f7c9, FR-019). Updated source-code mapping (dropped (planned) on server.py). /api/history serves stored primitives (pv_power, battery_power, battery_soc, grid_power_total); house_load derived client-side. |
+| 1.5 | 2026-07-17 | Added extended historical telemetry serving (/api/history/12mo, daily-rollup, rolling trailing 12 months) to history-serving responsibility, primary functions, and TelemetryServer component summary (change-b1c2d3e4, FR-020). |
 
 ---
 

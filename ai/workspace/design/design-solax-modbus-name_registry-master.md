@@ -567,6 +567,7 @@ constants:
 | 1.3 | 2026-07-07 | Registered constant `DEFAULT_HTTP_PORT` (module solax_modbus.presentation.server) for the serve-by-default / port-8181 change. See change-a7c3e9d2. |
 | 1.4 | 2026-07-07 | Corrected stale `planned` status to `implemented` for the presentation.server module, its 3 classes, 5 methods, and 2 constants (feature confirmed present in source, see change-c4d8e1f6 / change-a7c3e9d2). Moved the corresponding classes to the Implemented section of the class diagram. |
 | 1.5 | 2026-07-16 | Off-grid SQLite history (change-a2d5f7c9). Added `retired` status legend value. Retired modules data.validator and data.buffer, and classes DataValidator, DataBuffer, ValidationResult. data.storage / TimeSeriesStore retained as `planned` (SQLite store, primitives schema: pv_power, battery_power, battery_soc, grid_power_total; house_load derived, not stored). |
+| 1.6 | 2026-07-17 | Annual rollup tier (change-b1c2d3e4). Added rollup_daily(), prune_daily(), query_history_12mo() to the TimeSeriesStore class diagram entry (all `planned`, consistent with the class's own status). |
 
 ---
 

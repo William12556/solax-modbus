@@ -249,12 +249,13 @@ src/
 - Manage retention policies
 - Handle connection failures gracefully
 
-**Retention (SQLite; change-a2d5f7c9):**
+**Retention (SQLite; change-a2d5f7c9, change-b1c2d3e4):**
 
 | Table | Resolution | Window | Aggregation |
 |-------|------------|--------|-------------|
 | raw | 1 minute | 24 hours | none |
 | rollup | 15 minutes | 30 days | avg, min, max per metric |
+| daily_rollup | 1 day | rolling trailing 365 days | avg, min, max per metric |
 
 **Database Schema:**
 
@@ -556,6 +557,7 @@ logging:
 | 1.0 | 2025-12-30 | Initial domain design |
 | 1.1 | 2025-12-30 | Added Tier 3 component document references |
 | 1.2 | 2026-07-16 | Off-grid SQLite history (change-a2d5f7c9). Technology stack InfluxDB -> local SQLite (sqlite3). Retention restated (raw 1-min/24h, rollup 15-min/30d, avg/min/max). DataValidator and DataBuffer retired; TimeSeriesStore retargeted to SQLite. Component tables and Tier 3 references updated. Store persists primitives (pv_power, battery_power, battery_soc, grid_power_total); house_load derived at display, not persisted. |
+| 1.3 | 2026-07-17 | Added daily_rollup tier to retention table (1-day resolution, rolling trailing 365 days) (change-b1c2d3e4). |
 
 ---
 

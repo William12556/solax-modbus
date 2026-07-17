@@ -34,8 +34,8 @@ Created: 2026 June 26
 component_info:
   name: "TelemetryServer"
   domain: "Presentation"
-  version: "1.2"
-  date: "2026-07-07"
+  version: "1.5"
+  date: "2026-07-17"
   status: "Active"
   source_file: "src/solax_modbus/presentation/server.py"
   static_asset: "src/solax_modbus/presentation/templates/dashboard.html"
@@ -54,11 +54,11 @@ Serve live single-inverter telemetry over HTTP to local-network clients. The ser
 | Responsibility | Description |
 |----------------|-------------|
 | JSON endpoint | Serve current telemetry snapshot as JSON |
-| History endpoint | Serve downsampled rollup series as JSON from the SQLite store (change-a2d5f7c9) |
+| History endpoints | Serve downsampled rollup series (30-day) and daily-rollup series (12-month, rolling trailing) as JSON from the SQLite store (change-a2d5f7c9, change-b1c2d3e4) |
 | Dashboard | Serve a static HTML client that fetches the JSON and history endpoints |
 | Access control | Reject requests from source IPs outside the configured allowlist |
 | State access | Read most recent telemetry snapshot from shared state (read-only) |
-| History access | Read rollup series from the TimeSeriesStore (read-only) |
+| History access | Read rollup and daily-rollup series from the TimeSeriesStore (read-only) |
 | Lifecycle | Provide explicit start and stop for coordination by the Application domain |
 
 ### Design Principles
@@ -96,7 +96,7 @@ dependencies:
   external: []
   internal:
     - "Application shared state (StateHolder)"
-    - "TimeSeriesStore (read-only, for /api/history) - change-a2d5f7c9"
+    - "TimeSeriesStore (read-only, for /api/history and /api/history/12mo) - change-a2d5f7c9, change-b1c2d3e4"
   standard_library:
     - "http.server (ThreadingHTTPServer, BaseHTTPRequestHandler)"
     - "json"
@@ -205,11 +205,12 @@ def __init__(
 |-------|--------|----------|--------------|
 | `/` | GET | Static dashboard HTML | text/html |
 | `/api/telemetry` | GET | Current telemetry snapshot | application/json |
-| `/api/history` | GET | Downsampled rollup series (all four primary metrics) | application/json |
+| `/api/history` | GET | Downsampled rollup series, 30-day window (all four primary metrics) | application/json |
+| `/api/history/12mo` | GET | Downsampled daily-rollup series, rolling trailing 12 months (all four primary metrics) | application/json |
 | any other path | GET | 404 Not Found | text/plain |
 | any path, disallowed source IP | GET | 403 Forbidden | text/plain |
 
-The dashboard is served once and polls `/api/telemetry` on a client-side interval using `fetch()`, updating the DOM without a full-page reload. It fetches `/api/history` less frequently and renders inline SVG sparklines client-side.
+The dashboard is served once and polls `/api/telemetry` on a client-side interval using `fetch()`, updating the DOM without a full-page reload. It fetches `/api/history` less frequently and renders inline SVG sparklines client-side. `/api/history/12mo` is fetched only when the operator toggles a card to its 12-month view, on a low-frequency interval (or on toggle, per implementation).
 
 ### /api/history (change-a2d5f7c9)
 
@@ -222,6 +223,18 @@ via the TimeSeriesStore `query_history()` method; it does not query SQLite
 directly. When the store is unavailable or empty, the endpoint returns an empty
 object per metric with HTTP 200. The route is subject to the same source-IP
 allowlist as the other routes.
+
+### /api/history/12mo (change-b1c2d3e4)
+
+Returns the daily-rollup series for the same four primitive metrics, over a
+rolling trailing 365-day window (not fixed calendar-year buckets). Point shape
+is identical to `/api/history` (`bucket_ts`, `avg`, `min`, `max`, one day per
+point). House load is derived client-side using the same formula as
+`/api/history`. The handler reads via `query_history_12mo()`; it does not query
+SQLite directly. When the store is unavailable or the daily tier is empty
+(e.g. no full day elapsed yet since deployment), the endpoint returns an empty
+object per metric with HTTP 200. Subject to the same source-IP allowlist as
+the other routes.
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -321,13 +334,17 @@ def set(self, data: Dict[str, Any]) -> None:
     """Replace the telemetry snapshot under lock. Called by the poll loop."""
 ```
 
-### History Access (change-a2d5f7c9)
+### History Access (change-a2d5f7c9, change-b1c2d3e4)
 
 The handler reads history via the injected TimeSeriesStore:
 
 ```python
 def query_history(self, metric: str, window_seconds: int) -> list:
     """Return rollup series {bucket_ts, avg, min, max} for one metric."""
+
+def query_history_12mo(self, metric: str) -> list:
+    """Return daily-rollup series {bucket_ts, avg, min, max} for one metric,
+    over the rolling trailing 365-day window."""
 ```
 
 The store is passed to the server by the Application domain (as StateHolder is)
@@ -425,7 +442,7 @@ Parameters are supplied by the Application domain via command-line flags.
 ### Related Documents
 
 - Application domain (state ownership, thread lifecycle): [design-bf6d4e5f-domain_application.md](<design-bf6d4e5f-domain_application.md>)
-- Requirement: FR-018 (HTTP Telemetry Server), FR-019 (Historical Telemetry Endpoint), NFR-006 (network security) in [requirements-solax-modbus-master.md](<../requirements/requirements-solax-modbus-master.md>)
+- Requirement: FR-018 (HTTP Telemetry Server), FR-019 (Historical Telemetry Endpoint), FR-020 (Extended 12-Month Historical Telemetry Endpoint), NFR-006 (network security) in [requirements-solax-modbus-master.md](<../requirements/requirements-solax-modbus-master.md>)
 - History source: [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>) (TimeSeriesStore, SQLite)
 
 ### Source Code
@@ -448,6 +465,7 @@ Parameters are supplied by the Application domain via command-line flags.
 | 1.2 | 2026-07-07 | Serve-by-default: `--serve` replaced by `--no-serve` (Purpose and Configuration); default port 8080 -> 8181 via new `DEFAULT_HTTP_PORT` constant (Constructor, Configuration). See change-a7c3e9d2. |
 | 1.3 | 2026-07-07 | Status Planned -> Active; removed stale (planned) annotations from File Location and Source Code (implementation confirmed in source). |
 | 1.4 | 2026-07-16 | Added /api/history route serving downsampled rollup series for the four primary metrics from the TimeSeriesStore (SQLite), for client-side sparklines (change-a2d5f7c9, FR-019). Added TimeSeriesStore read dependency, history-access interface, and --db-path configuration. |
+| 1.5 | 2026-07-17 | Added /api/history/12mo route serving daily-rollup series (rolling trailing 12 months) from the TimeSeriesStore, for a toggled long-range dashboard view (change-b1c2d3e4, FR-020). Added query_history_12mo() to the history-access interface. |
 
 ---
 

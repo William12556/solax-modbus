@@ -31,8 +31,8 @@ Created: 2025 December 30
 component_info:
   name: "TimeSeriesStore"
   domain: "Data"
-  version: "2.1"
-  date: "2026-07-16"
+  version: "2.2"
+  date: "2026-07-17"
   status: "Planned"
   source_file: "src/solax_modbus/data/storage.py"
 ```
@@ -43,18 +43,20 @@ component_info:
 
 ## 2.0 Purpose
 
-Local SQLite store for telemetry history. Records raw samples and a downsampled
-rollup, prunes both by age, and serves history for trend visualisation. Uses the
-Python standard library `sqlite3`; no external database or network dependency.
+Local SQLite store for telemetry history. Records raw samples and two
+downsampled rollup tiers (15-minute operational, daily long-range), prunes all
+three by age, and serves history for trend visualisation. Uses the Python
+standard library `sqlite3`; no external database or network dependency.
 
 ### 2.1 Responsibilities
 
 | Responsibility | Description |
 |----------------|-------------|
 | Persistence | Write telemetry samples to a raw table |
-| Downsampling | Aggregate raw samples into rollup buckets (avg, min, max) |
-| Retention | Prune raw and rollup rows past their age windows |
-| Query | Return rollup series for the primary metrics |
+| Downsampling | Aggregate raw samples into 15-minute rollup buckets (avg, min, max) |
+| Long-range downsampling | Aggregate into daily rollup buckets (avg, min, max), retained a rolling trailing 12 months |
+| Retention | Prune raw, rollup, and daily-rollup rows past their age windows |
+| Query | Return rollup or daily-rollup series for the primary metrics |
 | Write-path validation | Reject out-of-range values before insert |
 
 ### 2.2 Design Principles
@@ -112,7 +114,10 @@ classDiagram
         +write_sample(data: dict) bool
         +rollup() int
         +prune() int
+        +rollup_daily() int
+        +prune_daily() int
         +query_history(metric, window) list
+        +query_history_12mo(metric) list
         +close() None
         -_validate(data: dict) dict
     }
@@ -141,10 +146,12 @@ def __init__(self, db_path: str = "solax_history.db"):
 
 ## 5.0 Database Schema
 
-Two tables. `raw` holds recent full-resolution samples; `rollup` holds
-downsampled aggregates. Timestamps are integer epoch seconds. The store records
-**primitive** measurements only; `house_load` is not stored, it is derived at
-display time (see 5.1). This keeps history correctable if the derivation changes.
+Three tables. `raw` holds recent full-resolution samples; `rollup` holds
+15-minute downsampled aggregates for the 30-day operational view; `daily_rollup`
+holds 1-day downsampled aggregates for the rolling trailing 12-month view.
+Timestamps are integer epoch seconds. The store records **primitive**
+measurements only; `house_load` is not stored, it is derived at display time
+(see 5.1). This keeps history correctable if the derivation changes.
 
 ```sql
 CREATE TABLE IF NOT EXISTS raw (
@@ -165,7 +172,22 @@ CREATE TABLE IF NOT EXISTS rollup (
     PRIMARY KEY (bucket_ts, metric)
 );
 CREATE INDEX IF NOT EXISTS idx_rollup_ts ON rollup(bucket_ts);
+
+CREATE TABLE IF NOT EXISTS daily_rollup (
+    bucket_ts  INTEGER NOT NULL,      -- epoch seconds, 1-day bucket start (UTC)
+    metric     TEXT    NOT NULL,      -- 'pv_power' | 'battery_power' | 'battery_soc' | 'grid_power_total'
+    avg        REAL,
+    min        REAL,
+    max        REAL,
+    PRIMARY KEY (bucket_ts, metric)
+);
+CREATE INDEX IF NOT EXISTS idx_daily_rollup_ts ON daily_rollup(bucket_ts);
 ```
+
+`daily_rollup` is schema-identical to `rollup`, distinguished only by bucket
+width and retention. Aggregated from `rollup`, not from `raw` (see 6.1.1),
+since `rollup` is always a superset of the most recent portion of the
+12-month window at lower cost than re-scanning raw samples.
 
 ### 5.1 Metric Mapping and Derived House Load
 
@@ -208,6 +230,11 @@ is acceptable for the dashboard's variability band.
 |-------|------------|--------|-------------|
 | raw | 1 minute | 24 hours | none (samples) |
 | rollup | 15 minutes | 30 days | avg, min, max per metric |
+| daily_rollup | 1 day | rolling trailing 365 days | avg, min, max per metric |
+
+`daily_rollup`'s window is a rolling trailing window, not fixed calendar-year
+buckets: at any moment it holds the last 365 days ending now, sliding forward
+continuously. See FR-012 and FR-020.
 
 ### 6.1 Rollup Procedure
 
@@ -230,6 +257,42 @@ Repeated for each stored metric (`pv_power`, `battery_power`, `battery_soc`,
 `grid_power_total`). Invoked on an interval by the Application domain (for
 example every 15 minutes), or opportunistically after writes.
 
+#### 6.1.1 Daily Rollup Procedure
+
+`rollup_daily()` aggregates `rollup` rows (not `raw`) into 1-day buckets per
+metric and upserts into `daily_rollup`. Bucket start is `bucket_ts -
+(bucket_ts % 86400)`. Aggregation is deterministic SQL, structurally identical
+to 6.1 but sourced from `rollup`:
+
+```sql
+INSERT INTO daily_rollup (bucket_ts, metric, avg, min, max)
+SELECT (bucket_ts - (bucket_ts % 86400)) AS day_bucket_ts,
+       metric, AVG(avg), MIN(min), MAX(max)
+FROM rollup
+WHERE bucket_ts >= :since AND metric = :metric
+GROUP BY day_bucket_ts
+ON CONFLICT(bucket_ts, metric) DO UPDATE SET
+    avg = excluded.avg, min = excluded.min, max = excluded.max;
+```
+
+Averaging 15-minute averages to produce a daily average is exact only for
+equally-weighted buckets, which holds here since every day contributes the
+same number of 15-minute buckets under normal operation; a partially-covered
+day (deployment start, downtime) averages over whatever buckets exist, a
+known and accepted approximation consistent with the rollup tier's own
+behaviour. Invoked by the Application domain on a coarser interval than 6.1
+(for example daily), via an elapsed-time check in the poll loop (see
+prompt-level detail).
+
+**Correctness dependency:** `daily_rollup` accumulates incrementally, one
+day's worth of `rollup` data at a time, and retains 365 days independently of
+`rollup`'s own 30-day window. This is only correct if `rollup_daily()` runs at
+least once per day, before that day's source rows age out of `rollup` via
+`prune()` (30-day window). Both run inline in the same poll loop on their
+respective elapsed-time checks, so this holds under normal operation; extended
+downtime exceeding ~30 days would create a gap in `daily_rollup` for the
+unrolled days.
+
 ### 6.2 Pruning
 
 `prune()` deletes rows past the windows:
@@ -239,12 +302,19 @@ DELETE FROM raw    WHERE ts        < :now - 86400;      -- 24 hours
 DELETE FROM rollup WHERE bucket_ts < :now - 2592000;    -- 30 days
 ```
 
+`prune_daily()` deletes `daily_rollup` rows past the rolling trailing window:
+
+```sql
+DELETE FROM daily_rollup WHERE bucket_ts < :now - 31536000;   -- 365 days
+```
+
 ### 6.3 Storage Estimate
 
 | Table | Row rate | Rows retained | Approx size |
 |-------|----------|---------------|-------------|
 | raw | 1/min | ~1,440 | small (tens of KB) |
 | rollup | 4/hr x 4 metrics | ~11,520 | small (hundreds of KB) |
+| daily_rollup | 1/day x 4 metrics | ~1,460 | small (tens of KB) |
 
 The steady-state file is bounded well under 1 GB (NFR-008).
 
@@ -321,6 +391,30 @@ def prune(self) -> int:
     """
 ```
 
+#### rollup_daily()
+
+```python
+def rollup_daily(self) -> int:
+    """
+    Aggregate rollup rows into 1-day daily_rollup buckets.
+
+    Returns:
+        Number of buckets written or updated.
+    """
+```
+
+#### prune_daily()
+
+```python
+def prune_daily(self) -> int:
+    """
+    Delete daily_rollup rows older than the rolling trailing 365-day window.
+
+    Returns:
+        Number of rows deleted.
+    """
+```
+
 #### query_history()
 
 ```python
@@ -335,6 +429,22 @@ def query_history(
     Args:
         metric: One of pv_power, battery_power, battery_soc, grid_power_total.
         window_seconds: Trailing window (e.g. 30 days).
+
+    Returns:
+        List of {bucket_ts, avg, min, max} in chronological order.
+    """
+```
+
+#### query_history_12mo()
+
+```python
+def query_history_12mo(self, metric: str) -> List[Dict[str, Any]]:
+    """
+    Return the daily_rollup series for one metric over the rolling trailing
+    365-day window.
+
+    Args:
+        metric: One of pv_power, battery_power, battery_soc, grid_power_total.
 
     Returns:
         List of {bucket_ts, avg, min, max} in chronological order.
@@ -390,9 +500,9 @@ def close(self) -> None:
 
 ### 10.3 Related Documents
 
-- History endpoint: [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>) (Routes: /api/history)
-- Requirements: FR-010, FR-012, FR-019, NFR-008 in [requirements-solax-modbus-master.md](<../requirements/requirements-solax-modbus-master.md>)
-- Change: change-a2d5f7c9
+- History endpoints: [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>) (Routes: /api/history, /api/history/12mo)
+- Requirements: FR-010, FR-012, FR-019, FR-020, NFR-008 in [requirements-solax-modbus-master.md](<../requirements/requirements-solax-modbus-master.md>)
+- Change: change-a2d5f7c9, change-b1c2d3e4
 
 ### 10.4 Source Code
 
@@ -411,6 +521,7 @@ def close(self) -> None:
 | 1.0 | 2025-12-30 | Initial component design for planned storage (InfluxDB). |
 | 2.0 | 2026-07-16 | Superseded in place: InfluxDB replaced by local SQLite store (change-a2d5f7c9). New raw + rollup schema (avg/min/max), retention raw 1-min/24h and rollup 15-min/30d, folded write-path validation replacing the retired DataValidator, and a query_history interface for the /api/history endpoint. Removed InfluxDB connection config, tags, nanosecond precision, Flux downsampling, and buffer coupling. Added section numbering. |
 | 2.1 | 2026-07-16 | Store primitives, not derived house_load (change-a2d5f7c9). raw/rollup metrics: pv_power, battery_power, battery_soc, grid_power_total. house_load derived at display (house_load = pv_power - battery_power + grid_power_total); documented linearity/min-max caveat and provisional-derivation warning. Updated schema, metric mapping (5.1), rollup metric list, write-path validation, and query_history metric enum. |
+| 2.2 | 2026-07-17 | Added daily_rollup tier (change-b1c2d3e4): new table, retained a rolling trailing 365 days (not calendar-year), aggregated from rollup rather than raw. Added rollup_daily(), prune_daily(), query_history_12mo() to class design and interfaces. Updated 6.0 retention table, storage estimate (6.3), and cross-references (FR-020, /api/history/12mo). Documented the rollup-before-prune correctness dependency between the 15-min and daily tiers. |
 
 ---
 

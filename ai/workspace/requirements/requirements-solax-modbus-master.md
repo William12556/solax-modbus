@@ -278,13 +278,15 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   acceptance_criteria:
     - "Raw table: 1-minute resolution retained for 24 hours"
     - "Rollup table: 15-minute resolution retained for 30 days"
-    - "Each rollup bucket stores average, minimum, and maximum per metric"
+    - "Daily-rollup table: 1-day resolution retained for a rolling trailing 365 days"
+    - "Each rollup bucket (15-minute and daily) stores average, minimum, and maximum per metric"
     - "Raw samples older than the raw window pruned"
     - "Rollup buckets older than the rollup window pruned"
+    - "Daily-rollup buckets older than the trailing 365-day window pruned"
   source: "Storage management requirements (off-grid deployment)"
-  rationale: "Bounded raw and rollup windows keep the local database file small while preserving a 30-day trend"
+  rationale: "Bounded raw and rollup windows keep the local database file small while preserving a 30-day operational trend and a 12-month rolling trend"
   dependencies: ["d0e1f2a3"]
-  notes: "Change: change-a2d5f7c9. Replaces the InfluxDB three-tier retention model."
+  notes: "Change: change-a2d5f7c9 (raw/15-min rollup). Change: change-b1c2d3e4 (daily-rollup tier, rolling trailing 12 months, not calendar-year). Replaces the InfluxDB three-tier retention model."
 ```
 
 ### FR-013: Threshold Alerting
@@ -415,6 +417,26 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
   rationale: "A local historical trend lets an operator assess production and battery behaviour over time without an external tool"
   dependencies: ["d0e1f2a3", "1a2b3c4d"]
   notes: "Change: change-a2d5f7c9."
+```
+
+### FR-020: Extended (12-Month) Historical Telemetry Endpoint
+
+```yaml
+- id: "c2d3e4f5"
+  type: "functional"
+  description: "System SHALL serve a rolling trailing 12-month downsampled telemetry series over HTTP for long-range trend visualisation"
+  acceptance_criteria:
+    - "JSON endpoint (/api/history/12mo) returns daily-rollup series from the SQLite store"
+    - "Series covers a rolling trailing 365 days, not fixed calendar-year buckets"
+    - "Stored series are the same primitives as FR-019: pv_power, battery_power, battery_soc, grid_power_total"
+    - "Each daily-rollup point exposes average, minimum, and maximum for the day"
+    - "House load is derived client-side, consistent with FR-019, not stored"
+    - "Endpoint governed by the same source-IP allowlist as /api/telemetry and /api/history (HTTP 403 for non-permitted sources)"
+    - "Dashboard renders the 12-month series via a toggle/expand on existing cards; no additional card"
+  source: "Off-grid long-range historical overview requirements"
+  rationale: "The FR-019 rollup tier (15-minute resolution, 30-day retention) is unsuited to a 12-month query window; a coarser daily tier keeps the response and rendered sparkline usable"
+  dependencies: ["f2a3b4c5", "2e5f8a1b"]
+  notes: "Change: change-b1c2d3e4."
 ```
 
 [Return to Table of Contents](<#table of contents>)
@@ -797,6 +819,9 @@ Provide direct, local monitoring of Solax X3 Hybrid 6.0-D solar inverters withou
 | f2a3b4c5 | design-b7c8d9e0-component_data_storage.md | Retention Policies |
 | 2e5f8a1b | design-9b7e2c4a-component_presentation_server.md | Routes (/api/history) |
 | 2e5f8a1b | design-b7c8d9e0-component_data_storage.md | History query |
+| f2a3b4c5 | design-b7c8d9e0-component_data_storage.md | Daily-rollup tier (6.0 Retention and Rollup) |
+| c2d3e4f5 | design-9b7e2c4a-component_presentation_server.md | Routes (/api/history/12mo) |
+| c2d3e4f5 | design-b7c8d9e0-component_data_storage.md | 12-month history query |
 | a3b4c5d6 | design-bf6d4e5f-domain_application.md | Application Domain |
 | a3b4c5d6 | design-e0f1a2b3-component_application_alerting.md | AlertManager |
 | b4c5d6e7 | design-e0f1a2b3-component_application_alerting.md | Notification Dispatch |
@@ -827,6 +852,7 @@ Retired references (change-a2d5f7c9): e1f2a3b4 -> design-c8d9e0f1 (DataBuffer) a
 | f8a9b0c1 | SolaxEmulator | src/tools/emulator/solax_emulator.py |
 | 1a2b3c4d | TelemetryServer | src/solax_modbus/presentation/server.py |
 | 2e5f8a1b | TelemetryServer / TimeSeriesStore | src/solax_modbus/presentation/server.py, src/solax_modbus/data/storage.py |
+| c2d3e4f5 | TelemetryServer / TimeSeriesStore | src/solax_modbus/presentation/server.py, src/solax_modbus/data/storage.py |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -842,7 +868,7 @@ Retired references (change-a2d5f7c9): e1f2a3b4 -> design-c8d9e0f1 (DataBuffer) a
 - Data acquisition and display: FR-001 through FR-007
 - Connection management: FR-008
 - Data quality and persistence: FR-009, FR-010, FR-012 (FR-011 retired)
-- Historical telemetry endpoint: FR-019
+- Historical telemetry endpoints: FR-019, FR-020
 - Monitoring and alerting: FR-013 through FR-014
 - Configuration control: FR-015 through FR-016
 - Development infrastructure: FR-017
@@ -901,6 +927,7 @@ Retired references (change-a2d5f7c9): e1f2a3b4 -> design-c8d9e0f1 (DataBuffer) a
 | SQLite | Embedded, serverless relational database provided by the Python standard library (sqlite3); the local time-series store |
 | Rollup | Downsampled aggregate table holding average, minimum, and maximum per time bucket |
 | Retention Policy | Rules governing data aging and deletion in the local store |
+| Rolling Trailing Window | A retention/query span measured backward from the current time (e.g. "the last 365 days"), continuously sliding forward; distinct from a fixed calendar period |
 | Downsampling | Aggregation of fine-grained data to coarser time resolution |
 | Exponential Backoff | Retry strategy with geometrically increasing delays |
 | Circuit Breaker | Fault tolerance pattern preventing cascading failures |
@@ -920,6 +947,7 @@ Retired references (change-a2d5f7c9): e1f2a3b4 -> design-c8d9e0f1 (DataBuffer) a
 | 1.4 | 2026-06-26 | Brought web UI in-scope (embedded HTTP telemetry server). Added FR-018 HTTP Telemetry Server. Amended NFR-006 with HTTP isolation and source-IP allowlist criteria. Added traceability rows and glossary terms (RFC 1918, source-IP allowlist, link-local). |
 | 1.5 | 2026-07-03 | Updated SolaxEmulator source path: src/solax_modbus/emulator/solax_emulator.py → src/tools/emulator/solax_emulator.py (see design-c2b3c4d5 1.5). |
 | 1.6 | 2026-07-16 | Off-grid UI / SQLite history (change-a2d5f7c9). FR-010 persistence retargeted InfluxDB → local SQLite. FR-012 retention retargeted to raw 1-min/24h + rollup 15-min/30d (avg/min/max). FR-011 (buffering) retired. FR-009 narrowed to write-path range validation. Added FR-019 (/api/history). NFR-008 restated for SQLite. AR-002 dropped influxdb-client (added sqlite3). AR-008 generalised store-adapter wording. Updated traceability (withdrew DataValidator/DataBuffer standalone rows; added FR-019 rows) and glossary (replaced InfluxDB with SQLite/Rollup). |
+| 1.7 | 2026-07-17 | Annual rollup tier (change-b1c2d3e4). FR-012 extended with a daily-rollup tier (1-day resolution, rolling trailing 365 days). Added FR-020 (/api/history/12mo), dependent on FR-012 and FR-019. Updated traceability (added FR-012 daily-tier row and FR-020 rows) and coverage summary. |
 
 ---
 

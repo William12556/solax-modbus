@@ -51,7 +51,7 @@ Real-time monitoring system for Solax X3 Hybrid 6.0-D solar inverters using Modb
 - Console-based telemetry display
 - Modbus TCP emulator for development testing
 - HTTP server for live telemetry (single inverter, read-only)
-- Future: Local SQLite time-series history (raw + rollup) and /api/history endpoint
+- Future: Local SQLite time-series history (raw + rollup + daily-rollup) and /api/history, /api/history/12mo endpoints
 - Future: Monitoring and alerting
 
 ### Out of Scope
@@ -126,8 +126,9 @@ flowchart LR
 | Console display | ✓ Implemented | Formatted statistics output |
 | Emulator | ✓ Implemented | Test server with dynamic state simulation |
 | HTTP telemetry server | ✓ Implemented | Live telemetry over HTTP, read-only |
-| Data persistence | ○ Planned | Local SQLite time-series history (raw + rollup) |
+| Data persistence | ○ Planned | Local SQLite time-series history (raw + rollup + daily-rollup) |
 | Historical endpoint | ○ Planned | /api/history rollup series for client-side sparklines |
+| Extended historical endpoint | ○ Planned | /api/history/12mo daily-rollup series, rolling trailing 12 months |
 | Alerting | ○ Planned | Threshold monitoring and notifications |
 
 
@@ -422,6 +423,7 @@ stateDiagram-v2
 **Retention:**
 - Raw: 1-minute resolution, 24 hours
 - Rollup: 15-minute resolution, 30 days (avg, min, max)
+- Daily-rollup: 1-day resolution, rolling trailing 365 days (avg, min, max) (change-b1c2d3e4)
 
 ---
 
@@ -693,6 +695,7 @@ logging:
 | 1.9 | 2026-06-26 | Brought web UI in-scope. Added HTTP telemetry server to In Scope and Primary Functions. Added TelemetryServer (design-9b7e2c4a) to Tier 3 components; marked HTMLRenderer (design-d9e0f1a2) Superseded. |
 | 1.10 | 2026-07-03 | Relocated SolaxEmulator source from src/solax_modbus/emulator/ to src/tools/emulator/, outside the package tree (see design-c2b3c4d5 1.5). Updated Directory Structure, Implementation Status, Components, and Source Code Mapping. |
 | 1.11 | 2026-07-16 | Off-grid UI / SQLite history (change-a2d5f7c9). Persistence retargeted InfluxDB -> local SQLite (Scope, System Overview, Technology Stack, TimeSeriesStore section, retention). DataValidator and DataBuffer retired; TimeSeriesStore marked Planned (SQLite). TelemetryServer status corrected to Active. Added House Load and Rollup terminology. Noted /api/history endpoint. Store persists primitives; house_load derived at display (house_load = pv_power - battery_power + grid_power_total). |
+| 1.12 | 2026-07-17 | Annual rollup tier (change-b1c2d3e4). Added daily-rollup tier to Scope, Primary Functions, and TimeSeriesStore retention (1-day resolution, rolling trailing 365 days). Noted /api/history/12mo endpoint. |
 
 ---
 
