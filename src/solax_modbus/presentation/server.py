@@ -73,11 +73,12 @@ class TelemetryRequestHandler(BaseHTTPRequestHandler):
     HTTP request handler for telemetry endpoints.
 
     Routes:
-        /              - Static dashboard HTML
-        /api/telemetry - Current telemetry snapshot as JSON
-        /api/history   - Downsampled rollup series as JSON
-        Other paths    - 404 Not Found
-        Disallowed IP  - 403 Forbidden
+        /               - Static dashboard HTML
+        /api/telemetry  - Current telemetry snapshot as JSON
+        /api/history    - Downsampled rollup series as JSON (30-day window)
+        /api/history/12mo - Daily rollup series as JSON (365-day window)
+        Other paths     - 404 Not Found
+        Disallowed IP   - 403 Forbidden
     """
 
     # Suppress default stderr logging
@@ -103,6 +104,8 @@ class TelemetryRequestHandler(BaseHTTPRequestHandler):
                 self._serve_telemetry()
             elif self.path == "/api/history":
                 self._serve_history()
+            elif self.path == "/api/history/12mo":
+                self._serve_history_12mo()
             else:
                 self._send_error(404, "Not Found")
 
@@ -185,6 +188,41 @@ class TelemetryRequestHandler(BaseHTTPRequestHandler):
             self._send_response(200, "application/json", content.encode("utf-8"))
         except (TypeError, ValueError) as e:
             logger.error("History JSON serialization failed: %s", e, exc_info=True)
+            self._send_error(500, "Serialization error")
+
+    def _serve_history_12mo(self) -> None:
+        """Serve daily rollup series as JSON for all primary metrics (365-day window)."""
+        # Metrics to include in the history response
+        metrics = ("pv_power", "battery_power", "battery_soc", "grid_power_total")
+
+        store = getattr(self.server, "store", None)
+
+        # Build the response object with all metrics
+        result: Dict[str, List[Dict[str, Any]]] = {}
+
+        for metric in metrics:
+            if store is None:
+                result[metric] = []
+            else:
+                try:
+                    result[metric] = store.query_history_12mo(metric)
+                except ValueError as e:
+                    logger.warning("query_history_12mo failed for %s: %s", metric, e)
+                    result[metric] = []
+                except Exception as e:
+                    logger.error(
+                        "Unexpected error in query_history_12mo for %s: %s",
+                        metric,
+                        e,
+                        exc_info=True,
+                    )
+                    result[metric] = []
+
+        try:
+            content = json.dumps(result)
+            self._send_response(200, "application/json", content.encode("utf-8"))
+        except (TypeError, ValueError) as e:
+            logger.error("History 12mo JSON serialization failed: %s", e, exc_info=True)
             self._send_error(500, "Serialization error")
 
     def _send_response(self, status: int, content_type: str, body: bytes) -> None:

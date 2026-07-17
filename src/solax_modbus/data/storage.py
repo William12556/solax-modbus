@@ -24,9 +24,13 @@ STORED_METRICS = ("pv_power", "battery_power", "battery_soc", "grid_power_total"
 # Retention windows in seconds
 RAW_RETENTION_SECONDS = 86400  # 24 hours
 ROLLUP_RETENTION_SECONDS = 2592000  # 30 days
+DAILY_ROLLUP_RETENTION_SECONDS = 31536000  # 365 days
 
 # Rollup bucket size in seconds (15 minutes)
 ROLLUP_BUCKET_SECONDS = 900
+
+# Daily rollup bucket size in seconds (1 day)
+DAILY_ROLLUP_BUCKET_SECONDS = 86400
 
 # Range validation bounds
 RANGE_BOUNDS: Dict[str, tuple] = {
@@ -115,6 +119,21 @@ class TimeSeriesStore:
                 """)
                 cursor.execute(
                     "CREATE INDEX IF NOT EXISTS idx_rollup_ts ON rollup(bucket_ts)"
+                )
+
+                # Daily rollup aggregates table (1-day buckets, 365-day retention)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS daily_rollup (
+                        bucket_ts  INTEGER NOT NULL,
+                        metric     TEXT    NOT NULL,
+                        avg        REAL,
+                        min        REAL,
+                        max        REAL,
+                        PRIMARY KEY (bucket_ts, metric)
+                    )
+                """)
+                cursor.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_daily_rollup_ts ON daily_rollup(bucket_ts)"
                 )
 
                 self._conn.commit()
@@ -383,6 +402,135 @@ class TimeSeriesStore:
 
         except sqlite3.Error as e:
             logger.error("query_history failed: %s", e, exc_info=True)
+
+        return results
+
+    def rollup_daily(self) -> int:
+        """
+        Aggregate rollup rows into 1-day daily_rollup buckets.
+
+        Computes avg of avg, min of min, max of max per metric per day bucket
+        and upserts into daily_rollup. Source data is the rollup table (15-min
+        buckets), not the raw table.
+
+        Returns:
+            Number of bucket-metric rows written or updated.
+        """
+        if self._conn is None or self._closed:
+            return 0
+
+        rows_affected = 0
+
+        try:
+            with self._lock:
+                cursor = self._conn.cursor()
+
+                for metric in STORED_METRICS:
+                    cursor.execute(
+                        f"""
+                        INSERT INTO daily_rollup (bucket_ts, metric, avg, min, max)
+                        SELECT (bucket_ts - (bucket_ts % ?)) AS day_bucket_ts,
+                               ? AS metric,
+                               AVG(avg),
+                               MIN(min),
+                               MAX(max)
+                        FROM rollup
+                        WHERE metric = ? AND avg IS NOT NULL
+                        GROUP BY day_bucket_ts
+                        ON CONFLICT(bucket_ts, metric) DO UPDATE SET
+                            avg = excluded.avg,
+                            min = excluded.min,
+                            max = excluded.max
+                        """,
+                        (DAILY_ROLLUP_BUCKET_SECONDS, metric, metric),
+                    )
+                    rows_affected += cursor.rowcount
+
+                self._conn.commit()
+                logger.info(
+                    "Daily rollup completed: %d bucket-metric rows affected",
+                    rows_affected,
+                )
+
+        except sqlite3.Error as e:
+            logger.error("rollup_daily failed: %s", e, exc_info=True)
+
+        return rows_affected
+
+    def prune_daily(self) -> int:
+        """
+        Delete daily_rollup rows older than a rolling trailing 365 days.
+
+        Returns:
+            Number of rows deleted.
+        """
+        if self._conn is None or self._closed:
+            return 0
+
+        now = int(time.time())
+        cutoff = now - DAILY_ROLLUP_RETENTION_SECONDS
+        deleted = 0
+
+        try:
+            with self._lock:
+                cursor = self._conn.cursor()
+                cursor.execute(
+                    "DELETE FROM daily_rollup WHERE bucket_ts < ?", (cutoff,)
+                )
+                deleted = cursor.rowcount
+                self._conn.commit()
+                logger.info("Daily prune completed: %d rows deleted", deleted)
+
+        except sqlite3.Error as e:
+            logger.error("prune_daily failed: %s", e, exc_info=True)
+
+        return deleted
+
+    def query_history_12mo(self, metric: str) -> List[Dict[str, Any]]:
+        """
+        Return daily_rollup series for one metric over a trailing 365-day window.
+
+        Args:
+            metric: One of pv_power, battery_power, battery_soc, grid_power_total.
+
+        Returns:
+            List of {bucket_ts, avg, min, max} dictionaries in chronological order.
+
+        Raises:
+            ValueError: If metric is not one of the stored metrics.
+        """
+        if metric not in STORED_METRICS:
+            raise ValueError(f"Unknown metric: {metric}")
+
+        if self._conn is None or self._closed:
+            return []
+
+        now = int(time.time())
+        cutoff = now - DAILY_ROLLUP_RETENTION_SECONDS
+        results: List[Dict[str, Any]] = []
+
+        try:
+            with self._lock:
+                cursor = self._conn.cursor()
+                cursor.execute(
+                    """
+                    SELECT bucket_ts, avg, min, max
+                    FROM daily_rollup
+                    WHERE metric = ? AND bucket_ts >= ?
+                    ORDER BY bucket_ts ASC
+                    """,
+                    (metric, cutoff),
+                )
+                for row in cursor.fetchall():
+                    results.append({
+                        "bucket_ts": row[0],
+                        "avg": row[1],
+                        "min": row[2],
+                        "max": row[3],
+                    })
+
+        except sqlite3.Error as e:
+            logger.error("query_history_12mo failed: %s", e, exc_info=True)
 
         return results
 

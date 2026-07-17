@@ -251,8 +251,10 @@ traceability:
 notes: >
   Naming convention "12mo" used throughout (table, constant, method, endpoint)
   in place of "annual" to avoid implying fixed calendar-year semantics; the
-  tier is a rolling trailing 365-day window. Daily bucket source (15-min
-  rollup vs. raw) to be fixed at T04 prompt authoring.
+  tier is a rolling trailing 365-day window. Daily bucket source fixed at
+  prompt authoring: aggregated from the 15-min rollup table, not raw (see
+  design-b7c8d9e0 section 6.1.1). Source implementation specified in
+  prompt-b1c2d3e4 (T04, Claude Code profile), not yet executed.
 
 version_history:
   - version: "1.0"
@@ -265,6 +267,11 @@ version_history:
     author: "William Watson"
     changes:
       - "Requirements and design baseline revised (FR-012 extended, FR-020 added; design-b7c8d9e0, design-9b7e2c4a, design-af5c3d4e, design-9e4b2c3d, design-solax-modbus-master updated; traceability matrix and name registry updated). Source implementation (T04 prompt) not yet authored."
+  - version: "1.2"
+    date: "2026-07-17"
+    author: "William Watson"
+    changes:
+      - "Authored prompt-b1c2d3e4 (T04, Claude Code profile) specifying source implementation. Not yet executed."
 
 metadata:
   copyright: "Copyright (c) 2026 William Watson. MIT License."

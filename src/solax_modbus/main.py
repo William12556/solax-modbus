@@ -25,6 +25,9 @@ from solax_modbus.presentation.server import (
 # Rollup and prune interval in seconds (15 minutes)
 ROLLUP_INTERVAL_SECONDS = 900
 
+# Daily rollup and prune interval in seconds (1 day)
+DAILY_ROLLUP_INTERVAL_SECONDS = 86400
+
 # Configure logging to stdout/stderr for journald capture
 logging.basicConfig(
     level=logging.INFO,
@@ -558,6 +561,7 @@ Examples:
 
     # Track time since last rollup/prune for periodic maintenance
     last_rollup_time = time.time()
+    last_daily_rollup_time = time.time()
 
     # Main monitoring loop
     try:
@@ -587,6 +591,16 @@ Examples:
                         store.rollup()
                         store.prune()
                     last_rollup_time = now
+
+                # Daily rollup and prune (roughly once per day)
+                if now - last_daily_rollup_time >= DAILY_ROLLUP_INTERVAL_SECONDS:
+                    if store is not None:
+                        try:
+                            store.rollup_daily()
+                            store.prune_daily()
+                        except Exception as e:
+                            logger.error("Daily rollup/prune failed: %s", e, exc_info=True)
+                    last_daily_rollup_time = now
 
                 # Wait for next poll
                 time.sleep(poll_interval)

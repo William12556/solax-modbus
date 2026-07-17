@@ -105,6 +105,31 @@
             height: 100%;
         }
 
+        /* Range toggle */
+        .range-toggle {
+            margin-left: auto;
+            display: flex;
+            gap: 4px;
+            font-size: 0.7rem;
+        }
+        .range-toggle button {
+            background: #1a1a2e;
+            border: 1px solid #444;
+            color: #888;
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+        .range-toggle button:hover {
+            background: #2d2d4a;
+        }
+        .range-toggle button.active {
+            background: #4fc3f7;
+            color: #1a1a2e;
+            border-color: #4fc3f7;
+        }
+
         /* Status card specific */
         .status-card .card-value {
             font-size: 1.4rem;
@@ -212,6 +237,10 @@
                 <div class="card-header">
                     <span class="card-icon">&#9728;</span>
                     <span class="card-title">Solar Production</span>
+                    <div class="range-toggle" data-card="solar">
+                        <button class="active" data-range="30d">30d</button>
+                        <button data-range="12mo">12mo</button>
+                    </div>
                 </div>
                 <div class="card-value solar" id="solar-value">--</div>
                 <div class="card-unit">watts</div>
@@ -223,6 +252,10 @@
                 <div class="card-header">
                     <span class="card-icon">&#128267;</span>
                     <span class="card-title">Battery</span>
+                    <div class="range-toggle" data-card="battery">
+                        <button class="active" data-range="30d">30d</button>
+                        <button data-range="12mo">12mo</button>
+                    </div>
                 </div>
                 <div class="card-value battery" id="battery-value">--</div>
                 <div class="card-unit" id="battery-unit">%</div>
@@ -234,6 +267,10 @@
                 <div class="card-header">
                     <span class="card-icon">&#127968;</span>
                     <span class="card-title">House Load</span>
+                    <div class="range-toggle" data-card="load">
+                        <button class="active" data-range="30d">30d</button>
+                        <button data-range="12mo">12mo</button>
+                    </div>
                 </div>
                 <div class="card-value load" id="load-value">--</div>
                 <div class="card-unit">watts</div>
@@ -367,9 +404,21 @@
     <script>
         const TELEMETRY_INTERVAL = 5000;   // 5 seconds
         const HISTORY_INTERVAL = 60000;    // 60 seconds
+        const HISTORY_12MO_INTERVAL = 600000; // 10 minutes
 
-        // History data cache
+        // History data cache (30-day)
         let historyData = null;
+
+        // 12-month history data cache (lazily fetched)
+        let history12moData = null;
+        let history12moFetching = false;
+
+        // Per-card range toggle state: 'solar', 'battery', 'load' -> '30d' or '12mo'
+        const cardRangeState = {
+            solar: '30d',
+            battery: '30d',
+            load: '30d'
+        };
 
         function formatValue(value, unit, decimals = 1) {
             if (value === undefined || value === null) return '--';
@@ -585,30 +634,51 @@
             document.getElementById('energy-total').textContent = formatValue(data.energy_total, 'kWh');
         }
 
+        /**
+         * Get the data source for a card based on its current range state.
+         */
+        function getDataForCard(card) {
+            const range = cardRangeState[card];
+            if (range === '12mo' && history12moData) {
+                return history12moData;
+            }
+            return historyData;
+        }
+
+        /**
+         * Update a single card's sparkline based on its range state.
+         */
+        function updateCardSparkline(card) {
+            const data = getDataForCard(card);
+            if (!data) return;
+
+            if (card === 'solar') {
+                renderSparkline(
+                    document.getElementById('solar-sparkline'),
+                    data.pv_power || [],
+                    '#ffca28'
+                );
+            } else if (card === 'battery') {
+                renderSparkline(
+                    document.getElementById('battery-sparkline'),
+                    data.battery_soc || [],
+                    '#4caf50'
+                );
+            } else if (card === 'load') {
+                const loadSeries = deriveHouseLoadSeries(data);
+                renderSparkline(
+                    document.getElementById('load-sparkline'),
+                    loadSeries,
+                    '#ff9800'
+                );
+            }
+        }
+
         function updateSparklines() {
-            if (!historyData) return;
-
-            // Solar sparkline
-            renderSparkline(
-                document.getElementById('solar-sparkline'),
-                historyData.pv_power || [],
-                '#ffca28'
-            );
-
-            // Battery SOC sparkline
-            renderSparkline(
-                document.getElementById('battery-sparkline'),
-                historyData.battery_soc || [],
-                '#4caf50'
-            );
-
-            // House Load sparkline (derived)
-            const loadSeries = deriveHouseLoadSeries(historyData);
-            renderSparkline(
-                document.getElementById('load-sparkline'),
-                loadSeries,
-                '#ff9800'
-            );
+            // Update each card based on its range state
+            updateCardSparkline('solar');
+            updateCardSparkline('battery');
+            updateCardSparkline('load');
         }
 
         async function fetchTelemetry() {
@@ -639,6 +709,68 @@
             }
         }
 
+        /**
+         * Fetch 12-month history data. Called lazily on first toggle to 12mo.
+         */
+        async function fetchHistory12mo() {
+            if (history12moFetching) return;
+            history12moFetching = true;
+
+            try {
+                const response = await fetch('/api/history/12mo');
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                history12moData = await response.json();
+                updateSparklines();
+            } catch (err) {
+                console.error('History 12mo fetch error:', err);
+            } finally {
+                history12moFetching = false;
+            }
+        }
+
+        /**
+         * Check if any card is currently in 12mo view.
+         */
+        function anyCardIn12moView() {
+            return Object.values(cardRangeState).some(r => r === '12mo');
+        }
+
+        /**
+         * Handle toggle button clicks.
+         */
+        function initRangeToggles() {
+            document.querySelectorAll('.range-toggle').forEach(toggle => {
+                const card = toggle.dataset.card;
+                toggle.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const range = btn.dataset.range;
+                        if (cardRangeState[card] === range) return;
+
+                        // Update state
+                        cardRangeState[card] = range;
+
+                        // Update button styles
+                        toggle.querySelectorAll('button').forEach(b => {
+                            b.classList.toggle('active', b.dataset.range === range);
+                        });
+
+                        // Fetch 12mo data if switching to 12mo and not yet fetched
+                        if (range === '12mo' && !history12moData && !history12moFetching) {
+                            fetchHistory12mo();
+                        } else {
+                            // Re-render this card's sparkline
+                            updateCardSparkline(card);
+                        }
+                    });
+                });
+            });
+        }
+
+        // Initialize range toggles
+        initRangeToggles();
+
         // Initial fetch
         fetchTelemetry();
         fetchHistory();
@@ -646,6 +778,13 @@
         // Periodic refresh
         setInterval(fetchTelemetry, TELEMETRY_INTERVAL);
         setInterval(fetchHistory, HISTORY_INTERVAL);
+
+        // Periodic 12mo history refresh (only when at least one card is in 12mo view)
+        setInterval(() => {
+            if (anyCardIn12moView() && history12moData) {
+                fetchHistory12mo();
+            }
+        }, HISTORY_12MO_INTERVAL);
 
         // Re-render sparklines on window resize
         window.addEventListener('resize', updateSparklines);

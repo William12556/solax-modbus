@@ -12,8 +12,8 @@ issue_info:
   type: "requirement_change"
   iteration: 1
   coupled_docs:
-    change_ref: ""
-    change_iteration: null
+    change_ref: "change-b1c2d3e4"
+    change_iteration: 1
 
 source:
   origin: "requirement_change"
@@ -108,7 +108,7 @@ resolution:
     Author change document and revise requirements/design baseline (FR-012
     extension). Source implementation delivered via a T04 prompt for
     Claude Code.
-  change_ref: ""
+  change_ref: "change-b1c2d3e4"
   resolved_date: ""
   resolved_by: ""
   fix_description: ""
@@ -135,7 +135,8 @@ traceability:
   design_refs:
     - "design-b7c8d9e0-component_data_storage"
     - "design-9b7e2c4a-component_presentation_server"
-  change_refs: []
+  change_refs:
+    - "change-b1c2d3e4"
   test_refs: []
 
 notes: >
@@ -156,6 +157,11 @@ version_history:
     author: "William Watson"
     changes:
       - "Initial issue documenting the annual (12-month, trailing) rollup tier requirement"
+  - version: "1.1"
+    date: "2026-07-17"
+    author: "William Watson"
+    changes:
+      - "Linked change-b1c2d3e4 following T02 change document authoring"
 
 metadata:
   copyright: "Copyright (c) 2026 William Watson. MIT License."
