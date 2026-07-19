@@ -205,7 +205,7 @@ src/
 
 | Component | File | Status | Purpose |
 |-----------|------|--------|---------|
-| TimeSeriesStore | solax_modbus/data/storage.py | Planned | Local SQLite store (raw + rollup) with folded write-path validation |
+| TimeSeriesStore | solax_modbus/data/storage.py | Implemented | Local SQLite store (raw + rollup + daily_rollup) with folded write-path validation |
 | Data Models | solax_modbus/data/models.py | Planned | Data structures |
 | DataValidator | data/validator.py | Retired | Superseded by folded write-path validation (change-a2d5f7c9) |
 | DataBuffer | data/buffer.py | Retired | Outage buffering not applicable to local SQLite (change-a2d5f7c9) |
@@ -239,7 +239,7 @@ src/
 
 ### TimeSeriesStore
 
-**Tier 3 Document:** [design-XXXX-component_data_storage.md](planned)
+**Tier 3 Document:** [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>)
 
 **Purpose:** Interface to InfluxDB for data persistence and retrieval.
 
@@ -525,7 +525,7 @@ logging:
 
 | Component | Document | Status |
 |-----------|----------|--------|
-| TimeSeriesStore | [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>) | Planned (SQLite) |
+| TimeSeriesStore | [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>) | Active |
 | DataValidator | [design-a6b7c8d9-component_data_validator.md](<design-a6b7c8d9-component_data_validator.md>) | Retired |
 | DataBuffer | [design-c8d9e0f1-component_data_buffer.md](<design-c8d9e0f1-component_data_buffer.md>) | Retired |
 
@@ -541,10 +541,10 @@ logging:
 
 | Component | File |
 |-----------|------|
-| Data Models | src/data/models.py (planned) |
-| DataValidator | src/data/validator.py (planned) |
-| TimeSeriesStore | src/data/storage.py (planned) |
-| DataBuffer | src/data/buffer.py (planned) |
+| Data Models | src/solax_modbus/data/models.py (planned) |
+| DataValidator | src/solax_modbus/data/validator.py (retired) |
+| TimeSeriesStore | src/solax_modbus/data/storage.py |
+| DataBuffer | src/solax_modbus/data/buffer.py (retired) |
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -558,6 +558,7 @@ logging:
 | 1.1 | 2025-12-30 | Added Tier 3 component document references |
 | 1.2 | 2026-07-16 | Off-grid SQLite history (change-a2d5f7c9). Technology stack InfluxDB -> local SQLite (sqlite3). Retention restated (raw 1-min/24h, rollup 15-min/30d, avg/min/max). DataValidator and DataBuffer retired; TimeSeriesStore retargeted to SQLite. Component tables and Tier 3 references updated. Store persists primitives (pv_power, battery_power, battery_soc, grid_power_total); house_load derived at display, not persisted. |
 | 1.3 | 2026-07-17 | Added daily_rollup tier to retention table (1-day resolution, rolling trailing 365 days) (change-b1c2d3e4). |
+| 1.4 | 2026-07-17 | P08 review (prompt-b1c2d3e4): corrected stale TimeSeriesStore status Planned -> Implemented/Active (source has existed since change-a2d5f7c9; status was never updated). Added Tier 3 document link. Corrected Source Code Mapping paths (src/data/... -> src/solax_modbus/data/...); DataValidator and DataBuffer paths marked (retired) rather than the stale (planned). |
 
 ---
 

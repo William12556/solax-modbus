@@ -411,6 +411,7 @@ notes: |
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-07-17 | Initial prompt. Implement daily_rollup tier (rollup_daily, prune_daily, query_history_12mo), /api/history/12mo route, per-card dashboard toggle, and main.py scheduling integration, per design-b7c8d9e0 and design-9b7e2c4a (change-b1c2d3e4). Authored for the Claude Code profile. |
+| 1.1 | 2026-07-17 | Closed. Implemented by Claude Code and committed/pushed; P08 review by Claude (Strategic Domain) passed with one non-blocking naming note (source constant DAILY_ROLLUP_RETENTION_SECONDS vs. DAILY_RETENTION_SECONDS as informally referenced during scoping). Existing pytest suite not executed by Claude; operator confirmation pending. |
 
 ---
 

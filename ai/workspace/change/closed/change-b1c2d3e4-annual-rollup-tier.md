@@ -7,7 +7,7 @@ change_info:
   title: "Annual Rollup Tier for 12-Month History Graph"
   date: "2026-07-17"
   author: "William Watson"
-  status: "proposed"
+  status: "implemented"
   priority: "low"
   iteration: 1
   coupled_docs:
@@ -147,7 +147,7 @@ technical_details:
         (15-min) tables.
     - entity: "Retention policy"
       change_type: "schema"
-      details: "New constant DAILY_RETENTION_SECONDS = 31536000 (365 days), rolling trailing-window prune."
+      details: "New constant DAILY_ROLLUP_RETENTION_SECONDS = 31536000 (365 days), rolling trailing-window prune. (Named DAILY_ROLLUP_RETENTION_SECONDS in the implementation, not DAILY_RETENTION_SECONDS as originally drafted here; corrected during P08 review.)"
   interface_changes:
     - interface: "HTTP /api/history/12mo"
       change_type: "contract"
@@ -208,12 +208,37 @@ implementation:
     following deployment; no new file or external service.
 
 verification:
-  implemented_date: ""
-  implemented_by: ""
-  verification_date: ""
-  verified_by: ""
-  test_results: ""
-  issues_found: []
+  implemented_date: "2026-07-17"
+  implemented_by: "Claude Code (Tactical Domain)"
+  verification_date: "2026-07-17"
+  verified_by: "Claude (Strategic Domain, P08 review)"
+  test_results: >
+    P08 review pass. storage.py (daily_rollup schema; rollup_daily, prune_daily,
+    query_history_12mo sourced from rollup not raw, matching design-b7c8d9e0
+    section 6.1.1), server.py (/api/history/12mo under the existing allowlist,
+    reusing the store reference), main.py (second elapsed-time horizon for
+    daily rollup/prune, scheduled inline after the existing 15-min rollup/prune
+    within the same poll iteration, preserving the rollup-before-prune
+    correctness ordering), dashboard.html (per-card 30d/12mo toggle, lazy
+    shared fetch of /api/history/12mo, existing house-load derivation reused
+    unchanged) all conform to prompt-b1c2d3e4 and to design-b7c8d9e0 /
+    design-9b7e2c4a. No house_load column or metric in daily_rollup, confirmed.
+    Rolling trailing 365-day window confirmed (no calendar-year alignment).
+    One non-blocking naming note: source constant is
+    DAILY_ROLLUP_RETENTION_SECONDS, not DAILY_RETENTION_SECONDS as informally
+    referenced in this change document's technical_details; design-b7c8d9e0
+    updated to record the actual name as authoritative. No new tests added
+    (P06 is a separate phase per project convention, consistent with
+    change-a2d5f7c9 precedent); existing pytest suite not executed by Claude,
+    operator to confirm green. Additionally identified and corrected, as part
+    of this review, a pre-existing staleness gap: the whole TimeSeriesStore/
+    history baseline (established by change-a2d5f7c9) had been left marked
+    Planned across design-b7c8d9e0, design-9e4b2c3d, design-af5c3d4e,
+    design-solax-modbus-master, the name registry, and the traceability
+    matrix, despite being implemented in source since that change. Corrected
+    to Implemented/Active throughout.
+  issues_found:
+    - issue_ref: "issue-b1c2d3e4"
 
 traceability:
   design_updates:
@@ -272,6 +297,11 @@ version_history:
     author: "William Watson"
     changes:
       - "Authored prompt-b1c2d3e4 (T04, Claude Code profile) specifying source implementation. Not yet executed."
+  - version: "1.3"
+    date: "2026-07-17"
+    author: "William Watson"
+    changes:
+      - "Implemented via prompt-b1c2d3e4 by Claude Code; P08 reviewed and passed with one non-blocking naming note. Corrected a pre-existing status-staleness gap across the TimeSeriesStore/history baseline (design docs, name registry, traceability matrix) discovered during review. Status proposed -> implemented."
 
 metadata:
   copyright: "Copyright (c) 2026 William Watson. MIT License."

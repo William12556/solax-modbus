@@ -103,20 +103,23 @@ classDiagram
         +do_GET() None
     }
 
+    class TimeSeriesStore {
+        +init_schema() None
+        +write_sample(data) bool
+        +rollup() int
+        +prune() int
+        +rollup_daily() int
+        +prune_daily() int
+        +query_history(metric, window) list
+        +query_history_12mo(metric) list
+    }
+
     %% ── Planned ──────────────────────────────────────────────
 
     class Measurement {
         <<dataclass>>
         +datetime timestamp
         +str inverter_id
-    }
-
-    class TimeSeriesStore {
-        +init_schema() None
-        +write_sample(data) bool
-        +rollup() int
-        +prune() int
-        +query_history(metric, window) list
     }
 
     %% ── Retired (change-a2d5f7c9) ─────────────────────────────
@@ -190,7 +193,7 @@ modules:
   - name: "solax_modbus.data.storage"
     path: "src/solax_modbus/data/storage.py"
     package: "solax_modbus"
-    status: planned  # change-a2d5f7c9: SQLite store (raw + rollup)
+    status: implemented  # change-a2d5f7c9: SQLite store (raw + rollup); change-b1c2d3e4: daily_rollup tier
   - name: "solax_modbus.data.buffer"
     path: "src/solax_modbus/data/buffer.py"
     package: "solax_modbus"
@@ -246,7 +249,7 @@ classes:
   - name: "TimeSeriesStore"
     module: "solax_modbus.data.storage"
     base_classes: []
-    status: planned  # change-a2d5f7c9: SQLite store
+    status: implemented  # change-a2d5f7c9: SQLite store; change-b1c2d3e4: daily_rollup tier
   - name: "DataBuffer"
     module: "solax_modbus.data.buffer"
     base_classes: []
@@ -568,6 +571,7 @@ constants:
 | 1.4 | 2026-07-07 | Corrected stale `planned` status to `implemented` for the presentation.server module, its 3 classes, 5 methods, and 2 constants (feature confirmed present in source, see change-c4d8e1f6 / change-a7c3e9d2). Moved the corresponding classes to the Implemented section of the class diagram. |
 | 1.5 | 2026-07-16 | Off-grid SQLite history (change-a2d5f7c9). Added `retired` status legend value. Retired modules data.validator and data.buffer, and classes DataValidator, DataBuffer, ValidationResult. data.storage / TimeSeriesStore retained as `planned` (SQLite store, primitives schema: pv_power, battery_power, battery_soc, grid_power_total; house_load derived, not stored). |
 | 1.6 | 2026-07-17 | Annual rollup tier (change-b1c2d3e4). Added rollup_daily(), prune_daily(), query_history_12mo() to the TimeSeriesStore class diagram entry (all `planned`, consistent with the class's own status). |
+| 1.7 | 2026-07-17 | P08 review (prompt-b1c2d3e4): corrected stale status `planned` -> `implemented` for module solax_modbus.data.storage and class TimeSeriesStore (source has existed since change-a2d5f7c9; status was never updated at that time). Moved TimeSeriesStore from the Planned to the Implemented section of the class diagram. |
 
 ---
 

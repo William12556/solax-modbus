@@ -126,9 +126,9 @@ flowchart LR
 | Console display | ✓ Implemented | Formatted statistics output |
 | Emulator | ✓ Implemented | Test server with dynamic state simulation |
 | HTTP telemetry server | ✓ Implemented | Live telemetry over HTTP, read-only |
-| Data persistence | ○ Planned | Local SQLite time-series history (raw + rollup + daily-rollup) |
-| Historical endpoint | ○ Planned | /api/history rollup series for client-side sparklines |
-| Extended historical endpoint | ○ Planned | /api/history/12mo daily-rollup series, rolling trailing 12 months |
+| Data persistence | ✓ Implemented | Local SQLite time-series history (raw + rollup + daily-rollup) |
+| Historical endpoint | ✓ Implemented | /api/history rollup series for client-side sparklines |
+| Extended historical endpoint | ✓ Implemented | /api/history/12mo daily-rollup series, rolling trailing 12 months |
 | Alerting | ○ Planned | Threshold monitoring and notifications |
 
 
@@ -253,12 +253,13 @@ target_platforms:
 | main() | src/solax_modbus/main.py | 313-395 | Partial |
 | SolaxEmulatorState | src/tools/emulator/solax_emulator.py | Full | No |
 | DynamicModbusDataBlock | src/tools/emulator/solax_emulator.py | Full | No |
+| TimeSeriesStore | src/solax_modbus/data/storage.py | Full | No |
+| TelemetryServer | src/solax_modbus/presentation/server.py | Full | Partial |
 
 ### Planned Components
 
 | Component | Priority | Dependencies |
 |-----------|----------|--------------|
-| TimeSeriesStore | High | sqlite3 (stdlib) |
 | AlertManager | Medium | smtplib, requests |
 
 Retired (change-a2d5f7c9): DataValidator (folded into TimeSeriesStore), DataBuffer (not applicable to local SQLite).
@@ -409,15 +410,16 @@ stateDiagram-v2
 
 ---
 
-### TimeSeriesStore (Planned)
+### TimeSeriesStore (Active)
 
-**Purpose:** Persist telemetry to a local SQLite store with raw and rollup tables (change-a2d5f7c9).
+**Purpose:** Persist telemetry to a local SQLite store with raw, 15-min rollup, and daily-rollup tables (change-a2d5f7c9, change-b1c2d3e4).
 
 **Responsibilities:**
 - Write telemetry samples to a raw table (epoch-second timestamps)
 - Downsample raw samples into 15-minute rollup buckets (avg, min, max per metric)
-- Prune raw and rollup rows past their retention windows
-- Provide a query interface for the /api/history endpoint
+- Downsample rollup buckets into 1-day daily-rollup buckets (avg, min, max per metric), retained a rolling trailing 12 months
+- Prune raw, rollup, and daily-rollup rows past their retention windows
+- Provide query interfaces for the /api/history and /api/history/12mo endpoints
 - Apply minimal range validation on the write path (folded from the retired DataValidator)
 
 **Retention:**
@@ -646,7 +648,7 @@ logging:
 | SolaxInverterClient | Protocol | [design-c1a2b3d4-component_protocol_client.md](<design-c1a2b3d4-component_protocol_client.md>) | Active |
 | SolaxEmulator | Protocol | [design-c2b3c4d5-component_protocol_emulator.md](<design-c2b3c4d5-component_protocol_emulator.md>) | Active |
 
-| TimeSeriesStore | Data | [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>) | Planned (SQLite) |
+| TimeSeriesStore | Data | [design-b7c8d9e0-component_data_storage.md](<design-b7c8d9e0-component_data_storage.md>) | Active |
 | DataValidator | Data | [design-a6b7c8d9-component_data_validator.md](<design-a6b7c8d9-component_data_validator.md>) | Retired |
 | DataBuffer | Data | [design-c8d9e0f1-component_data_buffer.md](<design-c8d9e0f1-component_data_buffer.md>) | Retired |
 | InverterDisplay | Presentation | [design-d3c4d5e6-component_presentation_console.md](<design-d3c4d5e6-component_presentation_console.md>) | Active |
@@ -666,6 +668,8 @@ logging:
 | main | src/solax_modbus/main.py |
 | SolaxEmulatorState | src/tools/emulator/solax_emulator.py |
 | DynamicModbusDataBlock | src/tools/emulator/solax_emulator.py |
+| TimeSeriesStore | src/solax_modbus/data/storage.py |
+| TelemetryServer | src/solax_modbus/presentation/server.py |
 | Unit tests | tests/test_solax_poll.py |
 
 ### Reference Documents
@@ -696,6 +700,7 @@ logging:
 | 1.10 | 2026-07-03 | Relocated SolaxEmulator source from src/solax_modbus/emulator/ to src/tools/emulator/, outside the package tree (see design-c2b3c4d5 1.5). Updated Directory Structure, Implementation Status, Components, and Source Code Mapping. |
 | 1.11 | 2026-07-16 | Off-grid UI / SQLite history (change-a2d5f7c9). Persistence retargeted InfluxDB -> local SQLite (Scope, System Overview, Technology Stack, TimeSeriesStore section, retention). DataValidator and DataBuffer retired; TimeSeriesStore marked Planned (SQLite). TelemetryServer status corrected to Active. Added House Load and Rollup terminology. Noted /api/history endpoint. Store persists primitives; house_load derived at display (house_load = pv_power - battery_power + grid_power_total). |
 | 1.12 | 2026-07-17 | Annual rollup tier (change-b1c2d3e4). Added daily-rollup tier to Scope, Primary Functions, and TimeSeriesStore retention (1-day resolution, rolling trailing 365 days). Noted /api/history/12mo endpoint. |
+| 1.13 | 2026-07-17 | P08 review (prompt-b1c2d3e4): corrected stale Planned status to Implemented/Active for TimeSeriesStore and the three history-related Primary Functions rows (data persistence, historical endpoint, extended historical endpoint) — source has existed since change-a2d5f7c9 and was never updated. Moved TimeSeriesStore from Planned to Implemented Components; added TelemetryServer to Implemented Components (same gap). Updated Design Element Cross-References and Source Code Mapping accordingly. |
 
 ---
 

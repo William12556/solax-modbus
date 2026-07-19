@@ -5,7 +5,7 @@ Created: 2025 December 30
 **Document Type:** Tier 3 Component Design  
 **Document ID:** design-b7c8d9e0-component_data_storage  
 **Parent:** [design-9e4b2c3d-domain_data.md](<design-9e4b2c3d-domain_data.md>)  
-**Status:** Planned  
+**Status:** Active  
 
 ---
 
@@ -31,9 +31,9 @@ Created: 2025 December 30
 component_info:
   name: "TimeSeriesStore"
   domain: "Data"
-  version: "2.2"
+  version: "2.3"
   date: "2026-07-17"
-  status: "Planned"
+  status: "Active"
   source_file: "src/solax_modbus/data/storage.py"
 ```
 
@@ -502,7 +502,7 @@ def close(self) -> None:
 
 - History endpoints: [design-9b7e2c4a-component_presentation_server.md](<design-9b7e2c4a-component_presentation_server.md>) (Routes: /api/history, /api/history/12mo)
 - Requirements: FR-010, FR-012, FR-019, FR-020, NFR-008 in [requirements-solax-modbus-master.md](<../requirements/requirements-solax-modbus-master.md>)
-- Change: change-a2d5f7c9, change-b1c2d3e4
+- Change: change-a2d5f7c9, change-b1c2d3e4 (implemented; prompt-b1c2d3e4, P08 reviewed)
 
 ### 10.4 Source Code
 
@@ -522,6 +522,7 @@ def close(self) -> None:
 | 2.0 | 2026-07-16 | Superseded in place: InfluxDB replaced by local SQLite store (change-a2d5f7c9). New raw + rollup schema (avg/min/max), retention raw 1-min/24h and rollup 15-min/30d, folded write-path validation replacing the retired DataValidator, and a query_history interface for the /api/history endpoint. Removed InfluxDB connection config, tags, nanosecond precision, Flux downsampling, and buffer coupling. Added section numbering. |
 | 2.1 | 2026-07-16 | Store primitives, not derived house_load (change-a2d5f7c9). raw/rollup metrics: pv_power, battery_power, battery_soc, grid_power_total. house_load derived at display (house_load = pv_power - battery_power + grid_power_total); documented linearity/min-max caveat and provisional-derivation warning. Updated schema, metric mapping (5.1), rollup metric list, write-path validation, and query_history metric enum. |
 | 2.2 | 2026-07-17 | Added daily_rollup tier (change-b1c2d3e4): new table, retained a rolling trailing 365 days (not calendar-year), aggregated from rollup rather than raw. Added rollup_daily(), prune_daily(), query_history_12mo() to class design and interfaces. Updated 6.0 retention table, storage estimate (6.3), and cross-references (FR-020, /api/history/12mo). Documented the rollup-before-prune correctness dependency between the 15-min and daily tiers. |
+| 2.3 | 2026-07-17 | P08 review (prompt-b1c2d3e4): source confirmed implementing this design in full (daily_rollup schema, rollup_daily, prune_daily, query_history_12mo). Corrected stale component status Planned -> Active; this status had not been updated when change-a2d5f7c9 was originally implemented. Actual constant name in source is DAILY_ROLLUP_RETENTION_SECONDS (not DAILY_RETENTION_SECONDS as informally referenced in change-b1c2d3e4); noted here as the authoritative name. |
 
 ---
 

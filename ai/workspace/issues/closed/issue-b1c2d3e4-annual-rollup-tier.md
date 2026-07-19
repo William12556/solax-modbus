@@ -7,7 +7,7 @@ issue_info:
   title: "Annual Rollup Tier for 12-Month History Graph"
   date: "2026-07-17"
   reporter: "William Watson"
-  status: "open"
+  status: "closed"
   severity: "low"
   type: "requirement_change"
   iteration: 1
@@ -109,15 +109,36 @@ resolution:
     extension). Source implementation delivered via a T04 prompt for
     Claude Code.
   change_ref: "change-b1c2d3e4"
-  resolved_date: ""
-  resolved_by: ""
-  fix_description: ""
+  resolved_date: "2026-07-17"
+  resolved_by: "Claude Code (Tactical Domain)"
+  fix_description: >
+    daily_rollup tier (TimeSeriesStore), /api/history/12mo endpoint
+    (TelemetryServer), inline daily rollup/prune scheduling (main.py), and
+    per-card 30d/12mo dashboard toggle implemented per prompt-b1c2d3e4 and
+    committed by Claude Code. P08 reviewed against design-b7c8d9e0 and
+    design-9b7e2c4a: pass, with one non-blocking naming note (see
+    change-b1c2d3e4 verification).
 
 verification:
-  verified_date: ""
-  verified_by: ""
-  test_results: ""
-  closure_notes: ""
+  verified_date: "2026-07-17"
+  verified_by: "Claude (Strategic Domain, P08 review)"
+  test_results: >
+    P08 code review against design-b7c8d9e0 and design-9b7e2c4a: storage.py
+    (daily_rollup schema, rollup_daily/prune_daily sourced from rollup not
+    raw, query_history_12mo), server.py (/api/history/12mo under the existing
+    allowlist), main.py (daily scheduling preserving rollup-before-prune
+    ordering), dashboard.html (per-card toggle, lazy shared fetch) all
+    conform. No house_load in daily_rollup; rolling trailing 365-day window
+    confirmed. Existing pytest suite not executed by Claude; operator to
+    confirm green. Review also surfaced and corrected a pre-existing status
+    gap: the TimeSeriesStore/history baseline had been left marked Planned in
+    several design documents, the name registry, and the traceability matrix
+    since change-a2d5f7c9, despite being implemented; corrected to
+    Implemented/Active as part of this closure.
+  closure_notes: >
+    Requirements and design baseline revised; source implemented via
+    prompt-b1c2d3e4 and committed/pushed by Claude Code; P08 review passed.
+    Issue closed.
 
 prevention:
   preventive_measures: >
@@ -162,6 +183,11 @@ version_history:
     author: "William Watson"
     changes:
       - "Linked change-b1c2d3e4 following T02 change document authoring"
+  - version: "1.2"
+    date: "2026-07-17"
+    author: "William Watson"
+    changes:
+      - "Closed following P08 review of implemented source (prompt-b1c2d3e4). Status open -> closed."
 
 metadata:
   copyright: "Copyright (c) 2026 William Watson. MIT License."
