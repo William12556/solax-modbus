@@ -1,6 +1,0 @@
-# Project-local files under ai/ that bin/propagate.sh must never delete.
-# One path relative to ai/ per line.
-instructions.md
-obsidian_markdown_guidelines.md
-ael/config.yaml.bak
-project_information.md
