@@ -10,7 +10,7 @@ Created: 2026 March 31
 - [2.0 Placeholder Mappings](<#2.0 placeholder mappings>)
 - [3.0 Strategic Domain](<#3.0 strategic domain>)
 - [4.0 Tactical Domain](<#4.0 tactical domain>)
-- [5.0 Invocation](<#5.0 invocation>)
+- [5.0 Claude Code Task invocation](<#5.0 claude code task invocation>)
 - [6.0 Project Setup](<#6.0 project setup>)
 - [Version History](<#version history>)
 
@@ -73,22 +73,27 @@ Local context file: `CLAUDE.local.md` at project root (`.gitignore`'d).
 
 ---
 
-## 5.0 Invocation
+## 5.0 Claude Code Task invocation
 
 Claude Code fulfils both the worker and reviewer roles in a single manual pass. There is no worker/reviewer cycle; the human operator performs the review gate.
 
 **Procedure:**
 
-1. Strategic Domain authors and approves the T04 prompt per the standard workflow.
+1. Strategic Domain authors and approves the T03 prompt per the standard workflow.
 2. Open Claude Code in the project root.
-3. Issue the following instruction, substituting the actual T04 file path:
+3. Issue the following instruction, substituting the actual T03 file path:
 
 ```
-implement ai/workspace/prompt/prompt-<uuid>-<n>.md
+Implement ai/workspace/prompt/prompt-<uuid>-<name>.md and close the prompt T-Doc
+when finished. Leave the issue and change T-Docs active pending test results.
+Then, once finished, write a report of what you have done in
+ai/workspace/report/report-<uuid>-<name>.md.
 ```
 
-4. Claude Code reads the T04 prompt from disk and implements the task.
+4. Claude Code reads the T03 prompt from disk and implements the task.
 5. The human operator reviews the result and accepts or requests changes.
+
+Reference: `ai/governance.md` P13.3 Option C.
 
 [Return to Table of Contents](<#table of contents>)
 
@@ -125,6 +130,7 @@ CLAUDE.local.md
 | 1.1 | 2026-06-14 | workspace/ → ai/workspace/ in invocation example |
 | 1.2 | 2026-06-16 | Added section numbering throughout |
 | 1.3 | 2026-06-17 | Removed <tactical_config>/ and <skills_dir>/ placeholder rows from §2.0; added note that .claude/ is a native Claude Code directory |
+| 1.4 | 2026-08-19 | §5.0: corrected report path defect (ai/workspace/report-<uuid>-<name>.md → ai/workspace/report/report-<uuid>-<name>.md, aligning with governance §1.2.6 canonical directory); added cross-reference to governance §1.10.3 Option C |
 
 ---
 
