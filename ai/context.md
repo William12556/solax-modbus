@@ -6,11 +6,11 @@ Created: 2026 June 17
 
 ## 1.0 Project
 
-**Name:** \<project-name\>
-**Description:** \<one-line description\>
+**Name:** solax-modbus
+**Description:** Read-only Modbus TCP monitor for Solax X3 Hybrid 6.0-D inverters, with a console display, a web UI and SQLite history.
 
-**Technology stack:** Python 3.11 | \<list key libraries\>
-**Target platform:** \<deployment target — e.g. macOS, Raspberry Pi, Linux\>
+**Technology stack:** Python 3.9+ | pymodbus (>=3.11, <4); standard library `http.server`, `sqlite3`, `threading`
+**Target platform:** Raspberry Pi / Debian Linux (installed to `/opt/solax-monitor/`, optional systemd service); macOS for development against the emulator
 
 ---
 
@@ -18,25 +18,30 @@ Created: 2026 June 17
 
 | Action | Command |
 |---|---|
-| Install | `pip install -e .[dev]` |
+| Install (dev) | `pip install -e .[dev]` |
+| Install (Pi) | `sudo ./bin/install.sh [version] [--ip <INVERTER-IP>]` |
 | Test | `pytest tests/` |
-| Lint | \<lint command\> |
-| Build | \<build command or n/a\> |
+| Lint | n/a (none configured) |
+| Run | `solax-monitor <INVERTER-IP>` (web UI on port 8181; `--no-serve` disables it) |
+| Emulator | `python3 src/tools/emulator/solax_emulator.py --port 5020`, then `solax-monitor 127.0.0.1 --port 5020` |
+| Build | `./bin/build.sh` |
+| Release | `./bin/release.sh` (requires authenticated `gh` CLI) |
 
 ---
 
 ## 3.0 Code Style
 
-- \<style guideline — e.g. PEP 8, type hints required\>
-- \<style guideline — e.g. docstrings on public functions\>
-- \<style guideline — e.g. max line length 100\>
+- PEP 8
+- Read-only Modbus access; no register writes to the inverter
+- Offline operation; no cloud dependencies
+- Packages under `src/solax_modbus/`: `data` (SQLite storage), `presentation` (HTTP server, `templates/`), `main.py` (CLI)
 
 ---
 
 ## 4.0 Repository Conventions
 
-**Branches:** \<naming pattern — e.g. feature/\*, fix/\*\>
-**Commits:** \<format — e.g. conventional commits: feat:, fix:, docs:\>
+**Branches:** `main` only; no feature branches in use.
+**Commits:** conventional commits with optional scope (`feat(data):`, `fix(config):`, `docs:`, `chore:`); cycle closures cite the change UUID.
 
 ---
 
@@ -46,8 +51,10 @@ Created: 2026 June 17
 |---|---|
 | Governance | `ai/governance.md` |
 | Designs | `ai/workspace/design/` |
+| Changes | `ai/workspace/change/` |
 | Prompts | `ai/workspace/prompt/` |
 | Issues | `ai/workspace/issues/` |
+| Reports | `ai/workspace/report/` |
 
 ---
 
@@ -55,7 +62,8 @@ Created: 2026 June 17
 
 | Version | Date | Description |
 |---|---|---|
-| 0.1 | \<YYYY-MM-DD\> | Initial template |
+| 0.1 | 2026-06-17 | Initial template |
+| 1.0 | 2026-09-23 | Project context filled in (solax-modbus) |
 
 ---
 
