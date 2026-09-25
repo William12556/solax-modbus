@@ -12,7 +12,7 @@ mcp_servers:
     command: "/usr/local/bin/npx"
     args:
       - "-y"
-      - "@j0hanz/filesystem-mcp@latest"
+      - "@j0hanz/filesystem-mcp@2.5.0"  # pinned: tool names/arguments are version-specific (change-c37198be)
       - "/Users/williamwatson/Documents/GitHub/solax-modbus"
     env:
       PATH: "/opt/homebrew/opt/node@24/bin:/usr/local/bin:/usr/bin:/bin"
@@ -29,11 +29,11 @@ readiness:
 loop:
   max_iterations: 50        # Ralph Loop outer iterations (work+review cycles)
   phase_max_iterations: 50  # Inner tool-call iterations per phase
-  mcp_error_threshold: 3    # Write RALPH-BLOCKED.md after this many consecutive MCP errors per phase
+  mcp_error_threshold: 3    # Write BLOCKED.md after this many consecutive MCP errors per phase
   max_tool_calls_per_iteration: 10  # Truncate tool calls per iteration beyond this count
   preflight_check: false             # Evaluate success criteria before first worker iteration
   phase_duration_minutes: 30         # F28: soft cap on a single phase's wall-clock cost during audit-run refinement
-  state_dir: "ai/state/ralph"
+  state_dir: "ai/state"
 
 # Context budget
 # context_window: null attempts a live query to the oMLX admin API, then falls
