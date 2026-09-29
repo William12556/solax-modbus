@@ -8,6 +8,7 @@ record the outcome.
 
 | ID | Item | Status | References |
 | --- | --- | --- | --- |
+| c8e760ee | Validate the register list in `_process_battery_data` (audit-3e4f5a6b); first live engine run after the AI-G&O layout migration | Prompt ready; awaiting approval and run | issue/change/prompt-c8e760ee |
 
 ---
 

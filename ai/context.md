@@ -49,7 +49,7 @@ Created: 2026 June 17
 
 | Artifact | Location |
 |---|---|
-| Governance | `ai/governance.md` |
+| Governance | `ai/governance/software-engineering/governance.md` |
 | Designs | `ai/workspace/design/` |
 | Changes | `ai/workspace/change/` |
 | Prompts | `ai/workspace/prompt/` |
@@ -64,6 +64,7 @@ Created: 2026 June 17
 |---|---|---|
 | 0.1 | 2026-06-17 | Initial template |
 | 1.0 | 2026-09-23 | Project context filled in (solax-modbus) |
+| 1.1 | 2026-09-29 | Governance path updated to ai/governance/software-engineering/governance.md (AI-G&O governance 11.0 layout) |
 
 ---
 
