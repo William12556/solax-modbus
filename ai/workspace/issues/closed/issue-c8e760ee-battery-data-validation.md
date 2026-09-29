@@ -6,7 +6,7 @@ issue_info:
   title: "_process_battery_data does not validate its register list"
   date: "2026-09-29"
   reporter: "William Watson"
-  status: "open"
+  status: "closed"
   severity: "medium"
   type: "defect"
   iteration: 1
@@ -69,21 +69,21 @@ resolution:
   target_date: "2026-09-29"
   approach: "Guard clause: warn and return {} when regs is None or shorter than the mapped count; add two unit tests."
   change_ref: "change-c8e760ee"
-  resolved_date: ""
-  resolved_by: ""
-  fix_description: ""
+  resolved_date: "2026-09-29"
+  resolved_by: "engine (Devstral 8-bit worker), accepted by operator"
+  fix_description: "Guard clause in _process_battery_data returns {} and logs a warning for None or fewer than REGISTER_MAPPINGS['battery_data']['count'] registers; tests test_process_battery_data_short and test_process_battery_data_none added."
 
 verification:
-  verified_date: ""
-  verified_by: ""
-  test_results: ""
-  closure_notes: ""
+  verified_date: "2026-09-29"
+  verified_by: "Strategic Domain code review; operator acceptance"
+  test_results: "pytest tests: 26 passed (operator, solax-modbus venv, 2026-09-29)"
+  closure_notes: "Closed with change-c8e760ee."
 
 loop_context:
-  was_loop_execution: false
-  blocked_at_iteration: 0
-  failure_mode: ""
-  last_review_feedback: ""
+  was_loop_execution: true
+  blocked_at_iteration: 3
+  failure_mode: "Reviewer false REVISE: stall BLOCK after three identical objections although the implementation was complete and gates passed"
+  last_review_feedback: "Guard and tests reported missing; both present in src/solax_modbus/main.py and tests/test_solax_poll.py"
 
 version_history:
   - version: "1.0"
@@ -91,6 +91,11 @@ version_history:
     author: "William Watson"
     changes:
       - "Initial issue from audit-3e4f5a6b"
+  - version: "1.1"
+    date: "2026-09-29"
+    author: "William Watson"
+    changes:
+      - "Resolved and closed; loop context recorded"
 
 metadata:
   copyright: "Copyright (c) 2026 William Watson. MIT License."

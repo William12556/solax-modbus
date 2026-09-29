@@ -201,6 +201,18 @@ class TestSolaxInverterClient:
         assert result['battery_temperature'] == 24
         assert result['battery_soc'] == 78
     
+    def test_process_battery_data_short(self, client):
+        """Test processing of battery system data with short input."""
+        regs = [2705, 124, 3354, 0, 24]
+        result = client._process_battery_data(regs)
+        assert result == {}
+    
+    def test_process_battery_data_none(self, client):
+        """Test processing of battery system data with None input."""
+        regs = None
+        result = client._process_battery_data(regs)
+        assert result == {}
+    
     @patch.object(SolaxInverterClient, 'read_registers')
     def test_poll_inverter_complete(self, mock_read_registers, client):
         """Test complete polling cycle with all data."""

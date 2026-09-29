@@ -6,7 +6,7 @@ change_info:
   title: "Validate the register list in _process_battery_data"
   date: "2026-09-29"
   author: "William Watson"
-  status: "proposed"
+  status: "verified"
   priority: "medium"
   iteration: 1
   coupled_docs:
@@ -91,11 +91,19 @@ implementation:
   deployment_notes: "None"
 
 verification:
-  implemented_date: ""
-  implemented_by: ""
-  verification_date: ""
-  verified_by: ""
-  test_results: ""
+  implemented_date: "2026-09-29"
+  implemented_by: "engine: Devstral Small 2 8-bit worker, Magistral Small 2509 8-bit reviewer (run engine_20260929-131551)"
+  verification_date: "2026-09-29"
+  verified_by: "Strategic Domain code review of the diff; operator acceptance overriding the reviewer's BLOCKED"
+  test_results: >
+    Worker implemented the change in loop iteration 1; syntax gate and
+    pytest gate PASS in iterations 1-3. Reviewer returned REVISE claiming
+    the guard was missing (false negative), then repeated it without
+    re-reading the code; stall BLOCK at iteration 3. Diff limited to
+    src/solax_modbus/main.py and tests/test_solax_poll.py, matching the
+    prompt. Operator pytest tests: 26 passed. An earlier run
+    (engine_20260929-131033) crashed on an endpoint response without
+    choices before any change (AI-G&O backlog §3.0 item 5).
   issues_found: []
 
 traceability:
@@ -105,7 +113,7 @@ traceability:
     - issue_ref: "issue-c8e760ee"
       relationship: "resolves"
 
-notes: ""
+notes: "First live engine run after the AI-G&O layout migration (pilot for AI-G&O change-5bcd46ad). The logger.warning line exceeds 79 characters; accepted as is by the operator."
 
 version_history:
   - version: "1.0"
@@ -113,6 +121,11 @@ version_history:
     author: "William Watson"
     changes:
       - "Initial change document"
+  - version: "1.1"
+    date: "2026-09-29"
+    author: "William Watson"
+    changes:
+      - "Implemented by the engine; verified by review and pytest; accepted over reviewer BLOCKED; closed"
 
 metadata:
   copyright: "Copyright (c) 2026 William Watson. MIT License."

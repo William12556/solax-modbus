@@ -292,7 +292,11 @@ class SolaxInverterClient:
         }
     
     def _process_battery_data(self, regs: list) -> Dict[str, Any]:
-        """Process battery system data."""
+        """Process battery system data. Returns an empty dict for missing or short input."""
+        expected = self.REGISTER_MAPPINGS['battery_data']['count']
+        if regs is None or len(regs) < expected:
+            logger.warning("Battery data incomplete: expected %d registers, got %s", expected, None if regs is None else len(regs))
+            return {}
         return {
             'battery_voltage': self._to_signed(regs[0]) * 0.1,
             'battery_current': self._to_signed(regs[1]) * 0.1,
