@@ -22,3 +22,5 @@ Reviewed 2026-09-23: deleted instructions.md, obsidian_markdown_guidelines.md, a
 | 2026-09-25 | ai/index.md | ai-local/retired-5bcd46ad/index.md | retired framework file | layout migration change-5bcd46ad |
 | 2026-09-25 | ai/src/govwatch.py | ai-local/retired-5bcd46ad/src/govwatch.py | retired framework file | layout migration change-5bcd46ad |
 | 2026-09-25 | ai/src/requirements-govwatch.txt | ai-local/retired-5bcd46ad/src/requirements-govwatch.txt | retired framework file | layout migration change-5bcd46ad |
+| 2026-10-02 | ai/engine/recipes/audit-review.yaml | ai-local/engine/recipes/audit-review.yaml | retired framework file |  |
+| 2026-10-02 | ai/engine/recipes/audit-work.yaml | ai-local/engine/recipes/audit-work.yaml | retired framework file |  |
